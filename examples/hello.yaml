@@ -1,0 +1,11 @@
+nodes:
+  a:
+    label: Hello
+  b:
+    label: world
+rows:
+  - nodes: [a]
+  - nodes: ["", b]
+links:
+  - start: a
+    end: b

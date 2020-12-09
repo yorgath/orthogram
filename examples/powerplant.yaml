@@ -1,0 +1,195 @@
+# Schematic diagram of a hypothetical combined cycle power plant
+
+diagram:
+
+  label: Combined Cycle Power Plant
+  collapse_links: true
+  fill: lightyellow
+  link_distance: 6
+
+styles:
+
+  default_node:
+    fill: white
+
+  default_link:
+    start_bias: horizontal
+    end_bias: horizontal
+    buffer_width: 2
+    buffer_fill: lightyellow
+    stroke_width: 3
+
+  shaft:
+    arrow_forward: false
+    stroke: dimgrey
+    stroke_width: 8
+    stroke_dasharray: 8 8
+
+  compressor:
+    label: Compressor
+
+  cold_gas:
+    stroke: turquoise
+
+  electrical_generator:
+    label: "Electrical\nGenerator"
+
+  hot_gas:
+    stroke: orangered
+    fill: gold
+
+  steam:
+    stroke: grey
+
+  water:
+    stroke: royalblue
+
+groups:
+
+  gas_to_steam:
+    drawing_priority: -1
+
+nodes:
+
+  air:
+    label: Air
+    stroke: none
+    min_width: 24
+    min_height: 0
+
+  cdn:
+    label: Condenser
+
+  cmp1:
+    style: compressor
+
+  cmp2:
+    style: compressor
+
+  cmb1:
+    label: "Combustion\nChamber"
+    style: hot_gas
+
+  cmb2:
+    label: "Combustion\nChamber"
+    style: hot_gas
+
+  cool:
+    label: "Cooling\nTower"
+
+  fuel:
+    label: Fuel
+
+  egn1:
+    style: electrical_generator
+
+  egn2:
+    style: electrical_generator
+
+  egn3:
+    style: electrical_generator
+
+  gtb1:
+    label: Gas Turbine
+    style: hot_gas
+
+  gtb2:
+    label: Gas Turbine
+    style: hot_gas
+
+  sgn:
+    label: "Steam\nGenerator"
+    style: hot_gas
+
+  stb:
+    label: "Steam\nTurbine"
+    style: hot_gas
+
+  exst:
+    label: Exhaust
+
+  tx:
+    label: "To\nTransformers"
+    font_style: italic
+
+rows:
+
+  - nodes: [""   , ""   , fuel                   ]
+  - nodes: [""   , cmp1 , cmb1 , gtb1 , egn1     ]
+  - nodes: [air                                  ]
+  - nodes: [""   , cmp2 , cmb2 , gtb2 , egn2 , tx]
+  - nodes: [""   , exst , ""   , sgn             ]
+  - nodes: [""   , cool , cdn  , stb  , egn3     ]
+
+links:
+
+  - start: air
+    end: [cmp1, cmp2]
+    style: cold_gas
+    group: air
+
+  - start: cmp1
+    end: cmb1
+    style: cold_gas
+
+  - start: cmp2
+    end: cmb2
+    style: cold_gas
+
+  - start: fuel
+    end: [cmb1, cmb2]
+    drawing_priority: -1
+    end_bias: vertical
+    stroke: olive
+
+  - start: cmb1
+    end: gtb1
+    style: hot_gas
+
+  - start: cmb2
+    end: gtb2
+    style: hot_gas
+
+  - start: gtb1
+    end: egn1
+    style: shaft
+
+  - start: gtb2
+    end: egn2
+    style: shaft
+
+  - start: [gtb1, gtb2]
+    end: sgn
+    start_bias: vertical
+    end_bias: vertical
+    style: hot_gas
+    group: gas_to_steam
+
+  - start: sgn
+    end: stb
+    style: steam
+
+  - start: stb
+    end: egn3
+    style: shaft
+
+  - start: stb
+    end: cdn
+    style: steam
+
+  - start: cdn
+    end: sgn
+    start_bias: vertical
+    style: water
+
+  - start: cdn
+    end: cool
+    arrow_back: true
+    style: water
+
+  - start: [egn1, egn2, egn3]
+    end: tx
+
+  - start: sgn
+    end: exst
+    style: hot_gas
