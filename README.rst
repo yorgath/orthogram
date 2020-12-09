@@ -31,7 +31,7 @@ Installation
 You must have Python 3.8 or newer installed in your system.  Run the
 following command to install package ``orthogram`` from PyPi:
 
-.. code:: sh
+.. code:: console
 
    python -m pip install orthogram
 
@@ -53,7 +53,7 @@ The ``orthogram`` module is designed to be used from the command line.
 To generate a drawing of a diagram defined in a `diagram definition
 file`_ named ``diagram.yaml``, enter the following command:
 
-.. code:: sh
+.. code:: console
 
    python -m orthogram diagram.yaml
 
@@ -89,7 +89,7 @@ of YAML:
 
 Save it as ``hello.yaml`` and run:
 
-.. code:: sh
+.. code:: console
 
    python -m orthogram hello.yaml
 
@@ -209,7 +209,7 @@ the ``start`` and ``end`` nodes, as well as any `attributes`_
 appropriate for links.  Note that the nodes must be in place before
 making a connection. Here is an example:
 
-.. code::
+.. code:: yaml
 
    nodes:
      a: {label: First node}
@@ -231,7 +231,7 @@ Note that the ``start`` and ``end`` values of a link definition can be
 connections in a single definition, all links sharing the same
 attributes.  For example, the following definition creates six links:
 
-.. code::
+.. code:: yaml
 
    links:
      - start: [a, b]
