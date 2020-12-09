@@ -3,6 +3,7 @@ name = "orthogram"
 version = "0.1.0"
 description = "Draw diagrams of graphs."
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
+license = "GPL-3.0"
 
 [tool.poetry.dependencies]
 python = "^3.8"
