@@ -2,8 +2,17 @@
 name = "orthogram"
 version = "0.1.0"
 description = "Draw diagrams of graphs."
+license = "GPL-3.0-or-later"
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
-license = "GPL-3.0"
+maintainers = ["Georgios Athanasiou <yorgath@gmail.com>"]
+readme = "README.rst"
+repository = "https://github.com/yorgath/orthogram"
+keywords = ["diagram", "graph"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Topic :: Utilities",
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
