@@ -847,34 +847,23 @@ class Refiner:
 
     def _calculate_bundle_offsets(self, g: igraph.Graph) -> None:
         """Calculate the offsets and store them in the bundles."""
-        # Assign inital depths to the vertices.
+        # Find the roots.
+        roots = []
         for v in g.vs:
             is_root = True
-            for idx in g.predecessors(v):
+            for _ in g.predecessors(v):
                 is_root = False
                 break
             if is_root:
-                v['depth'] = 0
-            else:
-                v['depth'] = -1
-        # Calculate the depths of all the vertices.
-        while True:
-            changed = False
-            for v1 in g.vs:
-                depth1 = v1['depth']
-                if depth1 >= 0:
-                    for idx2 in g.successors(v1):
-                        v2 = g.vs[idx2]
-                        depth2 = v2['depth']
-                        if depth1 + 1 > depth2:
-                            v2['depth'] = max(depth1 + 1, depth2)
-                            changed = True
-            if not changed:
-                break
+                roots.append(v)
+        # Calculate the distances of all the vertices.
+        for root in roots:
+            for v, dist, _ in g.bfsiter(root, advanced=True):
+                v['distance'] = dist
         # We can now store the offsets in the bundles.
         for v in g.vs:
             bundle = v['bundle']
-            offset = v['depth']
+            offset = v['distance']
             bundle.offset = offset
 
     def _stack_bundles(self) -> None:
