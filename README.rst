@@ -3,7 +3,7 @@ Orthogram
 =========
 
 **WARNING:** *This is work in progress.  There is no guarantee as to
-the stability and reliability of this program.  Use at your own risk.*
+the stability and reliability of this program.*
 
 Orthogram is a command line program and Python library that lets you
 draw diagrams of graphs.  It reads a YAML file and produces a SVG file
@@ -291,12 +291,12 @@ There are two special style names, ``default_node`` and
 ``default_link``, which are used to set default values for all the
 nodes and links in the diagram respectively.
 
-``group``
-~~~~~~~~~
+``groups``
+~~~~~~~~~~
 
-The ``group`` section may be used to attach attributes to link groups.
-Since links in the same group may collapse on one another, it is
-usually desirable for all the links in one group to share the same
+The ``groups`` section may be used to attach attributes to link
+groups.  Since links in the same group may collapse on one another, it
+is usually desirable for all the links in one group to share the same
 attributes.  In the example that follows, all links are drawn in blue:
 
 .. code:: yaml
@@ -313,7 +313,7 @@ attributes.  In the example that follows, all links are drawn in blue:
        end: d
        group: water
 
-A ``group`` definition may contain a reference to a named ``style`` if
+A group definition may contain a reference to a named ``style`` if
 needed.  Note that creating an entry in the ``groups`` section is not
 necessary for the grouping of the links; a common ``group`` name in
 each link definition is sufficient.
@@ -483,16 +483,16 @@ builder, you can certainly do so.
 Convenience functions
 ~~~~~~~~~~~~~~~~~~~~~
 
-The ``load_ddf()`` and ``convert_ddf()`` functions are provided as
+The ``load_ddf()`` and ``translate()`` functions are provided as
 shortcuts:
 
 .. code:: python
 
-   from orthogram import convert_ddf, load_ddf, write_svg
+   from orthogram import load_ddf, translate, write_svg
 
    # You can do this:
    diagram = load_ddf("diagram.yaml")
    write_svg(diagram, "diagram.svg")
 
    # or just this:
-   convert_ddf("diagram.yaml", "diagram.svg")
+   translate("diagram.yaml", "diagram.svg")
