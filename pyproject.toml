@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "orthogram"
-version = "0.1.0"
+version = "0.1.1"
 description = "Draw diagrams of graphs."
 license = "GPL-3.0-or-later"
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
