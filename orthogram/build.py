@@ -248,8 +248,12 @@ class Builder:
     def _collect_attributes(self, any_def: _Definition) -> Attributes:
         """Collect the attributes from a definition."""
         attrs: Attributes = {}
+        if 'arrow_aspect' in any_def:
+            attrs['arrow_aspect'] = float(any_def['arrow_aspect'])
         if 'arrow_back' in any_def:
             attrs['arrow_back'] = bool(any_def['arrow_back'])
+        if 'arrow_base' in any_def:
+            attrs['arrow_base'] = float(any_def['arrow_base'])
         if 'arrow_forward' in any_def:
             attrs['arrow_forward'] = bool(any_def['arrow_forward'])
         if 'buffer_fill' in any_def:
@@ -316,8 +320,12 @@ class Builder:
 
     def _merge_attributes(self, dest: Attributes, src: Attributes) -> None:
         """Merge attributes from a definition."""
+        if 'arrow_aspect' in src:
+            dest['arrow_aspect'] = src['arrow_aspect']
         if 'arrow_back' in src:
             dest['arrow_back'] = src['arrow_back']
+        if 'arrow_base' in src:
+            dest['arrow_base'] = src['arrow_base']
         if 'arrow_forward' in src:
             dest['arrow_forward'] = src['arrow_forward']
         if 'buffer_fill' in src:

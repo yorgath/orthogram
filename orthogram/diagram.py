@@ -47,7 +47,7 @@ class LineAttributes:
                                           attrs['stroke_dasharray'])
         if 'stroke_width' in attrs:
             self._stroke_width = cast(float, attrs['stroke_width'])
-        
+
     @property
     def stroke(self) -> Optional[str]:
         """Color of the line (e.g. "black".)"""
@@ -62,7 +62,7 @@ class LineAttributes:
     def stroke_width(self) -> float:
         """Width of the line (in pt.)"""
         return self._stroke_width
-    
+
 ######################################################################
 
 class AreaAttributes:
@@ -73,7 +73,7 @@ class AreaAttributes:
         self._fill: Optional[str] = "none"
         self._min_height = 0.0
         self._min_width = 0.0
-        
+
     def _set_area_attributes(self, attrs: Attributes) -> None:
         """Set the area attributes to the given values."""
         if 'fill' in attrs:
@@ -82,7 +82,7 @@ class AreaAttributes:
             self._min_height = cast(float, attrs['min_height'])
         if 'min_width' in attrs:
             self._min_width = cast(float, attrs['min_width'])
-        
+
     @property
     def fill(self) -> Optional[str]:
         """Color of the interior (e.g. "white".)"""
@@ -97,7 +97,7 @@ class AreaAttributes:
     def min_width(self) -> float:
         """Minimum width of the node."""
         return self._min_width
-    
+
 ######################################################################
 
 class TextAttributes:
@@ -112,7 +112,7 @@ class TextAttributes:
         self._label: Optional[str] = None
         self._text_fill: Optional[str] = "black"
         self._text_line_height = 1.25
-        
+
     def _set_text_attributes(self, attrs: Attributes) -> None:
         """Set the text attributes to the given values."""
         if 'font_family' in attrs:
@@ -129,7 +129,7 @@ class TextAttributes:
             self._text_fill = cast(Optional[str], attrs['text_fill'])
         if 'text_line_height' in attrs:
             self._text_line_height = cast(float, attrs['text_line_height'])
-        
+
     @property
     def font_family(self) -> Optional[str]:
         """Font family of text (e.g. "sans".)"""
@@ -164,7 +164,7 @@ class TextAttributes:
     def text_line_height(self) -> float:
         """Height of text line (in em.)"""
         return self._text_line_height
-    
+
 ######################################################################
 
 class NodeAttributes(LineAttributes, AreaAttributes, TextAttributes):
@@ -189,7 +189,7 @@ class NodeAttributes(LineAttributes, AreaAttributes, TextAttributes):
     def _set_node_attributes(self, attrs: Attributes) -> None:
         """Set the node attributes to the given values."""
         pass
-    
+
 ######################################################################
 
 class Node:
@@ -238,7 +238,7 @@ class DiagramRow:
         self._elements: List[_RowElement] = []
         if elements:
             self._elements.extend(elements)
-            
+
     def __len__(self) -> int:
         """Get the number of nodes and empty spaces in the row."""
         return len(self._elements)
@@ -259,7 +259,9 @@ class LinkAttributes(LineAttributes):
     def __init__(self, **attrs: Attributes):
         """Initialize the attributes with the given values."""
         LineAttributes.__init__(self)
+        self._arrow_aspect = 1.5
         self._arrow_back = False
+        self._arrow_base = 3.0
         self._arrow_forward = True
         self._buffer_fill: Optional[str] = None
         self._buffer_width: Optional[float] = None
@@ -269,7 +271,7 @@ class LinkAttributes(LineAttributes):
         self._start_bias: Optional[Orientation] = None
         self._stroke = "black"
         self.set_attributes(**attrs)
-        
+
     def set_attributes(self, **attrs: Attributes) -> None:
         """Set the attributes to the given values."""
         self._set_line_attributes(attrs)
@@ -277,8 +279,12 @@ class LinkAttributes(LineAttributes):
 
     def _set_link_attributes(self, attrs: Attributes) -> None:
         """Set the link attributes to the given values."""
+        if 'arrow_aspect' in attrs:
+            self._arrow_aspect = cast(float, attrs['arrow_aspect'])
         if 'arrow_back' in attrs:
-            self._arrow_back = cast(bool, attrs['arrow_back']) 
+            self._arrow_back = cast(bool, attrs['arrow_back'])
+        if 'arrow_base' in attrs:
+            self._arrow_base = cast(float, attrs['arrow_base'])
         if 'arrow_forward' in attrs:
             self._arrow_forward = cast(bool, attrs['arrow_forward'])
         if 'buffer_fill' in attrs:
@@ -293,11 +299,21 @@ class LinkAttributes(LineAttributes):
             self._group = cast(Optional[str], attrs['group'])
         if 'start_bias' in attrs:
             self._start_bias = cast(Optional[Orientation], attrs['start_bias'])
-       
+
+    @property
+    def arrow_aspect(self) -> float:
+        """Arrow aspect, length/width."""
+        return self._arrow_aspect
+
     @property
     def arrow_back(self) -> bool:
         """Draw an arrow at the start of the link?"""
         return self._arrow_back
+
+    @property
+    def arrow_base(self) -> float:
+        """Multiply stroke width with this to get arrow base width."""
+        return self._arrow_base
 
     @property
     def arrow_forward(self) -> bool:
@@ -318,7 +334,7 @@ class LinkAttributes(LineAttributes):
     def drawing_priority(self) -> int:
         """Relative priority when drawing links."""
         return self._drawing_priority
-    
+
     @property
     def group(self) -> Optional[str]:
         """Group to which the link belongs."""
@@ -364,7 +380,7 @@ class Link:
 
 class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
     """Collection of attributes relevant to diagrams."""
-    
+
     def __init__(self, **attrs: Attributes):
         """Initialize the attributes with the given values."""
         LineAttributes.__init__(self)
@@ -390,7 +406,7 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
         self._set_area_attributes(attrs)
         self._set_text_attributes(attrs)
         self._set_diagram_attributes(attrs)
-        
+
     def _set_diagram_attributes(self, attrs: Attributes) -> None:
         """Set the diagram attributes to the given values."""
         if 'collapse_links' in attrs:
@@ -409,7 +425,7 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
             self._row_margin = cast(float, attrs['row_margin'])
         if 'stretch' in attrs:
             self._stretch = cast(bool, attrs['stretch'])
-        
+
     @property
     def collapse_links(self) -> bool:
         """Let links that belong to the same group overlap?."""
@@ -599,7 +615,7 @@ class Diagram:
         for start in start_node_names:
             for end in end_node_names:
                 self.add_link(start, end, **attrs)
-    
+
     def links(self) -> Iterator[Link]:
         """Return the links of the diagram."""
         yield from self._links

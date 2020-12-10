@@ -58,8 +58,8 @@ from .layout import (
 
 ######################################################################
 
-# Key for link markers.  Depends on stroke width and color.
-MarkerKey = Tuple[int, str]
+# Key for link markers.  Depends on dimensions and color.
+MarkerKey = Tuple[int, int, str]
 
 ######################################################################
 
@@ -86,7 +86,7 @@ class Box:
     def node(self) -> Node:
         """Diagram node inside the box."""
         return self._node
-    
+
     @property
     def layout_point(self) -> IntPoint:
         """Position of the box in the layout."""
@@ -278,7 +278,7 @@ class Track(OrientedLine):
         """Tell the lanes to calculate their width."""
         for lane in self._lanes.values():
             lane.calculate_width()
-            
+
     def _width_of_lanes(self) -> float:
         """Calculate the width necessary for the lanes."""
         lanes = self._lanes
@@ -359,9 +359,6 @@ class Track(OrientedLine):
 class Drawing:
     """Drawing of a diagram layout."""
 
-    # Fixed width/height aspect of the arrows.
-    _arrow_aspect = 1.5
-
     def __init__(self, layout: Layout):
         """Initialize the drawing of a layout."""
         self._layout = layout
@@ -435,7 +432,7 @@ class Drawing:
         """Return an iterator over the connectors."""
         for net in self._layout.networks():
             yield from net.connectors()
-            
+
     def _fix_tracks_without_connectors(self) -> None:
         """Add one empty lane to each track with no connectors through it.
 
@@ -471,7 +468,7 @@ class Drawing:
         border = attrs.stroke_width
         padding = attrs.padding
         return border + padding
-        
+
     def _main_area_y(self) -> float:
         """Vertical coordinate after which the tracks are drawn."""
         attrs = self._diagram_attributes
@@ -481,7 +478,7 @@ class Drawing:
         if attrs.label_position is LabelPosition.TOP:
             y += self._label_area_height()
         return y
-        
+
     def _label_area_height(self) -> float:
         """Height of the area into which the label of the diagram is drawn.
 
@@ -494,7 +491,7 @@ class Drawing:
         distance = attrs.label_distance
         height = self._label_height(text, attrs)
         return distance + height
-        
+
     def _label_height(
             self,
             label: Optional[str],
@@ -510,7 +507,7 @@ class Drawing:
         else:
             label_height = 0.0
         return label_height
-        
+
     def _calculate_box_positions(self) -> None:
         """Calculate the positions of the boxes.
 
@@ -525,7 +522,7 @@ class Drawing:
             y = self._get_position(hor, p.i)
             c = FloatPoint(x, y)
             box.central_point = c
-        
+
     def _calculate_box_dimensions(self) -> None:
         """Calculate the dimensions of the boxes.
 
@@ -624,7 +621,7 @@ class Drawing:
                 ver_length = float_min
             box.width = max(ver_length, box.width)
             box.height = max(hor_length, box.height)
-        
+
     def _init_frame_size(self) -> None:
         """Calculate the dimensions of the drawing.
 
@@ -696,7 +693,7 @@ class Drawing:
         size = (w - stroke_width, h - stroke_width)
         rect = dwg.rect(insert=insert, size=size, **extra)
         dwg.add(rect)
-        
+
     def _draw_nodes(self, dwg: SvgDrawing) -> None:
         """Draw the nodes.
 
@@ -800,28 +797,25 @@ class Drawing:
             'markerUnits': 'userSpaceOnUse',
             'orient': 'auto',
         }
-        distance = self._diagram_attributes.link_distance
-        aspect = self._arrow_aspect
         for conn in self._connectors():
             attrs = conn.link.attributes
-            width = attrs.stroke_width
-            arrow_base, arrow_length = self._arrow_dimensions(width, distance)
-            insert = (arrow_length / 2.0, arrow_base / 2.0)
+            arrow_width, arrow_length = self._arrow_dimensions(attrs)
+            insert = (arrow_length / 2.0, arrow_width / 2.0)
             points = [
                 (0, 0),
-                (arrow_length, arrow_base / 2.0),
-                (0, arrow_base),
+                (arrow_length, arrow_width / 2.0),
+                (0, arrow_width),
             ]
             shape_extra = {
                 'stroke-width': 0,
             }
             stroke = self._str_or_empty(attrs.stroke)
             self._maybe_add(shape_extra, 'fill', stroke)
-            marker_key = self._arrow_marker_key(width, stroke)
+            marker_key = self._arrow_marker_key(arrow_width, arrow_length, stroke)
             if marker_key not in markers:
                 marker = dwg.marker(
                     insert=insert,
-                    size=(arrow_length, arrow_base),
+                    size=(arrow_length, arrow_width),
                     **marker_extra
                 )
                 line = dwg.polyline(points, **shape_extra)
@@ -830,29 +824,23 @@ class Drawing:
                 markers[marker_key] = marker
         return markers
 
-    def _arrow_dimensions(
-            self,
-            stroke_width: float,
-            link_distance: float,
-    ) -> Tuple[float, float]:
+    @staticmethod
+    def _arrow_dimensions(attrs: LinkAttributes) -> Tuple[int, int]:
         """Return the dimensions of an arrow for a link.
 
-        The calculations are based on the width of the link and the
-        distance between the links.  The result is (base, length).
+        The calculations are based on the width of the link.  The
+        result is (width, length).  The dimensions are rounded to the
+        nearest integers to be better suited as marker keys.
 
         """
-        aspect = self._arrow_aspect
-        base = stroke_width + link_distance
-        length = aspect * base
-        return base, length
+        width = attrs.stroke_width * attrs.arrow_base
+        length = width * attrs.arrow_aspect
+        return round(width), round(length)
 
     @staticmethod
-    def _arrow_marker_key(width: float, stroke: str) -> MarkerKey:
+    def _arrow_marker_key(width: int, length: int, stroke: str) -> MarkerKey:
         """Return a key for the marker with the given attributes."""
-        # Round the width to the nearest integer; it is not a good
-        # thing to use floats as keys.  The discrepancy in the drawing
-        # should be minimal.
-        return round(width), stroke
+        return width, length, stroke
 
     def _draw_links(
             self,
@@ -881,8 +869,6 @@ class Drawing:
                 # Draw the line.
                 self._draw_link_line(dwg, line, attrs)
                 # Draw the markers.
-                stroke = self._str_or_empty(attrs.stroke)
-                width = attrs.stroke_width
                 cases = [
                     (attrs.arrow_back, 0),
                     (attrs.arrow_forward, -1)
@@ -893,8 +879,7 @@ class Drawing:
                             dwg = dwg,
                             link_point = Point(line.coords[index]),
                             box_polygon = polygons[index],
-                            link_width = width,
-                            link_stroke = stroke,
+                            attrs = attrs,
                             markers = markers,
                         )
 
@@ -923,7 +908,7 @@ class Drawing:
             y = self._get_position(hor, p.i, v)
             points.append((x, y))
         return LineString(points)
-        
+
     def _box_polygons(self, conn: Connector) -> Tuple[Polygon, Polygon]:
         """Return the polygons of the boxes at the two ends."""
         polygons = []
@@ -935,7 +920,7 @@ class Drawing:
                 polygons.append(box.polygon)
         assert len(polygons) == 2
         return polygons[0], polygons[1]
-        
+
     def _clip_link_line(
             self,
             line: LineString,
@@ -949,11 +934,9 @@ class Drawing:
         last node.
 
         """
-        link_distance = self._diagram_attributes.link_distance
-        stroke_width = attrs.stroke_width
+        _, arrow_length = self._arrow_dimensions(attrs)
         back = attrs.arrow_back
         forward = attrs.arrow_forward
-        _, arrow_length = self._arrow_dimensions(stroke_width, link_distance)
         polys = list(polygons)
         if back:
             polys[0] = polys[0].buffer(arrow_length)
@@ -1008,8 +991,7 @@ class Drawing:
             dwg: SvgDrawing,
             link_point: Point,
             box_polygon: Polygon,
-            link_width: float,
-            link_stroke: str,
+            attrs: LinkAttributes,
             markers: Mapping[MarkerKey, SvgMarker],
     ) -> None:
         """Draw the marker at the end of a link."""
@@ -1022,14 +1004,16 @@ class Drawing:
             (link_point.x, link_point.y),
             (middle.x, middle.y),
         ]
+        stroke = self._str_or_empty(attrs.stroke)
         extra = {
-            'stroke': link_stroke,
+            'stroke': stroke,
             'stroke-width': 1
         }
         svg_line = dwg.polyline(svg_points, **extra)
         dwg.add(svg_line)
         # Set the marker at the end of the auxiliary line.
-        marker_key = self._arrow_marker_key(link_width, link_stroke)
+        arrow_width, arrow_length = self._arrow_dimensions(attrs)
+        marker_key = self._arrow_marker_key(arrow_width, arrow_length, stroke)
         marker = markers[marker_key]
         svg_line.set_markers([None, None, marker])
 
@@ -1071,7 +1055,7 @@ class Drawing:
             return []
         else:
             return s.split("\n")
-    
+
     @staticmethod
     def _str_or_empty(s: Optional[str]) -> str:
         """Returns the string itself or the empty one if None."""
@@ -1079,13 +1063,13 @@ class Drawing:
             return s
         else:
             return ""
-        
+
     @staticmethod
     def _maybe_add(d: Dict[str, Any], name: str, value: Any) -> None:
         """Add the value to the dictionary if it is truthy."""
         if value:
             d[name] = value
-        
+
     def _pretty_print(self) -> None:
         """Print the drawing internals for debugging purposes."""
         for track in self._tracks.values():
