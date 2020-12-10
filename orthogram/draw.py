@@ -973,10 +973,10 @@ class Drawing:
         stroke = attrs.buffer_fill
         if not stroke or stroke == "none":
             return
-        width = 2.0 * attrs.buffer_width
-        if not width:
+        b_width = attrs.buffer_width
+        if not b_width:
             return
-        width += attrs.stroke_width
+        width = attrs.stroke_width + 2 * b_width
         extra = {
             'stroke': stroke,
             'stroke-width': width,
