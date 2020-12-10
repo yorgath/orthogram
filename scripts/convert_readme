@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Convert README to HTML using Docuitls.
+rst2html README.rst README.html

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Translate the examples.
+python -m orthogram examples/hello.yaml
+python -m orthogram examples/powerplant.yaml

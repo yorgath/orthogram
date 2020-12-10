@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Check source using Mypy.  It should give no errors.
+mypy --strict --implicit-reexport orthogram
