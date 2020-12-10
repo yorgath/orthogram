@@ -170,7 +170,7 @@ style:
      multi-with-newlines-again:
        label: |-
          You can also use
-	 YAML literal style
+         YAML literal style
 
 Note that if the label of a node is not defined, the name of the node
 is used as a label instead.
@@ -326,21 +326,23 @@ and its components.  Where an attribute is applicable, it shows the
 default value:
 
 ====================  ===============  =======  =======
-Attribute   	      Diagram  	       Node     Link
+Attribute             Diagram          Node     Link
 ====================  ===============  =======  =======
-``arrow_back``                 	                False
-``arrow_forward``              	                True
+``arrow_aspect``                                1.5
+``arrow_back``                                  False
+``arrow_base``                                  3.0
+``arrow_forward``                               True
 ``buffer_fill``                                 "none"
 ``buffer_width``                                0.0
 ``collapse_links``    False
 ``column_margin``     24.0
-``drawing_priority``           	                0
+``drawing_priority``                            0
 ``end_bias``                                    None
-``fill``              "none"   	       "none"
-``font_family``       None     	       None     None
-``font_size``         14.0     	       10.0
-``font_style``        None     	       None     None
-``font_weight``       None     	       None     None
+``fill``              "none"           "none"
+``font_family``       None             None     None
+``font_size``         14.0             10.0
+``font_style``        None             None     None
+``font_weight``       None             None     None
 ``group``                                       None
 ``label_distance``    6.0
 ``label_position``    "top"
@@ -352,11 +354,11 @@ Attribute   	      Diagram  	       Node     Link
 ``row_margin``        24.0
 ``start_bias``                                  None
 ``stretch``           True
-``stroke_dasharray``  None     	       None     None
-``stroke_width``      0.0      	       2.0      2.0
-``stroke``  	      "none"   	       "black"  "black"
-``text_fill``         "black"  	       "black"
-``text_line_height``  1.25     	       1.25
+``stroke_dasharray``  None             None     None
+``stroke_width``      0.0              2.0      2.0
+``stroke``            "none"           "black"  "black"
+``text_fill``         "black"          "black"
+``text_line_height``  1.25             1.25
 ====================  ===============  =======  =======
 
 The options for the enumerated attributes are:
