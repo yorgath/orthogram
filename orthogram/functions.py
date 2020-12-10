@@ -2,7 +2,7 @@
 
 import argparse, os
 
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 
@@ -13,7 +13,7 @@ from .layout import Layout
 
 ######################################################################
 
-def convert_ddf_from_command_line() -> int:
+def translate_from_command_line() -> int:
     """Create a diagram from command line arguments."""
     desc = "Create diagrams with fixed nodes and orthogonal connectors."
     parser = argparse.ArgumentParser(description=desc)
@@ -29,17 +29,15 @@ def convert_ddf_from_command_line() -> int:
         dest='out_file',
     )
     args = parser.parse_args()
-    in_file = args.in_file
-    out_file = args.out_file
+    translate(args.in_file, args.out_file)
+    return 0
+
+def translate(in_file: str, out_file: Optional[str] = None) -> None:
+    """Create a SVG file from a diagram definition file."""
+    diagram = load_ddf(in_file)
     if not out_file:
         pre, ext = os.path.splitext(in_file)
         out_file = pre + ".svg"
-    convert_ddf(in_file, out_file)
-    return 0
-
-def convert_ddf(in_file: str, out_file: str) -> None:
-    """Create a SVG file from a diagram definition file."""
-    diagram = load_ddf(in_file)
     write_svg(diagram, out_file)
 
 def load_ddf(file: str) -> Diagram:
