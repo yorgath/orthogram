@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="full" height="100%" version="1.1" viewBox="0 0 864.0 636.875" width="100%">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="full" height="100%" version="1.1" viewBox="0 0 837.0 693.875" width="100%">
   <defs>
     <marker id="id1" markerHeight="9" markerUnits="userSpaceOnUse" markerWidth="14" orient="auto" refX="7.0" refY="4.5">
       <polyline fill="turquoise" points="0,0 14,4.5 0,9" stroke-width="0"/>
@@ -23,147 +23,146 @@
       <polyline fill="black" points="0,0 14,4.5 0,9" stroke-width="0"/>
     </marker>
   </defs>
-  <rect fill="lightyellow" height="636.875" width="864.0" x="0" y="0"/>
-  <rect fill="none" height="636.875" stroke="black" stroke-width="0.0" width="864.0" x="0.0" y="0.0"/>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="270.0" y="51.875"/>
-  <text transform="translate(318.0,75.875) translate(0,-0.0)">
+  <rect fill="lightyellow" height="693.875" width="837.0" x="0" y="0"/>
+  <rect fill="none" height="693.875" stroke="black" stroke-width="0.0" width="837.0" x="0.0" y="0.0"/>
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="282.0" y="63.875"/>
+  <text transform="translate(330.0,87.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Fuel</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="111.0" y="159.875"/>
-  <text transform="translate(159.0,183.875) translate(0,-0.0)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="123.0" y="171.875"/>
+  <text transform="translate(171.0,195.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
   </text>
-  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="270.0" y="159.875"/>
-  <text transform="translate(318.0,183.875) translate(0,-7.8125)">
+  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="282.0" y="171.875"/>
+  <text transform="translate(330.0,195.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
   </text>
-  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="429.0" y="159.875"/>
-  <text transform="translate(477.0,183.875) translate(0,-0.0)">
+  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="441.0" y="171.875"/>
+  <text transform="translate(489.0,195.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="585.0" y="159.875"/>
-  <text transform="translate(633.0,183.875) translate(0,-7.8125)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="597.0" y="171.875"/>
+  <text transform="translate(645.0,195.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <rect fill="white" height="9.0" stroke="none" stroke-width="2.0" width="24.0" x="24.0" y="270.875"/>
-  <text transform="translate(36.0,275.375) translate(0,-0.0)">
+  <rect fill="white" height="486.0" stroke="black" stroke-width="2.0" width="48.0" x="753.0" y="171.875"/>
+  <text transform="translate(777.0,414.875) translate(-0.0,0) rotate(-90)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">To Electrical Transformers</tspan>
+  </text>
+  <rect fill="white" height="9.0" stroke="none" stroke-width="2.0" width="24.0" x="36.0" y="299.375"/>
+  <text transform="translate(48.0,303.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Air</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="111.0" y="345.875"/>
-  <text transform="translate(159.0,369.875) translate(0,-0.0)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="123.0" y="390.875"/>
+  <text transform="translate(171.0,414.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
   </text>
-  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="270.0" y="345.875"/>
-  <text transform="translate(318.0,369.875) translate(0,-7.8125)">
+  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="282.0" y="390.875"/>
+  <text transform="translate(330.0,414.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
   </text>
-  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="429.0" y="345.875"/>
-  <text transform="translate(477.0,369.875) translate(0,-0.0)">
+  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="441.0" y="390.875"/>
+  <text transform="translate(489.0,414.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="585.0" y="345.875"/>
-  <text transform="translate(633.0,369.875) translate(0,-7.8125)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="597.0" y="390.875"/>
+  <text transform="translate(645.0,414.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="744.0" y="345.875"/>
-  <text transform="translate(792.0,369.875) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">To</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">Transformers</tspan>
-  </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="111.0" y="456.875"/>
-  <text transform="translate(159.0,480.875) translate(0,-0.0)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="123.0" y="501.875"/>
+  <text transform="translate(171.0,525.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Exhaust</tspan>
   </text>
-  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="429.0" y="456.875"/>
-  <text transform="translate(477.0,480.875) translate(0,-7.8125)">
+  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="441.0" y="501.875"/>
+  <text transform="translate(489.0,525.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="111.0" y="564.875"/>
-  <text transform="translate(159.0,588.875) translate(0,-7.8125)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="123.0" y="609.875"/>
+  <text transform="translate(171.0,633.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Cooling</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Tower</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="270.0" y="564.875"/>
-  <text transform="translate(318.0,588.875) translate(0,-0.0)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="282.0" y="609.875"/>
+  <text transform="translate(330.0,633.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Condenser</tspan>
   </text>
-  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="429.0" y="564.875"/>
-  <text transform="translate(477.0,588.875) translate(0,-7.8125)">
+  <rect fill="gold" height="48.0" stroke="orangered" stroke-width="2.0" width="96.0" x="441.0" y="609.875"/>
+  <text transform="translate(489.0,633.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Turbine</tspan>
   </text>
-  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="585.0" y="564.875"/>
-  <text transform="translate(633.0,588.875) translate(0,-7.8125)">
+  <rect fill="white" height="48.0" stroke="black" stroke-width="2.0" width="96.0" x="597.0" y="609.875"/>
+  <text transform="translate(645.0,633.875) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <polyline fill="none" points="318.0,100.875 318.0,144.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="318.0,100.875 318.0,144.875" stroke="olive" stroke-width="3.0"/>
-  <polyline marker-end="url(#id2)" points="318.0,144.875 318.0,151.875" stroke="olive" stroke-width="1"/>
-  <polyline fill="none" points="269.0,75.875 238.5,75.875 238.5,275.375 318.0,275.375 318.0,330.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="269.0,75.875 238.5,75.875 238.5,275.375 318.0,275.375 318.0,330.875" stroke="olive" stroke-width="3.0"/>
-  <polyline marker-end="url(#id2)" points="318.0,330.875 318.0,337.875" stroke="olive" stroke-width="1"/>
-  <polyline fill="none" points="477.0,208.875 477.0,314.375 397.5,314.375 397.5,425.375 477.0,425.375 477.0,441.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="477.0,394.875 477.0,441.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="477.0,208.875 477.0,314.375 397.5,314.375 397.5,425.375 477.0,425.375 477.0,441.875" stroke="orangered" stroke-width="3.0"/>
-  <polyline marker-end="url(#id3)" points="477.0,441.875 477.0,448.875" stroke="orangered" stroke-width="1"/>
-  <polyline fill="none" points="477.0,394.875 477.0,441.875" stroke="orangered" stroke-width="3.0"/>
-  <polyline marker-end="url(#id3)" points="477.0,441.875 477.0,448.875" stroke="orangered" stroke-width="1"/>
-  <polyline fill="none" points="49.0,275.375 79.5,275.375 79.5,183.875 96.0,183.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="49.0,275.375 79.5,275.375 79.5,369.875 96.0,369.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="49.0,275.375 79.5,275.375 79.5,183.875 96.0,183.875" stroke="turquoise" stroke-width="3.0"/>
-  <polyline marker-end="url(#id1)" points="96.0,183.875 103.0,183.875" stroke="turquoise" stroke-width="1"/>
-  <polyline fill="none" points="49.0,275.375 79.5,275.375 79.5,369.875 96.0,369.875" stroke="turquoise" stroke-width="3.0"/>
-  <polyline marker-end="url(#id1)" points="96.0,369.875 103.0,369.875" stroke="turquoise" stroke-width="1"/>
-  <polyline fill="none" points="208.0,183.875 255.0,183.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="208.0,183.875 255.0,183.875" stroke="turquoise" stroke-width="3.0"/>
-  <polyline marker-end="url(#id1)" points="255.0,183.875 262.0,183.875" stroke="turquoise" stroke-width="1"/>
-  <polyline fill="none" points="208.0,369.875 255.0,369.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="208.0,369.875 255.0,369.875" stroke="turquoise" stroke-width="3.0"/>
-  <polyline marker-end="url(#id1)" points="255.0,369.875 262.0,369.875" stroke="turquoise" stroke-width="1"/>
-  <polyline fill="none" points="367.0,183.875 414.0,183.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="367.0,183.875 414.0,183.875" stroke="orangered" stroke-width="3.0"/>
-  <polyline marker-end="url(#id3)" points="414.0,183.875 421.0,183.875" stroke="orangered" stroke-width="1"/>
-  <polyline fill="none" points="367.0,369.875 414.0,369.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="367.0,369.875 414.0,369.875" stroke="orangered" stroke-width="3.0"/>
-  <polyline marker-end="url(#id3)" points="414.0,369.875 421.0,369.875" stroke="orangered" stroke-width="1"/>
-  <polyline fill="none" points="526.0,183.875 584.0,183.875" stroke="lightyellow" stroke-width="12.0"/>
-  <polyline fill="none" points="526.0,183.875 584.0,183.875" stroke="dimgrey" stroke-dasharray="8 8" stroke-width="8.0"/>
-  <polyline fill="none" points="526.0,369.875 584.0,369.875" stroke="lightyellow" stroke-width="12.0"/>
-  <polyline fill="none" points="526.0,369.875 584.0,369.875" stroke="dimgrey" stroke-dasharray="8 8" stroke-width="8.0"/>
-  <polyline fill="none" points="477.0,505.875 477.0,549.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="477.0,505.875 477.0,549.875" stroke="grey" stroke-width="3.0"/>
-  <polyline marker-end="url(#id5)" points="477.0,549.875 477.0,556.875" stroke="grey" stroke-width="1"/>
-  <polyline fill="none" points="526.0,588.875 584.0,588.875" stroke="lightyellow" stroke-width="12.0"/>
-  <polyline fill="none" points="526.0,588.875 584.0,588.875" stroke="dimgrey" stroke-dasharray="8 8" stroke-width="8.0"/>
-  <polyline fill="none" points="428.0,588.875 381.0,588.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="428.0,588.875 381.0,588.875" stroke="grey" stroke-width="3.0"/>
-  <polyline marker-end="url(#id5)" points="381.0,588.875 374.0,588.875" stroke="grey" stroke-width="1"/>
-  <polyline fill="none" points="318.0,563.875 318.0,485.375 414.0,485.375" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="318.0,563.875 318.0,485.375 414.0,485.375" stroke="royalblue" stroke-width="3.0"/>
-  <polyline marker-end="url(#id6)" points="414.0,485.375 421.0,485.375" stroke="royalblue" stroke-width="1"/>
-  <polyline fill="none" points="255.0,588.875 222.0,588.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="255.0,588.875 222.0,588.875" stroke="royalblue" stroke-width="3.0"/>
-  <polyline marker-end="url(#id6)" points="255.0,588.875 262.0,588.875" stroke="royalblue" stroke-width="1"/>
-  <polyline marker-end="url(#id6)" points="222.0,588.875 215.0,588.875" stroke="royalblue" stroke-width="1"/>
-  <polyline fill="none" points="682.0,183.875 712.5,183.875 712.5,358.375 729.0,358.375" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="682.0,183.875 712.5,183.875 712.5,358.375 729.0,358.375" stroke="black" stroke-width="3.0"/>
-  <polyline marker-end="url(#id7)" points="729.0,358.375 736.0,358.375" stroke="black" stroke-width="1"/>
-  <polyline fill="none" points="682.0,369.875 729.0,369.875" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="682.0,369.875 729.0,369.875" stroke="black" stroke-width="3.0"/>
-  <polyline marker-end="url(#id7)" points="729.0,369.875 736.0,369.875" stroke="black" stroke-width="1"/>
-  <polyline fill="none" points="682.0,588.875 712.5,588.875 712.5,381.375 729.0,381.375" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="682.0,588.875 712.5,588.875 712.5,381.375 729.0,381.375" stroke="black" stroke-width="3.0"/>
-  <polyline marker-end="url(#id7)" points="729.0,381.375 736.0,381.375" stroke="black" stroke-width="1"/>
-  <polyline fill="none" points="428.0,476.375 222.0,476.375" stroke="lightyellow" stroke-width="7.0"/>
-  <polyline fill="none" points="428.0,476.375 222.0,476.375" stroke="orangered" stroke-width="3.0"/>
-  <polyline marker-end="url(#id3)" points="222.0,476.375 215.0,476.375" stroke="orangered" stroke-width="1"/>
-  <text transform="translate(432.0,16.9375) translate(0,-0.0)">
+  <polyline fill="none" points="330.0,112.875 330.0,156.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="330.0,112.875 330.0,156.875" stroke="olive" stroke-width="3.0"/>
+  <polyline marker-end="url(#id2)" points="330.0,156.875 330.0,163.875" stroke="olive" stroke-width="1"/>
+  <polyline fill="none" points="281.0,87.875 250.5,87.875 250.5,359.375 330.0,359.375 330.0,375.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="281.0,87.875 250.5,87.875 250.5,359.375 330.0,359.375 330.0,375.875" stroke="olive" stroke-width="3.0"/>
+  <polyline marker-end="url(#id2)" points="330.0,375.875 330.0,382.875" stroke="olive" stroke-width="1"/>
+  <polyline fill="none" points="489.0,220.875 489.0,359.375 409.5,359.375 409.5,470.375 489.0,470.375 489.0,486.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="489.0,439.875 489.0,486.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="489.0,220.875 489.0,359.375 409.5,359.375 409.5,470.375 489.0,470.375 489.0,486.875" stroke="orangered" stroke-width="3.0"/>
+  <polyline marker-end="url(#id3)" points="489.0,486.875 489.0,493.875" stroke="orangered" stroke-width="1"/>
+  <polyline fill="none" points="489.0,439.875 489.0,486.875" stroke="orangered" stroke-width="3.0"/>
+  <polyline marker-end="url(#id3)" points="489.0,486.875 489.0,493.875" stroke="orangered" stroke-width="1"/>
+  <polyline fill="none" points="61.0,303.875 91.5,303.875 91.5,195.875 108.0,195.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="61.0,303.875 91.5,303.875 91.5,414.875 108.0,414.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="61.0,303.875 91.5,303.875 91.5,195.875 108.0,195.875" stroke="turquoise" stroke-width="3.0"/>
+  <polyline marker-end="url(#id1)" points="108.0,195.875 115.0,195.875" stroke="turquoise" stroke-width="1"/>
+  <polyline fill="none" points="61.0,303.875 91.5,303.875 91.5,414.875 108.0,414.875" stroke="turquoise" stroke-width="3.0"/>
+  <polyline marker-end="url(#id1)" points="108.0,414.875 115.0,414.875" stroke="turquoise" stroke-width="1"/>
+  <polyline fill="none" points="220.0,195.875 267.0,195.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="220.0,195.875 267.0,195.875" stroke="turquoise" stroke-width="3.0"/>
+  <polyline marker-end="url(#id1)" points="267.0,195.875 274.0,195.875" stroke="turquoise" stroke-width="1"/>
+  <polyline fill="none" points="220.0,414.875 267.0,414.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="220.0,414.875 267.0,414.875" stroke="turquoise" stroke-width="3.0"/>
+  <polyline marker-end="url(#id1)" points="267.0,414.875 274.0,414.875" stroke="turquoise" stroke-width="1"/>
+  <polyline fill="none" points="379.0,195.875 426.0,195.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="379.0,195.875 426.0,195.875" stroke="orangered" stroke-width="3.0"/>
+  <polyline marker-end="url(#id3)" points="426.0,195.875 433.0,195.875" stroke="orangered" stroke-width="1"/>
+  <polyline fill="none" points="379.0,414.875 426.0,414.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="379.0,414.875 426.0,414.875" stroke="orangered" stroke-width="3.0"/>
+  <polyline marker-end="url(#id3)" points="426.0,414.875 433.0,414.875" stroke="orangered" stroke-width="1"/>
+  <polyline fill="none" points="538.0,195.875 596.0,195.875" stroke="lightyellow" stroke-width="12.0"/>
+  <polyline fill="none" points="538.0,195.875 596.0,195.875" stroke="dimgrey" stroke-dasharray="8 8" stroke-width="8.0"/>
+  <polyline fill="none" points="538.0,414.875 596.0,414.875" stroke="lightyellow" stroke-width="12.0"/>
+  <polyline fill="none" points="538.0,414.875 596.0,414.875" stroke="dimgrey" stroke-dasharray="8 8" stroke-width="8.0"/>
+  <polyline fill="none" points="489.0,550.875 489.0,594.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="489.0,550.875 489.0,594.875" stroke="grey" stroke-width="3.0"/>
+  <polyline marker-end="url(#id5)" points="489.0,594.875 489.0,601.875" stroke="grey" stroke-width="1"/>
+  <polyline fill="none" points="538.0,633.875 596.0,633.875" stroke="lightyellow" stroke-width="12.0"/>
+  <polyline fill="none" points="538.0,633.875 596.0,633.875" stroke="dimgrey" stroke-dasharray="8 8" stroke-width="8.0"/>
+  <polyline fill="none" points="440.0,633.875 393.0,633.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="440.0,633.875 393.0,633.875" stroke="grey" stroke-width="3.0"/>
+  <polyline marker-end="url(#id5)" points="393.0,633.875 386.0,633.875" stroke="grey" stroke-width="1"/>
+  <polyline fill="none" points="330.0,608.875 330.0,530.375 426.0,530.375" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="330.0,608.875 330.0,530.375 426.0,530.375" stroke="royalblue" stroke-width="3.0"/>
+  <polyline marker-end="url(#id6)" points="426.0,530.375 433.0,530.375" stroke="royalblue" stroke-width="1"/>
+  <polyline fill="none" points="267.0,633.875 234.0,633.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="267.0,633.875 234.0,633.875" stroke="royalblue" stroke-width="3.0"/>
+  <polyline marker-end="url(#id6)" points="267.0,633.875 274.0,633.875" stroke="royalblue" stroke-width="1"/>
+  <polyline marker-end="url(#id6)" points="234.0,633.875 227.0,633.875" stroke="royalblue" stroke-width="1"/>
+  <polyline fill="none" points="694.0,195.875 738.0,195.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="694.0,195.875 738.0,195.875" stroke="black" stroke-width="3.0"/>
+  <polyline marker-end="url(#id7)" points="738.0,195.875 745.0,195.875" stroke="black" stroke-width="1"/>
+  <polyline fill="none" points="694.0,414.875 738.0,414.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="694.0,414.875 738.0,414.875" stroke="black" stroke-width="3.0"/>
+  <polyline marker-end="url(#id7)" points="738.0,414.875 745.0,414.875" stroke="black" stroke-width="1"/>
+  <polyline fill="none" points="694.0,633.875 738.0,633.875" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="694.0,633.875 738.0,633.875" stroke="black" stroke-width="3.0"/>
+  <polyline marker-end="url(#id7)" points="738.0,633.875 745.0,633.875" stroke="black" stroke-width="1"/>
+  <polyline fill="none" points="440.0,521.375 234.0,521.375" stroke="lightyellow" stroke-width="7.0"/>
+  <polyline fill="none" points="440.0,521.375 234.0,521.375" stroke="orangered" stroke-width="3.0"/>
+  <polyline marker-end="url(#id3)" points="234.0,521.375 227.0,521.375" stroke="orangered" stroke-width="1"/>
+  <text transform="translate(418.5,16.9375) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="14.0pt" text-anchor="middle" x="0">Combined Cycle Power Plant</tspan>
   </text>
 </svg>

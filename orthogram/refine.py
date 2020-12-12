@@ -18,7 +18,7 @@ from typing import (
 
 import igraph # type: ignore
 
-from .diagram import Link, Node
+from .diagram import Link, Pin
 
 from .geometry import (
     Direction,
@@ -30,7 +30,7 @@ from .geometry import (
 
 from .route import (
     LayoutAxis,
-    NodesAndPointsIterator,
+    PinsAndPointsIterator,
     Route,
     RouteSegment,
     Router,
@@ -141,13 +141,13 @@ class Joint:
             point: IntPoint,
             horizontal: Optional[Bundle],
             vertical: Optional[Bundle],
-            node: Optional[Node] = None,
+            pin: Optional[Pin] = None,
     ):
         """Initialize the joint at the meeting point of the two bundles."""
         self._point = point
         self._horizontal_bundle = horizontal
         self._vertical_bundle = vertical
-        self._node = node
+        self._pin = pin
 
     def __repr__(self) -> str:
         """Convert to string."""
@@ -182,13 +182,13 @@ class Joint:
             return 0
 
     @property
-    def node(self) -> Optional[Node]:
-        """Diagram node on which the joint lies."""
-        return self._node
+    def pin(self) -> Optional[Pin]:
+        """Terminal pin on which the joint lies."""
+        return self._pin
 
-    @node.setter
-    def node(self, node: Node) -> None:
-        self._node = node
+    @pin.setter
+    def pin(self, pin: Pin) -> None:
+        self._pin = pin
 
 ######################################################################
 
@@ -227,7 +227,7 @@ class ConnectorSegment(OrientedVector):
 ######################################################################
 
 class Connector:
-    """Connector between two diagram nodes."""
+    """Connector between two terminals."""
 
     def __init__(self, route: Route, segments: Sequence[ConnectorSegment]):
         """Create a connector with the given segments for a route."""
@@ -394,14 +394,14 @@ class Network:
     def _float_point(self, bundle: Bundle, joint: Joint) -> FloatPoint:
         """Calculated using the central integer point and the offsets.
 
-        If there is a node associated with the joint, the point is
-        moved a bit to avoid bundles interacting at the nodes.
+        If there is a pin associated with the joint, the point is
+        moved a bit to avoid bundles interacting at the pins.
 
         """
         p = joint.point
         h = joint.horizontal_offset
         v = joint.vertical_offset
-        if joint.node:
+        if joint.pin:
             ori = bundle.orientation
             out = (p == bundle.first_point)
             key = (ori, out)
@@ -597,20 +597,20 @@ class Refiner:
         for key, group_routes in per_group.items():
             name = "N{}".format(len(nets))
             net = Network(name, *key, group_routes)
-            self._set_joint_nodes(net)
+            self._set_joint_pins(net)
             nets.append(net)
 
     def _must_collapse_links(self) -> bool:
         """Collapse links in the same group?"""
         return self._router.diagram.attributes.collapse_links
 
-    def _set_joint_nodes(self, net: Network) -> None:
-        """Associate joints with nodes."""
+    def _set_joint_pins(self, net: Network) -> None:
+        """Associate joints with terminal pins."""
         router = self._router
         for joint in net.joints():
-            joint_node = router.node_at(joint.point)
-            if joint_node:
-                joint.node = joint_node
+            joint_pin = router.pin_at(joint.point)
+            if joint_pin:
+                joint.pin = joint_pin
 
     def _init_segment_bundles(self) -> None:
         """Map each route segment to the bundle to which it belongs."""

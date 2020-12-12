@@ -46,7 +46,7 @@ class Builder:
         Valid keys are:
 
         - diagram
-        - nodes
+        - terminals
         - rows
         - links
         - styles
@@ -64,9 +64,9 @@ class Builder:
         dia_def = defs.get('diagram')
         if dia_def:
             self.configure_diagram(dia_def)
-        node_defs = defs.get('nodes')
-        if node_defs:
-            self.add_nodes(node_defs)
+        terminal_defs = defs.get('terminals')
+        if terminal_defs:
+            self.add_terminals(terminal_defs)
         row_defs = defs.get('rows')
         if row_defs:
             self.add_rows(row_defs)
@@ -144,42 +144,45 @@ class Builder:
         attrs = self._collect_attributes(dia_def)
         self._diagram.attributes.set_attributes(**attrs)
 
-    def add_nodes(self, defs: Mapping[str, Any]) -> None:
-        """Add nodes to the diagram.
+    def add_terminals(self, defs: Mapping[str, Any]) -> None:
+        """Add terminals to the diagram.
 
-        The input is a mapping between node names and node
-        definitions.  See add_node() for the structure of a node
-        definition.
+        The input is a mapping between terminal names and terminal
+        definitions.  See add_terminal() for the structure of a
+        terminal definition.
 
         """
-        for name, node_def in defs.items():
-            self.add_node(name, node_def)
+        for name, terminal_def in defs.items():
+            self.add_terminal(name, terminal_def)
 
-    def add_node(self, name: str, node_def: Optional[_Definition]) -> None:
-        """Add a node to the diagram.
+    def add_terminal(
+            self,
+            name: str, terminal_def: Optional[_Definition]
+    ) -> None:
+        """Add a terminal to the diagram.
 
-        The node definition may contain any attributes plus a 'style'
-        reference to a named style.
+        The terminal definition may contain any attributes plus a
+        'style' reference to a named style.
 
         """
         attrs: Attributes = {}
-        # Merge default node attributes.
-        def_attrs = self._get_style('default_node')
+        # Merge default terminal attributes.
+        def_attrs = self._get_style('default_terminal')
         self._merge_attributes(attrs, def_attrs)
-        # The node definition may be None: an empty definition.
-        if node_def:
+        # The terminal definition may be None: an empty definition.
+        if terminal_def:
             # Merge attributes inherited from style reference.
-            style_name = node_def.get('style')
+            style_name = terminal_def.get('style')
             style_attrs = self._get_style(style_name, True)
             self._merge_attributes(attrs, style_attrs)
             # Merge attributes defined here.
-            own_attrs = self._collect_attributes(node_def)
+            own_attrs = self._collect_attributes(terminal_def)
             self._merge_attributes(attrs, own_attrs)
         # Create the object.
-        self._diagram.add_node(name, **attrs)
+        self._diagram.add_terminal(name, **attrs)
 
     def add_rows(self, row_defs: Sequence[_Definition]) -> None:
-        """Add rows of nodes to the diagram.
+        """Add rows of terminal pins to the diagram.
 
         The input is a sequence of row definitions.  See add_row() for
         the structure of a rwo definition.
@@ -189,18 +192,18 @@ class Builder:
             self.add_row(row_def)
 
     def add_row(self, row_def: _Definition) -> None:
-        """Add a row of nodes to the diagram.
+        """Add a row of terminal pins to the diagram.
 
-        The names of the nodes go under the following key:
+        The names of the terminals go under the following key:
 
-        - nodes: list of node names (optional)
+        - pins: list of terminal names (optional)
 
-        An empty string as a node name inserts an empty space into the
-        row.
+        An empty string as a terminal name inserts an empty space into
+        the row.
 
         """
-        node_names = row_def.get('nodes', list())
-        self._diagram.add_row(node_names)
+        terminal_names = row_def.get('pins', list())
+        self._diagram.add_row(terminal_names)
 
     def add_links(self, defs: Sequence[Mapping[str, Any]]) -> None:
         """Add links to the diagram.
@@ -227,7 +230,7 @@ class Builder:
         end = self._str_or_list(link_def['end'])
         # Calculate the styles.
         attrs: Attributes = {}
-        # Merge default node attributes.
+        # Merge default link attributes.
         def_attrs = self._get_style('default_link')
         self._merge_attributes(attrs, def_attrs)
         # Merge attributes inherited from group.
@@ -267,7 +270,7 @@ class Builder:
         if 'drawing_priority' in any_def:
             attrs['drawing_priority'] = int(any_def['drawing_priority'])
         if 'end_bias' in any_def:
-            end_bias = self._parse_link_bias(any_def['end_bias'])
+            end_bias = self._parse_orientation(any_def['end_bias'])
             if end_bias:
                 attrs['end_bias'] = end_bias
         if 'fill' in any_def:
@@ -301,7 +304,7 @@ class Builder:
         if 'row_margin' in any_def:
             attrs['row_margin'] = float(any_def['row_margin'])
         if 'start_bias' in any_def:
-            start_bias = self._parse_link_bias(any_def['start_bias'])
+            start_bias = self._parse_orientation(any_def['start_bias'])
             if start_bias:
                 attrs['start_bias'] = start_bias
         if 'stretch' in any_def:
@@ -316,6 +319,11 @@ class Builder:
             attrs['text_fill'] = str(any_def['text_fill'])
         if 'text_line_height' in any_def:
             attrs['text_line_height'] = float(any_def['text_line_height'])
+        if 'text_orientation' in any_def:
+            text_orientation = self._parse_orientation(
+                any_def['text_orientation'])
+            if text_orientation:
+                attrs['text_orientation'] = text_orientation
         return attrs
 
     def _merge_attributes(self, dest: Attributes, src: Attributes) -> None:
@@ -382,6 +390,8 @@ class Builder:
             dest['text_fill'] = src['text_fill']
         if 'text_line_height' in src:
             dest['text_line_height'] = src['text_line_height']
+        if 'text_orientation' in src:
+            dest['text_orientation'] = src['text_orientation']
 
     def _get_style(self, name: Optional[str], warn: bool = False) -> Attributes:
         """Retrieve the attributes of the style with the given name.
@@ -419,8 +429,8 @@ class Builder:
             return None
         
     @staticmethod
-    def _parse_link_bias(s: str) -> Optional[Orientation]:
-        """Parse the value of the link bias definition."""
+    def _parse_orientation(s: str) -> Optional[Orientation]:
+        """Parse the value of an orientation attribute."""
         a = s.lower()
         if a == 'horizontal':
             return Orientation.HORIZONTAL

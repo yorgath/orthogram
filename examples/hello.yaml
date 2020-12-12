@@ -1,11 +1,11 @@
-nodes:
+terminals:
   a:
     label: Hello
   b:
     label: world
 rows:
-  - nodes: [a]
-  - nodes: ["", b]
+  - pins: [a]
+  - pins: ["", b]
 links:
   - start: a
     end: b

@@ -1,4 +1,4 @@
-"""Route connectors between diagram nodes."""
+"""Route links between diagram terminals."""
 
 from enum import Enum, auto
 
@@ -8,6 +8,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
 )
 
@@ -22,28 +23,30 @@ from .geometry import (
 )
 
 from .diagram import (
+    Cell,
     Diagram,
     Link,
-    Node,
+    Pin,
+    Terminal,
 )
 
 ######################################################################
 
-# Iterator of diagram nodes and their positions in the layout grid.
-NodesAndPointsIterator = Iterator[Tuple[Node, IntPoint]]
+# Iterator of terminal pins and their positions in the layout grid.
+PinsAndPointsIterator = Iterator[Tuple[Pin, IntPoint]]
 
-# Iterator of grid points and placed diagram nodes.
-_PointsAndNodesIterator = Iterator[Tuple[IntPoint, Optional[Node]]]
+# Iterator of grid points and placed terminal pins.
+_PointsAndPinsIterator = Iterator[Tuple[IntPoint, Optional[Pin]]]
 
 ######################################################################
 
 class AxisLocation(Enum):
-    """Location of a grid axis relative to the nodes of the diagram."""
-    COLUMN_BETWEEN_NODES = auto()
+    """Location of a grid axis relative to the pins in the diagram."""
+    COLUMN_BETWEEN_PINS = auto()
     OUTER_COLUMN = auto()
     OUTER_ROW = auto()
-    OVER_NODES = auto()
-    ROW_BETWEEN_NODES = auto()
+    OVER_PINS = auto()
+    ROW_BETWEEN_PINS = auto()
 
 ######################################################################
 
@@ -62,7 +65,7 @@ class LayoutAxis(Axis):
 
     @property
     def location(self) -> AxisLocation:
-        """Location of the axis relative to the nodes."""
+        """Location of the axis relative to the pins."""
         return self._location
     
 ######################################################################
@@ -73,83 +76,69 @@ class LayoutGrid:
     def __init__(self, diagram: Diagram):
         """Initialize for the given diagram."""
         #
-        self._height: int
-        self._width: int
-        self._row_min: int
-        self._row_max: int
-        self._node_min: int
-        self._node_max: int
-        self._rows: List[List[Optional[Node]]]
-        self._node_points: Dict[Node, IntPoint]
+        self._height = 2 * diagram.n_rows() + 1
+        self._width = 2 * diagram.max_row() + 1
+        self._rows: List[List[Cell]]
+        self._pin_points: Dict[Pin, IntPoint]
+        self._forbidden_points: Set[IntPoint]
         #
-        self._calculate_dimensions(diagram)
-        self._create_rows(diagram)
+        self._make_rows(diagram)
+        self._collect_forbidden_points()
         
     def  __repr__(self) -> str:
         """Convert to string."""
-        values = [
-            ("height", self._height),
-            ("width", self._width),
-            ("row_min", self._row_min),
-            ("row_max", self._row_max),
-            ("node_min", self._node_min),
-            ("node_max", self._node_max),
-        ]
-        strings = []
-        for k, v in values:
-            a = "{}={}".format(k, v)
-            strings.append(a)
-        return "{}({})".format(
+        return "{}(height={}, width={})".format(
             self.__class__.__name__,
-            ",".join(strings),
+            self._height,
+            self._width,
         )
 
-    def _calculate_dimensions(self, diagram: Diagram) -> None:
-        """Calculate and store the dimensions of the grid."""
-        #
-        # If there is only a single row or column, add space around
-        # the nodes, so the router can route around them.
-        #
-        dh = diagram.n_rows()
-        if dh == 1:
-            self._height = 3
-            self._row_min = 1
-            self._row_max = 1
-        else:
-            self._height = 2 * dh - 1
-            self._row_min = 0
-            self._row_max = self._height - 1
-        dw = diagram.max_row()
-        if dw == 1:
-            self._width = 3
-            self._node_min = 1
-            self._node_max = 1
-        else:
-            self._width = 2 * dw - 1
-            self._node_min = 0
-            self._node_max = self._width - 1
-            
-    def _create_rows(self, diagram: Diagram) -> None:
+    def _make_rows(self, diagram: Diagram) -> None:
         """Create the cells of the grid."""
         # Create an empty grid first.
         g_rows = []
         for _ in range(self._height):
-            g_row: List[Optional[Node]] = []
+            g_row: List[Cell] = []
             for _ in range(self._width):
-                g_row.append(None)
+                cell = Cell()
+                g_row.append(cell)
             g_rows.append(g_row)
-        # Now put the nodes into their cells.
-        ntp = {}
-        for i, d_row in enumerate(diagram.rows()):
-            for j, elt in enumerate(d_row):
-                dp = IntPoint(i, j)
+        # Now put the pins into the cells.
+        pps = {}
+        for di, d_row in enumerate(diagram.rows()):
+            for dj, cell in enumerate(d_row):
+                dp = IntPoint(di, dj)
                 gp = self._diagram_to_grid(dp)
-                g_rows[gp.i][gp.j] = elt
-                if elt:
-                    ntp[elt] = gp
+                gi, gj = gp.i, gp.j
+                g_rows[gi][gj] = cell
+                pin = cell.pin
+                if pin:
+                    pps[pin] = gp
         self._rows = g_rows
-        self._node_points = ntp
+        self._pin_points = pps
 
+    def _collect_forbidden_points(self) -> None:
+        """Find the points between pins of the same terminal.
+
+        We do not want the router to go through these points.
+
+        """
+        forbidden: Set[IntPoint] = set()
+        rows = self._rows
+        for i in range(0, self._height - 2):
+            for j in range(0, self._width - 2):
+                t1 = rows[i][j].terminal
+                if t1:
+                    t2 = rows[i][j + 2].terminal
+                    if t1 is t2:
+                        p = IntPoint(i, j + 1)
+                        forbidden.add(p)
+                    t2 = rows[i + 2][j].terminal
+                    if t1 is t2:
+                        p = IntPoint(i + 1, j)
+                        forbidden.add(p)
+        self._forbidden_points = forbidden
+                
     @property
     def height(self) -> int:
         """Number of grid rows."""
@@ -162,30 +151,37 @@ class LayoutGrid:
 
     def _diagram_to_grid(self, p: IntPoint) -> IntPoint:
         """Convert diagram coordinates to grid coordinates."""
-        i = self._row_min + 2 * p.i
-        j = self._node_min + 2 * p.j
+        i = 2 * p.i + 1
+        j = 2 * p.j + 1
         return IntPoint(i, j)
 
-    def node_at(self, p: IntPoint) -> Optional[Node]:
-        """Return the node at the given grid point."""
+    def cell_at(self, p: IntPoint) -> Cell:
+        """Return the cell at the given grid point."""
         return self._rows[p.i][p.j]
     
-    def node_point(self, node: Node) -> IntPoint:
-        """Return the position of the node in the grid."""
-        return self._node_points[node]
+    def pin_point(self, pin: Pin) -> IntPoint:
+        """Return the position of the pin in the grid."""
+        return self._pin_points[pin]
 
-    def nodes_and_points(self) -> NodesAndPointsIterator:
-        """Return an iterator over the nodes and their positions."""
-        yield from self._node_points.items()
+    def pins_and_points(self) -> PinsAndPointsIterator:
+        """Return an iterator over the terminal pins and their positions."""
+        yield from self._pin_points.items()
     
-    def points_and_nodes(self) -> _PointsAndNodesIterator:
-        """Return an iterator over the points and associated nodes."""
+    def points_and_pins(self) -> _PointsAndPinsIterator:
+        """Return an iterator over the points and associated pins."""
         for i, row in enumerate(self._rows):
-            for j, elt in enumerate(row):
+            for j, cell in enumerate(row):
                 p = IntPoint(i, j)
-                yield p, elt
+                yield p, cell.pin
 
-    def edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
+    def permitted_edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
+        """Return an iterator over the edges that the router can use."""
+        forbidden = self._forbidden_points
+        for p1, p2 in self._edges():
+            if p1 not in forbidden and p2 not in forbidden:
+                yield p1, p2
+            
+    def _edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
         """Return an iterator over all the edges of the grid."""
         h = self._height
         w = self._width
@@ -209,25 +205,22 @@ class LayoutGrid:
             orientation: Orientation,
             coord: int
     ) -> AxisLocation:
-        """Return the location of the given axis relative to the nodes."""
-        row_min = self._row_min
-        row_max = self._row_max
-        node_min = self._node_min
-        node_max = self._node_max
+        """Return the location of the given axis relative to the pins."""
+        height, width = self._height, self._width
         if orientation is Orientation.HORIZONTAL:
-            if coord < row_min or coord > row_max:
+            if coord == 0 or coord == height - 1 :
                 return AxisLocation.OUTER_ROW
-            elif (coord - row_min) % 2 == 0:
-                return AxisLocation.OVER_NODES
+            elif coord % 2 == 1:
+                return AxisLocation.OVER_PINS
             else:
-                return AxisLocation.ROW_BETWEEN_NODES
+                return AxisLocation.ROW_BETWEEN_PINS
         else:
-            if coord < node_min or coord > node_max:
+            if coord == 0 or coord == width - 1:
                 return AxisLocation.OUTER_COLUMN
-            elif (coord - node_min) % 2 == 0:
-                return AxisLocation.OVER_NODES
+            elif coord % 2 == 1:
+                return AxisLocation.OVER_PINS
             else:
-                return AxisLocation.COLUMN_BETWEEN_NODES
+                return AxisLocation.COLUMN_BETWEEN_PINS
 
     def axes(self) -> Iterator[LayoutAxis]:
         """Return an iterator over the axes of the grid."""
@@ -285,7 +278,7 @@ class RouteSegment(OrientedVector):
 ######################################################################
 
 class Route:
-    """Path between two diagram nodes."""
+    """Path between two terminals."""
 
     def __init__(self, name: str, link: Link, segments: Sequence[RouteSegment]):
         """Initialize the route of a link with the given segments.
@@ -320,7 +313,7 @@ class Route:
 ######################################################################
 
 class Router:
-    """Calculates the routes between the connected nodes of a diagram."""
+    """Calculates the routes between the linked terminals of a diagram."""
 
     def __init__(self, diagram: Diagram):
         """Initialize the router for the given diagram."""
@@ -342,8 +335,8 @@ class Router:
         """
         self._grid_graph = graph = igraph.Graph(directed=False)
         grid = self._grid
-        for p, elt in grid.points_and_nodes():
-            graph.add_vertex(p.name(), point=p, node=elt)
+        for p, elt in grid.points_and_pins():
+            graph.add_vertex(p.name(), point=p, pin=elt)
         
     def _init_routes(self) -> None:
         """Create the routes for all the links of the diagram."""
@@ -355,20 +348,40 @@ class Router:
         self._routes = routes
 
     def _make_route(self, name: str, link: Link) -> Route:
-        """Create the route between two diagram nodes."""
-        points = self._shortest_path(link)
+        """Create the route between two terminal pins."""
+        points = self._shortest_path_of_link(link)
         prefix = "{}.".format(name)
         segments = self._make_segments_for_route(prefix, points)
         return Route(name, link, segments)
 
-    def _shortest_path(self, link: Link) -> Sequence[IntPoint]:
-        """Calculate the shortest path between the two nodes of the link.
+    def _shortest_path_of_link(self, link: Link) -> Sequence[IntPoint]:
+        """Calculate the shortest path between the two link terminals.
 
         Returns the points through which the path passes.
 
         """
-        n1 = link.start
-        n2 = link.end
+        shortest_path: Optional[List[IntPoint]] = None
+        shortest_length: Optional[float] = None
+        for n1 in link.start.pins():
+            for n2 in link.end.pins():
+                path, length = self._shortest_path_between_pins(link, n1, n2)
+                if shortest_length is None or length < shortest_length:
+                    shortest_path = path
+                    shortest_length = length
+        assert shortest_path
+        return shortest_path
+        
+    def _shortest_path_between_pins(
+            self,
+            link: Link,
+            n1: Pin, n2: Pin
+    ) -> Tuple[List[IntPoint], float]:
+        """Calculate the shortest path between two terminal pins.
+
+        Returns the points through which the path passes and the
+        length of the path.
+
+        """
         attrs = link.attributes
         b1 = attrs.start_bias
         b2 = attrs.end_bias
@@ -376,40 +389,56 @@ class Router:
         ver = Orientation.VERTICAL
         bias_weight = 0.9
         grid = self._grid
-        p1 = grid.node_point(n1)
-        p2 = grid.node_point(n2)
+        p1 = grid.pin_point(n1)
+        p2 = grid.pin_point(n2)
         graph = self._grid_graph
         # Connect the vertices to form a grid, except the ones leading
-        # to other diagram nodes.  We need to clear the edges of the
-        # previous run first.
+        # to other pins.  We need to clear the edges of the previous
+        # run first.
         graph.delete_edges()
-        for pa, pb in grid.edges():
-            na = grid.node_at(pa)
-            nb = grid.node_at(pb)
-            # Do not connect vertices of foreign nodes!
+        for pa, pb in grid.permitted_edges():
+            ca = grid.cell_at(pa)
+            ta, na = ca.terminal, ca.pin
+            na = ca.pin
+            cb = grid.cell_at(pb)
+            tb, nb = cb.terminal, cb.pin
+            # Do not connect vertices of foreign pins!
             if ((na is None or na is n1 or na is n2) and
                 (nb is None or nb is n1 or nb is n2)):
-                    # Give an appropriate weight to the edge
-                    # for aesthetic reasons mainly.
-                    weight = 1.0
-                    if pa.i == pb.i:
-                        if (n1 is na or n1 is nb) and b1 is hor:
-                            weight = bias_weight
-                        elif (n2 is na or n2 is nb) and b2 is hor:
-                            weight = bias_weight
-                    elif pa.j == pb.j:
-                        if (n1 is na or n1 is nb) and b1 is ver:
-                            weight = bias_weight
-                        elif (n2 is na or n2 is nb) and b2 is ver:
-                            weight = bias_weight
-                    graph.add_edge(pa.name(), pb.name(), weight=weight)
-        paths = graph.get_all_shortest_paths(
-            p1.name(), p2.name(), weights='weight')
-        result: List[IntPoint] = []
-        for idx in paths[0]:
-            p = graph.vs[idx]['point']
-            result.append(p)
-        return result
+                # Give an appropriate weight to the edge
+                # for aesthetic reasons mainly.
+                weight = 1.0
+                if pa.i == pb.i:
+                    if (n1 is na or n1 is nb) and b1 is hor:
+                        weight = bias_weight
+                    elif (n2 is na or n2 is nb) and b2 is hor:
+                        weight = bias_weight
+                elif pa.j == pb.j:
+                    if (n1 is na or n1 is nb) and b1 is ver:
+                        weight = bias_weight
+                    elif (n2 is na or n2 is nb) and b2 is ver:
+                        weight = bias_weight
+                graph.add_edge(pa.name(), pb.name(), weight=weight)
+        paths = graph.get_shortest_paths(
+            p1.name(), p2.name(),
+            weights='weight',
+        )
+        assert paths
+        path = paths[0]
+        assert path
+        # The path consists of vertices.  Collect the points.
+        points: List[IntPoint] = []
+        for idx in path:
+            v = graph.vs[idx]
+            points.append(v['point'])
+        # Calculate the length of the path.
+        length = 0.0
+        for i, idx1 in enumerate(path[:-1]):
+            idx2 = path[i + 1]
+            eid = graph.get_eid(idx1, idx2)
+            e = graph.es[eid]
+            length += e['weight']
+        return points, length
 
     def _make_segments_for_route(
             self,
@@ -484,13 +513,13 @@ class Router:
         """Layout grid."""
         return self._grid
 
-    def node_at(self, p: IntPoint) -> Optional[Node]:
-        """Return the node at the given grid point."""
-        return self._grid.node_at(p)
+    def pin_at(self, p: IntPoint) -> Optional[Pin]:
+        """Return the terminal pin at the given grid point."""
+        return self._grid.cell_at(p).pin
     
-    def nodes_and_points(self) -> NodesAndPointsIterator:
-        """Return an iterator over the nodes and their grid positions."""
-        yield from self.grid.nodes_and_points()
+    def pins_and_points(self) -> PinsAndPointsIterator:
+        """Return an iterator over the pins and their grid positions."""
+        yield from self.grid.pins_and_points()
     
     def routes(self) -> Iterator[Route]:
         """Return an iterator over the routes."""

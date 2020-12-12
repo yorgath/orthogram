@@ -21,6 +21,7 @@ from typing import (
 
 from shapely.geometry import ( # type: ignore
     LineString,
+    MultiPoint,
     Point,
     Polygon,
 )
@@ -35,7 +36,8 @@ from .diagram import (
     LabelPosition,
     Link,
     LinkAttributes,
-    Node,
+    Pin,
+    Terminal,
     TextAttributes,
 )
 
@@ -69,23 +71,33 @@ def _pt_to_px(pt: float) -> float:
 
 ######################################################################
 
-class Box:
-    """Box around a node."""
+# Geometry bounds.
+Bounds = Tuple[float, float, float, float]
 
-    def __init__(self, node: Node, point: IntPoint):
-        """Initialize the box for the node at the given point."""
-        self._node = node
+######################################################################
+
+class PinBox:
+    """Box around a terminal pin."""
+
+    def __init__(self, terminal: Terminal, pin: Pin, point: IntPoint):
+        """Initialize the box for the pin at the given point."""
+        self._terminal = terminal
+        self._pin = pin
         self._layout_point = point
         # These will be filled while drawing later on.
         self._central_point: FloatPoint
         self._width: float
         self._height: float
-        self._polygon: Polygon
 
     @property
-    def node(self) -> Node:
-        """Diagram node inside the box."""
-        return self._node
+    def terminal(self) -> Terminal:
+        """Terminal associated with the box."""
+        return self._terminal
+
+    @property
+    def pin(self) -> Pin:
+        """Terminal pin inside the box."""
+        return self._pin
 
     @property
     def layout_point(self) -> IntPoint:
@@ -119,14 +131,81 @@ class Box:
     def central_point(self, point: FloatPoint) -> None:
         self._central_point = point
 
-    @property
-    def polygon(self) -> Polygon:
-        """Polygon drawn for the box."""
-        return self._polygon
+######################################################################
 
-    @polygon.setter
-    def polygon(self, poly: Polygon) -> None:
-        self._polygon = poly
+class TerminalBox:
+    """Box that covers all the boxes of the pins of a terminal."""
+
+    def __init__(self, terminal: Terminal):
+        """Initialize an empty terminal box."""
+        self._terminal = terminal
+        self._pin_boxes: Set[PinBox] = set()
+        self._drawing_bounds: Bounds
+        self._clipping_bounds: Bounds
+
+    @property
+    def terminal(self) -> Terminal:
+        """Terminal associated with the box."""
+        return self._terminal
+
+    def add_pin_box(self, box: PinBox) -> None:
+        """Add the box of a terminal pin."""
+        self._pin_boxes.add(box)
+
+    def calculate_bounds(self) -> None:
+        """Calculate the bounds of the box and store them in it."""
+        self._calculate_drawing_bounds()
+        self._calculate_clipping_bounds()
+        
+    def _calculate_drawing_bounds(self) -> None:
+        """Calculate the bounds used to *draw* the box."""
+        points = []
+        for box in self._pin_boxes:
+            p = box.central_point
+            w = box.width
+            h = box.height
+            p1 = (p.x - w / 2.0, p.y - h / 2.0)
+            points.append(p1)
+            p2 = (p.x + w / 2.0, p.y + h / 2.0)
+            points.append(p2)
+        mp = MultiPoint(points)
+        self._drawing_bounds = mp.bounds
+
+    def _calculate_clipping_bounds(self) -> None:
+        """Calculate the bounds used to clip the links with."""
+        stroke_width = self._terminal.attributes.stroke_width
+        d = stroke_width / 2.0
+        x1, y1, x2, y2 = self._drawing_bounds
+        x1 -= d
+        y1 -= d
+        x2 += d
+        y2 += d
+        self._clipping_bounds = (x1, y1, x2, y2)
+
+    @property
+    def drawing_bounds(self) -> Bounds:
+        """Bounds used when drawing the box."""
+        return self._drawing_bounds
+        
+    @property
+    def central_point(self) -> FloatPoint:
+        """Return the point at the center of the box."""
+        # Either bounds will do.
+        x1, y1, x2, y2 = self._drawing_bounds
+        x = (x1 + x2) / 2.0
+        y = (y1 + y2) / 2.0
+        return FloatPoint(x, y)
+        
+    @property
+    def clipping_bounds(self) -> Bounds:
+        """Bounds used to clip lines at the edges of the box."""
+        return self._clipping_bounds
+
+    def clipping_polygon(self) -> Polygon:
+        """Return a polygon to use for clipping the lines."""
+        x1, y1, x2, y2 = self._clipping_bounds
+        mp = MultiPoint([(x1, y1), (x2, y2)])
+        return mp.envelope
 
 ######################################################################
 
@@ -206,7 +285,7 @@ class Track(OrientedLine):
         """
         self._axis = axis
         self._diagram_attributes = attrs
-        self._boxes: List[Box] = []
+        self._boxes: List[PinBox] = []
         self._lanes: Dict[int, Lane] = {}
         # Initial values for the empty track.
         self._lanes_width = 0.0
@@ -218,13 +297,13 @@ class Track(OrientedLine):
         """Axis on which the track lies."""
         return self._axis
 
-    def add_box(self, box: Box) -> None:
+    def add_box(self, box: PinBox) -> None:
         """Associate the box with the track."""
         boxes = self._boxes
         assert box not in boxes
         boxes.append(box)
 
-    def boxes(self) -> Iterable[Box]:
+    def boxes(self) -> Iterable[PinBox]:
         """Provide access to the boxes."""
         yield from self._boxes
 
@@ -268,9 +347,9 @@ class Track(OrientedLine):
             width += attrs.column_margin
         elif location is AxisLocation.OUTER_ROW:
             width += attrs.row_margin
-        elif location is AxisLocation.COLUMN_BETWEEN_NODES:
+        elif location is AxisLocation.COLUMN_BETWEEN_PINS:
             width += 2 * attrs.column_margin
-        elif location is AxisLocation.ROW_BETWEEN_NODES:
+        elif location is AxisLocation.ROW_BETWEEN_PINS:
             width += 2 * attrs.row_margin
         self._width = width
 
@@ -301,7 +380,7 @@ class Track(OrientedLine):
         width = 0.0
         ori = self._axis.orientation
         for box in self._boxes:
-            attrs = box.node.attributes
+            attrs = box.terminal.attributes
             if ori is Orientation.HORIZONTAL:
                 box_width = attrs.min_height
             else:
@@ -363,7 +442,8 @@ class Drawing:
         """Initialize the drawing of a layout."""
         self._layout = layout
         self._diagram_attributes = layout.diagram.attributes
-        self._boxes: Dict[Node, Box] = {}
+        self._pin_boxes: Dict[Pin, PinBox] = {}
+        self._terminal_boxes: Dict[Terminal, TerminalBox] = {}
         self._tracks: Dict[LayoutAxis, Track] = {}
         self._frame_size: Tuple[float, float] = (0.0, 0.0)
         #
@@ -379,11 +459,20 @@ class Drawing:
 
     def _init_boxes(self) -> None:
         """Create the boxes combining diagram and layout information."""
-        boxes = self._boxes
-        boxes.clear()
-        for node, p in self._layout.nodes_and_points():
-            box = Box(node, p)
-            boxes[node] = box
+        pin_boxes = self._pin_boxes
+        pin_boxes.clear()
+        terminal_boxes = self._terminal_boxes
+        terminal_boxes.clear()
+        diagram = self._layout.diagram
+        for pin, p in self._layout.pins_and_points():
+            terminal = diagram.terminal_of_pin(pin)
+            pin_box = PinBox(terminal, pin, p)
+            pin_boxes[pin] = pin_box
+            terminal_box = terminal_boxes.get(terminal)
+            if not terminal_box:
+                terminal_box = TerminalBox(terminal)
+                terminal_boxes[terminal] = terminal_box
+            terminal_box.add_pin_box(pin_box)
 
     def _init_tracks(self) -> None:
         """Create the tracks of the drawing."""
@@ -395,10 +484,10 @@ class Drawing:
             tracks[axis] = track
 
     def _add_boxes_to_tracks(self) -> None:
-        """Associate the boxes of the nodes with the tracks."""
+        """Associate the boxes of the pins with the tracks."""
         tracks = self._tracks
         grid = self._layout.grid
-        for box in self._boxes.values():
+        for box in self._pin_boxes.values():
             p = box.layout_point
             axis = grid.axis(Orientation.HORIZONTAL, p.i)
             track = tracks[axis]
@@ -516,7 +605,7 @@ class Drawing:
         """
         hor = Orientation.HORIZONTAL
         ver = Orientation.VERTICAL
-        for box in self._boxes.values():
+        for box in self._pin_boxes.values():
             p = box.layout_point
             x = self._get_position(ver, p.j)
             y = self._get_position(hor, p.i)
@@ -530,14 +619,14 @@ class Drawing:
 
         """
         Dir = Direction
-        boxes = self._boxes
+        boxes = self._pin_boxes
         # Initialize with default dimensions.
-        for box in self._boxes.values():
-            attrs = box.node.attributes
+        for box in self._pin_boxes.values():
+            attrs = box.terminal.attributes
             box.width = attrs.min_width
             box.height = attrs.min_height
         # Find the segments connected to each box side.
-        bds: Dict[Box, Dict[Direction, Set[ConnectorSegment]]] = {}
+        bds: Dict[PinBox, Dict[Direction, Set[ConnectorSegment]]] = {}
         for conn in self._connectors():
             for seg in conn.segments():
                 joints = seg.joints()
@@ -556,9 +645,9 @@ class Drawing:
                     sides.append(Dir.UP)
                     sides.append(Dir.DOWN)
                 for i, side in enumerate(sides):
-                    node = joints[i].node
-                    if node:
-                        box = boxes[node]
+                    pin = joints[i].pin
+                    if pin:
+                        box = boxes[pin]
                         ds = bds.get(box)
                         if not ds:
                             ds = bds[box] = {}
@@ -571,7 +660,7 @@ class Drawing:
         float_max = sys.float_info.max
         distance = self._diagram_attributes.link_distance
         tracks = self._tracks
-        box_lengths: Dict[Box, Dict[Direction, Tuple[float, float]]] = {}
+        box_lengths: Dict[PinBox, Dict[Direction, Tuple[float, float]]] = {}
         for box, ds in bds.items():
             side_bounds = box_lengths.get(box)
             if not side_bounds:
@@ -663,7 +752,7 @@ class Drawing:
             extra['height'] = str(height)
         dwg = SvgDrawing(filename, **extra)
         self._draw_diagram_frame(dwg)
-        self._draw_nodes(dwg)
+        self._draw_terminals(dwg)
         markers = self._add_markers(dwg)
         self._draw_links(dwg, markers)
         self._draw_diagram_label(dwg)
@@ -694,27 +783,23 @@ class Drawing:
         rect = dwg.rect(insert=insert, size=size, **extra)
         dwg.add(rect)
 
-    def _draw_nodes(self, dwg: SvgDrawing) -> None:
-        """Draw the nodes.
+    def _draw_terminals(self, dwg: SvgDrawing) -> None:
+        """Draw the terminals.
 
-        This method updates the boxes around the nodes.  It sets their
-        central points and stores the drawn polygons in them.
-
-        """
-        for box in self._boxes.values():
-            self._draw_box(dwg, box)
-            self._draw_node_label(dwg, box)
-
-    def _draw_box(self, dwg: SvgDrawing, box: Box) -> None:
-        """Draw the box around the node.
-
-        It stores the polygon in the box.
+        This method updates the bounds of the boxes.
 
         """
-        c = box.central_point
-        w = box.width
-        h = box.height
-        attrs = box.node.attributes
+        for box in self._terminal_boxes.values():
+            box.calculate_bounds()
+            self._draw_terminal_box(dwg, box)
+            self._draw_terminal_label(dwg, box)
+
+    def _draw_terminal_box(self, dwg: SvgDrawing, box: TerminalBox) -> None:
+        """Draw the box of the terminal."""
+        x1, y1, x2, y2 = box.drawing_bounds
+        w = x2 - x1
+        h = y2 - y1
+        attrs = box.terminal.attributes
         stroke_width = attrs.stroke_width
         extra = {
             'stroke-width': stroke_width,
@@ -722,27 +807,15 @@ class Drawing:
         self._maybe_add(extra, 'stroke', attrs.stroke)
         self._maybe_add(extra, 'stroke-dasharray', attrs.stroke_dasharray)
         self._maybe_add(extra, 'fill', attrs.fill)
-        x1 = c.x - w / 2.0
-        y1 = c.y - h / 2.0
         rect = dwg.rect(insert=(x1, y1), size=(w, h), **extra)
         dwg.add(rect)
-        # Try to make the clipping polygon a perfect fit, taking into
-        # account the stroke width.
-        d = stroke_width / 2.0
-        points = [
-            (x1 - d, y1 - d),
-            (x1 + w + d, y1 - d),
-            (x1 + w + d, y1 + h + d),
-            (x1 - d, y1 + h + d)
-        ]
-        box.polygon = Polygon(points)
 
-    def _draw_node_label(self, dwg: SvgDrawing, box: Box) -> None:
-        """Draw the label of the node inside the box."""
+    def _draw_terminal_label(self, dwg: SvgDrawing, box: TerminalBox) -> None:
+        """Draw the label of the terminal inside the box."""
         p = box.central_point
-        node = box.node
-        label = node.label()
-        attrs = node.attributes
+        terminal = box.terminal
+        label = terminal.label()
+        attrs = terminal.attributes
         self._draw_label(dwg, label, attrs, p.x, p.y)
 
     def _draw_label(
@@ -756,7 +829,7 @@ class Drawing:
         lines = self._list_of_strings(label)
         if not lines:
             return
-        # Place first line of text at the center of the node.
+        # Place first line of text at the center of the terminal.
         text = dwg.text("")
         text.translate(x, y)
         # Move text element up so the final element is centered
@@ -764,8 +837,13 @@ class Drawing:
         font_size = attrs.font_size
         line_height = attrs.text_line_height
         n_lines = len(lines)
-        dy = -_pt_to_px(font_size) * 0.5 * line_height * (n_lines - 1)
-        text.translate(0, dy)
+        d = -_pt_to_px(font_size) * 0.5 * line_height * (n_lines - 1)
+        # Adjust for orientation.
+        if attrs.text_orientation is Orientation.HORIZONTAL:
+            text.translate(0, d)
+        if attrs.text_orientation is Orientation.VERTICAL:
+            text.translate(d, 0)
+            text.rotate(-90)
         # Add lines as `tspan` elements inside the text.
         for i, line in enumerate(lines):
             kwargs = {
@@ -811,7 +889,8 @@ class Drawing:
             }
             stroke = self._str_or_empty(attrs.stroke)
             self._maybe_add(shape_extra, 'fill', stroke)
-            marker_key = self._arrow_marker_key(arrow_width, arrow_length, stroke)
+            marker_key = self._arrow_marker_key(
+                arrow_width, arrow_length, stroke)
             if marker_key not in markers:
                 marker = dwg.marker(
                     insert=insert,
@@ -912,12 +991,15 @@ class Drawing:
     def _box_polygons(self, conn: Connector) -> Tuple[Polygon, Polygon]:
         """Return the polygons of the boxes at the two ends."""
         polygons = []
-        boxes = self._boxes
+        boxes = self._terminal_boxes
+        diagram = self._layout.diagram
         for joint in conn.joints():
-            node = joint.node
-            if node:
-                box = boxes[node]
-                polygons.append(box.polygon)
+            pin = joint.pin
+            if pin:
+                terminal = diagram.terminal_of_pin(pin)
+                box = boxes[terminal]
+                poly = box.clipping_polygon()
+                polygons.append(poly)
         assert len(polygons) == 2
         return polygons[0], polygons[1]
 
@@ -930,8 +1012,8 @@ class Drawing:
         """Clip the line of the link at the boundaries of the boxes.
 
         The polygons parameter consists of two polygons: one for the
-        box at the first node of the link and one for the box at the
-        last node.
+        box of the first terminal of the link and one for the box of
+        the last terminal.
 
         """
         _, arrow_length = self._arrow_dimensions(attrs)
@@ -1075,7 +1157,7 @@ class Drawing:
         for track in self._tracks.values():
             print("{}:".format(track))
             for box in track.boxes():
-                print("\t{}".format(box.node))
+                print("\t{}".format(box.pin))
             for lane in track.lanes():
                 print("\t{}:".format(lane))
                 for conn in lane.connectors():

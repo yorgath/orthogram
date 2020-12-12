@@ -1,4 +1,3 @@
-=========
 Orthogram
 =========
 
@@ -14,12 +13,12 @@ like this one:
 
 Orthogram does not aim to be a fully-featured graph layout solution.
 Actually, it offers just a single layout: grid.  More than that, you
-have to arrange the *nodes* (i.e. graph vertices) manually in the grid
-and they stay fixed in place; the program will not attempt to move
-them around trying to optimize any aspect of the diagram.  Styling is
-also rather basic at the moment.  It does however try to do a decent
-job arranging the *links* (i.e. graph edges) around the nodes to
-produce a tidy, readable drawing.
+have to arrange the connected objects manually in the grid and they
+stay fixed in place; the program will not attempt to move them around
+trying to optimize any aspect of the diagram.  Styling is also rather
+basic at the moment.  It does however try to do a decent job arranging
+the connections around the objects to produce a tidy, readable
+drawing.
 
 When used as a command line tool, Orthogram reads a *diagram
 definition file* and produces a Scalable Vector Graphics file.  The
@@ -75,14 +74,14 @@ of YAML:
 
 .. code:: yaml
 
-   nodes:
+   terminals:
      a:
        label: Hello
      b:
        label: world
    rows:
-     - nodes: [a]
-     - nodes: ["", b]
+     - pins: [a]
+     - pins: ["", b]
    links:
      - start: a
        end: b
@@ -104,7 +103,7 @@ structure must be a YAML mapping; the following keys are recognized,
 each one containing a different category of definitions:
 
 * ``diagram``
-* ``nodes``
+* ``terminals``
 * ``rows``
 * ``links``
 * ``styles``
@@ -137,20 +136,20 @@ The following diagram attributes are of particular significance:
   contains it.  Set this attribute to ``false`` to make the browser
   render the diagram in its original dimensions.
 
-``nodes``
-~~~~~~~~~
+``terminals``
+~~~~~~~~~~~~~
 
-The ``nodes`` section contains mappings between node names and node
-definitions.  You must have at least a couple of nodes to produce a
-meaningful diagram.  Here is an example:
+The ``terminals`` section contains mappings between terminal names and
+terminal definitions.  You must have at least a couple of terminals to
+produce a meaningful diagram.  Here is an example:
 
 .. code:: yaml
 
-   nodes:
+   terminals:
      a:
-       label: A node
+       label: A terminal
      b:
-       label: Another node
+       label: Another terminal
        stroke: blue
 
 If you want a label with more than one line of text, use the newline
@@ -159,7 +158,7 @@ style:
 
 .. code:: yaml
 
-   nodes:
+   terminals:
 
      single-line:
        label: A single line label
@@ -172,52 +171,73 @@ style:
          You can also use
          YAML literal style
 
-Note that if the label of a node is not defined, the name of the node
-is used as a label instead.
+Note that if the label of a terminal is not defined, the name of the
+terminal is used as a label instead.
 
 ``rows``
 ~~~~~~~~
 
 The ``rows`` section of the diagram definition file is used to arrange
-the nodes in the layout grid.  It is essential; nodes that have not
-been placed in the grid are not drawn at all.
+the terminals in the layout grid.  It is essential; terminals that
+have not been placed in the grid are not drawn at all.
 
 The ``rows`` structure is a sequence of row definitions.  Each row
-definition contains a sequence of node names.  You can use an empty
-string between the node names to leave an empty spot in the row.  Here
-is an example:
+definition contains a sequence of terminal names.  You can use an
+empty string between the terminal names to leave an empty spot in the
+row.  Here is an example:
 
 .. code:: yaml
 
-   nodes:
+   terminals:
      a:
      b:
      c:
    rows:
-     - nodes: [a]
-     - nodes: [b, "", c]
+     - pins: [a]
+     - pins: [b, "", c]
 
-Note that the ``nodes`` key is necessary.  Row definitions do not have
+Note that the ``pins`` key is necessary.  Row definitions do not have
 any attributes, though this may change in the future.
 
-``links``
-~~~~~~~~~
-
-The ``links`` section defines the connections between the nodes.  It
-is a sequence of link definitions. Each link must declare the names of
-the ``start`` and ``end`` nodes, as well as any `attributes`_
-appropriate for links.  Note that the nodes must be in place before
-making a connection. Here is an example:
+A terminal can have many pins in multiple rows as long as the area
+they occupy in the grid is rectangular.  This way you can draw
+terminals that span multiple diagram rows or columns.  The following
+example contains valid arrangements:
 
 .. code:: yaml
 
-   nodes:
-     a: {label: First node}
-     b: {label: Second node}
-     c: {label: Third node}
    rows:
-     - nodes: [a,  b]
-     - nodes: ["", c]
+     - pins: [a, b , b , c, c]
+     - pins: [a, "", "", c, c]
+
+However, the program will reject the following invalid arrangements:
+
+.. code:: yaml
+
+   # These are wrong!  Terminal 'a' has a gap; terminal 'b' is
+   # L-shaped.
+   rows:
+     - pins: [a , "", a , b, ""]
+     - pins: ["", "", "", b, b ]
+       
+``links``
+~~~~~~~~~
+
+The ``links`` section defines the connections between the terminals.
+It is a sequence of link definitions. Each link must declare the names
+of the ``start`` and ``end`` terminals, as well as any `attributes`_
+appropriate for links.  Note that the terminals must have at least one
+pin placed before making a connection. Here is an example:
+
+.. code:: yaml
+
+   terminals:
+     a: {label: First terminal}
+     b: {label: Second terminal}
+     c: {label: Third terminal}
+   rows:
+     - pins: [a,  b]
+     - pins: ["", c]
    links:
      - start: a
        end: b
@@ -227,7 +247,7 @@ making a connection. Here is an example:
        stroke: "#FF8844"
 
 Note that the ``start`` and ``end`` values of a link definition can be
-*sequences* of node names as well.  This lets you make multiple
+*sequences* of terminal names as well.  This lets you make multiple
 connections in a single definition, all links sharing the same
 attributes.  For example, the following definition creates six links:
 
@@ -265,31 +285,31 @@ highest priority among all links in the group.
 ~~~~~~~~~~
 
 You can add style definitions to the ``styles`` section to create
-named styles that can be referred to by the nodes and links.  Each
+named styles that can be referred to by the terminals and links.  Each
 style definition consists of attribute key-value pairs.  For example,
-the following two nodes are drawn in the same color:
+the following two terminals are drawn in the same color:
 
 .. code:: yaml
 
-   nodes:
+   terminals:
      a:
        style: reddish
      b:
        style: reddish
    rows:
-     - nodes: [a, b]
+     - pins: [a, b]
    styles:
      reddish:
        stroke: "#880000"
        stroke_width: 3.0
        fill: "#FFDDDD"
 
-Attributes defined in the element itself override the attributes
-inherited by the linked named style.
+Attributes you define in the element itself override the attributes it
+inherits from the linked named style.
 
-There are two special style names, ``default_node`` and
-``default_link``, which are used to set default values for all the
-nodes and links in the diagram respectively.
+There are two special style names, ``default_terminal`` and
+``default_link``, which you can use to set default values for all the
+terminals and links in the diagram respectively.
 
 ``groups``
 ~~~~~~~~~~
@@ -325,41 +345,42 @@ The following table summarizes the attributes available to the diagram
 and its components.  Where an attribute is applicable, it shows the
 default value:
 
-====================  ===============  =======  =======
-Attribute             Diagram          Node     Link
-====================  ===============  =======  =======
-``arrow_aspect``                                1.5
-``arrow_back``                                  False
-``arrow_base``                                  3.0
-``arrow_forward``                               True
-``buffer_fill``                                 "none"
-``buffer_width``                                0.0
+====================  ===============  ============  =======
+Attribute             Diagram          Terminal      Link
+====================  ===============  ============  =======
+``arrow_aspect``                                     1.5
+``arrow_back``                                       False
+``arrow_base``                                       3.0
+``arrow_forward``                                    True
+``buffer_fill``                                      "none"
+``buffer_width``                                     0.0
 ``collapse_links``    False
 ``column_margin``     24.0
-``drawing_priority``                            0
-``end_bias``                                    None
+``drawing_priority``                                 0
+``end_bias``                                         None
 ``fill``              "none"           "none"
-``font_family``       None             None     None
+``font_family``       None             None          None
 ``font_size``         14.0             10.0
-``font_style``        None             None     None
-``font_weight``       None             None     None
-``group``                                       None
+``font_style``        None             None          None
+``font_weight``       None             None          None
+``group``                                            None
 ``label_distance``    6.0
 ``label_position``    "top"
 ``label``             None             None
 ``link_distance``     4.0
 ``min_height``        300.0            48.0
 ``min_width``         300.0            96.0
-``padding``           24.0
+``padding``           0.0
 ``row_margin``        24.0
-``start_bias``                                  None
+``start_bias``                                       None
 ``stretch``           True
-``stroke_dasharray``  None             None     None
-``stroke_width``      0.0              2.0      2.0
-``stroke``            "none"           "black"  "black"
+``stroke_dasharray``  None             None          None
+``stroke_width``      0.0              2.0           2.0
+``stroke``            "none"           "black"       "black"
 ``text_fill``         "black"          "black"
 ``text_line_height``  1.25             1.25
-====================  ===============  =======  =======
+``text_orientation``                   "horizontal"
+====================  ===============  ============  =======
 
 The options for the enumerated attributes are:
 
@@ -369,6 +390,11 @@ The options for the enumerated attributes are:
   * ``top``
 
 * ``start_bias`` and ``end_bias``:
+
+  * ``horizontal``
+  * ``vertical``
+
+* ``text_orientation``:
 
   * ``horizontal``
   * ``vertical``
@@ -391,28 +417,31 @@ creating an empty ``Diagram`` object:
 You can pass any diagram `attributes`_ to the constructor as key-value
 pairs.
 
-You can now add nodes to the diagram:
+You can now add terminals to the diagram:
 
 .. code:: python
 
-   diagram.add_node("a", label="Hello")
-   diagram.add_node("b", label="Beautiful")
-   diagram.add_node("c", label="World")
+   diagram.add_terminal("a", label="Hello")
+   diagram.add_terminal("b", label="Beautiful")
+   diagram.add_terminal("c", label="World")
 
-Again, you can provide `attributes`_ for the node as key-value pairs.
+Again, you can provide `attributes`_ for the terminals as key-value
+pairs.
 
-In order to use the nodes, you must first place them in the grid:
+In order to use the terminals, you must first place pins for them in
+the grid:
 
 .. code:: python
 
    diagram.add_row(["a"])
    diagram.add_row(["b", "", "c"])
 
-The ``add_row`` method takes a list of node names.  Note that you must
-have added the nodes to the diagram before placing them in the grid.
-Use an empty string or None to leave an empty space between nodes.
+The ``add_row`` method takes a list of terminal names.  Note that you
+must have added the terminals to the diagram before placing pins for
+them in the grid.  Use an empty string or None to leave an empty space
+between terminals.
 
-After placing the nodes, you can connect them via links like this:
+After placing the terminals, you can connect them via links like this:
 
 .. code:: python
 
@@ -450,32 +479,32 @@ method imports a complete diagram definition into the builder:
 If you have to be more specific, ``Builder`` provides the following
 methods:
 
-=======================  ===============
+=======================  ===================
 Do one                   Do many
-=======================  ===============
+=======================  ===================
 ``add_style()``          ``add_styles()``
 ``add_group()``          ``add_groups()``
-``add_node()``           ``add_nodes()``
+``add_terminal()``       ``add_terminals()``
 ``add_row()``            ``add_rows()``
 ``add_link()``           ``add_links()``
 ``configure_diagram()``
-=======================  ===============
+=======================  ===================
 
 For example:
 
 .. code:: python
 
-   node_def = {
+   terminal_def = {
        'label': "Hello",
        'fill': "yellow",
        'stroke': "none",
    }
-   builder.add_node('hello', node_def)
+   builder.add_terminal('hello', terminal_def)
 
 Use the ``help()`` Python function to read the documentation of each
 method.  Note that you have to do the imports in a logical order: you
-must import the styles before using them, place the nodes before
-linking them etc.
+must import the styles before using them, place the pins before
+linking the terminals etc.
 
 The ``diagram`` property of a ``Builder`` object holds the diagram
 which is being built.  If you want to use the ``Diagram`` API on it,

@@ -10,10 +10,16 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Tuple,
 )
 
-from .geometry import Orientation
+from .geometry import IntPoint, Orientation
 from .util import log_warning
+
+######################################################################
+
+# Attributes as key-value pairs.
+Attributes = Dict[str, Any]
 
 ######################################################################
 
@@ -21,11 +27,6 @@ class LabelPosition(Enum):
     """Position of the label of an element relative to its shape."""
     BOTTOM = auto()
     TOP = auto()
-
-######################################################################
-
-# Attributes as key-value pairs.
-Attributes = Dict[str, Any]
 
 ######################################################################
 
@@ -90,12 +91,12 @@ class AreaAttributes:
 
     @property
     def min_height(self) -> float:
-        """Minimum height of the node."""
+        """Minimum height of the shape."""
         return self._min_height
 
     @property
     def min_width(self) -> float:
-        """Minimum width of the node."""
+        """Minimum width of the shape."""
         return self._min_width
 
 ######################################################################
@@ -112,6 +113,7 @@ class TextAttributes:
         self._label: Optional[str] = None
         self._text_fill: Optional[str] = "black"
         self._text_line_height = 1.25
+        self._text_orientation = Orientation.HORIZONTAL
 
     def _set_text_attributes(self, attrs: Attributes) -> None:
         """Set the text attributes to the given values."""
@@ -129,6 +131,9 @@ class TextAttributes:
             self._text_fill = cast(Optional[str], attrs['text_fill'])
         if 'text_line_height' in attrs:
             self._text_line_height = cast(float, attrs['text_line_height'])
+        if 'text_orientation' in attrs:
+            self._text_orientation = cast(
+                Orientation, attrs['text_orientation'])
 
     @property
     def font_family(self) -> Optional[str]:
@@ -165,10 +170,39 @@ class TextAttributes:
         """Height of text line (in em.)"""
         return self._text_line_height
 
+    @property
+    def text_orientation(self) -> Orientation:
+        """Orientation of the text."""
+        return self._text_orientation
+
 ######################################################################
 
-class NodeAttributes(LineAttributes, AreaAttributes, TextAttributes):
-    """Collection of attributes relevant to nodes."""
+class Pin:
+    """Diagram position occupied by a terminal."""
+
+    def __init__(self, name: str, point: IntPoint):
+        """Initialize with the given name and position."""
+        self._name = name
+        self._point = point
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({})".format(self.__class__.__name__, self._name)
+    
+    @property
+    def name(self) -> str:
+        """Name that identifies the pin."""
+        return self._name
+
+    @property
+    def point(self) -> IntPoint:
+        """Position of the pin in the diagram."""
+        return self._point
+    
+######################################################################
+
+class TerminalAttributes(LineAttributes, AreaAttributes, TextAttributes):
+    """Collection of attributes relevant to link terminals."""
 
     def __init__(self, **attrs: Attributes):
         """Initialize the attributes with the given values."""
@@ -184,34 +218,107 @@ class NodeAttributes(LineAttributes, AreaAttributes, TextAttributes):
         self._set_line_attributes(attrs)
         self._set_area_attributes(attrs)
         self._set_text_attributes(attrs)
-        self._set_node_attributes(attrs)
+        self._set_terminal_attributes(attrs)
 
-    def _set_node_attributes(self, attrs: Attributes) -> None:
-        """Set the node attributes to the given values."""
+    def _set_terminal_attributes(self, attrs: Attributes) -> None:
+        """Set the attributes of the terminal to the given values."""
         pass
 
 ######################################################################
 
-class Node:
-    """A node in a diagram."""
+class Terminal:
+    """Links terminate here."""
 
     def __init__(self, name: str, **attrs: Attributes):
-        """Initialize the node (with optional attributes)."""
+        """Initialize the terminal (with optional attributes)."""
         self._name = name
-        self._attributes = NodeAttributes(**attrs)
+        self._attributes = TerminalAttributes(**attrs)
+        self._pins: List[Pin] = []
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({};pins={})".format(
+            self.__class__.__name__,
+            self._name,
+            len(self._pins),
+        )
 
     @property
     def name(self) -> str:
-        """A name that identifies the node."""
+        """A name that identifies the terminal."""
         return self._name
 
     @property
-    def attributes(self) -> NodeAttributes:
-        """Attributes attached to the node."""
+    def attributes(self) -> TerminalAttributes:
+        """Attributes attached to the terminal."""
         return self._attributes
 
+    def can_occupy(self, p: IntPoint, length: int) -> bool:
+        """Answer whether the terminal can occupy a range of positions.
+
+        It prints an appropriate warning when the result is negative.
+
+        """
+        pins = self._pins
+        # A terminal without pins can be always expanded.
+        if not pins:
+            return True
+        above = False
+        overlap = False
+        jmin = jmax = -1
+        for pin in self._pins:
+            pp = pin.point
+            if pp == p:
+                # This shouldn't happen actually.
+                overlap = True
+            if pp.i == p.i - 1:
+                # There is a chunk directly above, good.
+                above = True
+            if jmin < 0 or pp.j < jmin:
+                jmin = pp.j
+            if jmax < 0 or pp.j > jmax:
+                jmax = pp.j
+        if overlap:
+            t = "Pins of terminal '{}' overlap"
+            log_warning(t.format(self._name))
+            return False
+        if not above:
+            t = "Gap detected between pins of terminal '{}'"
+            log_warning(t.format(self._name))
+            return False
+        if jmin != p.j:
+            t = "Pins of terminal '{}' are not vertically aligned"
+            log_warning(t.format(self._name))
+            return False
+        width = jmax - jmin + 1
+        if width != length:
+            t = "Pin range for terminal '{}' has wrong length"
+            log_warning(t.format(self._name))
+            return False
+        return True
+        
+    def occupy(self, p: IntPoint) -> Pin:
+        """Occupy the given position in the diagram.
+
+        It returns the terminal pin created for the position.
+
+        """
+        pins = self._pins
+        pin_name = "{}.{}".format(self._name, len(pins))
+        pin = Pin(pin_name, p)
+        pins.append(pin)
+        return pin
+
+    def pins(self) -> Iterator[Pin]:
+        """Return an iterator over the pins of the terminal."""
+        yield from self._pins
+    
+    def is_placed(self) -> bool:
+        """Return true if the terminal occupies positions in the diagram."""
+        return len(self._pins) > 0
+    
     def label(self) -> str:
-        """Return a label to draw over the node in the diagram."""
+        """Return a label to draw on the terminal in the diagram."""
         label = self._attributes.label
         # Compare against None - the empty string is a valid label.
         if label is None:
@@ -219,37 +326,52 @@ class Node:
         else:
             return label
 
-    def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}({})".format(self.__class__.__name__, self._name)
-
 ######################################################################
 
-# Node or empty space in a row.
-_RowElement = Optional[Node]
+class Cell:
+    """Position in a grid, may hold a terminal pin."""
 
+    def __init__(
+            self,
+            terminal: Optional[Terminal] = None,
+            pin: Optional[Pin] = None,
+    ):
+        """Initialize with the given contents."""
+        self._terminal = terminal
+        self._pin = pin
+
+    @property
+    def terminal(self) -> Optional[Terminal]:
+        """The terminal that has a pin in this cell."""
+        return self._terminal
+
+    @property
+    def pin(self) -> Optional[Pin]:
+        """Terminal pin in this cell."""
+        return self._pin
+    
 ######################################################################
 
 class DiagramRow:
     """A row or column in the diagram."""
 
-    def __init__(self, elements: Sequence[_RowElement]):
-        """Initialize the row with nodes and empty spaces."""
-        self._elements: List[_RowElement] = []
-        if elements:
-            self._elements.extend(elements)
+    def __init__(self, cells: Sequence[Cell]):
+        """Initialize the row with terminal pins and empty spaces."""
+        self._cells: List[Cell] = []
+        if cells:
+            self._cells.extend(cells)
 
     def __len__(self) -> int:
-        """Get the number of nodes and empty spaces in the row."""
-        return len(self._elements)
+        """Get the number of pins and empty spaces in the row."""
+        return len(self._cells)
 
-    def __getitem__(self, j: int) -> Optional[Node]:
-        """Get the element which is at the given position."""
-        return self._elements[j]
+    def __getitem__(self, j: int) -> Cell:
+        """Get the cell which is at the given position."""
+        return self._cells[j]
 
-    def __iter__(self) -> Iterator[Optional[Node]]:
-        """Get an iterator over the nodes and empty spaces."""
-        yield from self._elements
+    def __iter__(self) -> Iterator[Cell]:
+        """Get an iterator over the cells."""
+        yield from self._cells
 
 ######################################################################
 
@@ -353,22 +475,22 @@ class LinkAttributes(LineAttributes):
 ######################################################################
 
 class Link:
-    """A link between two nodes in the diagram."""
+    """A link between two terminals in the diagram."""
 
-    def __init__(self, start: Node, end: Node, **attrs: Attributes):
-        """Initialize the link between the given nodes."""
+    def __init__(self, start: Terminal, end: Terminal, **attrs: Attributes):
+        """Initialize a link between the given terminals."""
         self._start = start
         self._end = end
         self._attributes = LinkAttributes(**attrs)
 
     @property
-    def start(self) -> Node:
-        """First node of the link."""
+    def start(self) -> Terminal:
+        """Source terminal of the link."""
         return self._start
 
     @property
-    def end(self) -> Node:
-        """Second and last node of the link."""
+    def end(self) -> Terminal:
+        """Destination terminal of the link."""
         return self._end
 
     @property
@@ -394,7 +516,7 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
         self._link_distance = 4.0
         self._min_height = 300.0
         self._min_width = 300.0
-        self._padding = 24.0
+        self._padding = 0.0
         self._row_margin = 24.0
         self._stretch = True
         self._stroke_width = 0.0
@@ -469,12 +591,12 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
 ######################################################################
 
 class Diagram:
-    """Container for the nodes and links of the diagram."""
+    """Container for the terminals and links of the diagram."""
 
     def __init__(self, **attrs: Attributes):
         """Initialize the diagram with the given attributes."""
-        self._nodes: Dict[str, Node] = {}
-        self._placed_nodes: Dict[Node, bool] = {}
+        self._terminals: Dict[str, Terminal] = {}
+        self._pins_to_terminals: Dict[Pin, Terminal] = {}
         self._rows: List[DiagramRow] = []
         self._links: List[Link] = []
         self._attributes = DiagramAttributes(**attrs)
@@ -484,66 +606,94 @@ class Diagram:
         """Attributes attached to the diagram."""
         return self._attributes
 
-    def add_node(self, name: str, **attrs: Attributes) -> None:
-        """Add a new node to the diagram.
+    def add_terminal(self, name: str, **attrs: Attributes) -> None:
+        """Add a new terminal to the diagram.
 
-        Rejects the node with a warning if there is already a node
-        registered with the same name.
+        Rejects the terminal with a warning if there is already a
+        terminal registered with the same name.
 
-        See NodeAttributes for a list of available attributes.
+        See TerminalAttributes for a list of available attributes.
 
         """
-        nodes = self._nodes
-        if name in nodes:
-            log_warning("Node '{}' already exists".format(name))
+        terminals = self._terminals
+        if name in terminals:
+            log_warning("Terminal '{}' already exists".format(name))
             return
-        node = Node(name, **attrs)
-        nodes[name] = node
+        terminal = Terminal(name, **attrs)
+        terminals[name] = terminal
 
-    def _node(self, name: str) -> Optional[Node]:
-        """Retrieve a node by name.
+    def _terminal(self, name: str) -> Optional[Terminal]:
+        """Retrieve a terminal by name.
 
-        If a node with the given name does not exist, it prints a
+        If a terminal with the given name does not exist, it prints a
         warning and returns None.
 
         """
-        node = self._nodes.get(name)
-        if not node:
-            log_warning("Node '{}' does not exist".format(name))
-        return node
+        terminal = self._terminals.get(name)
+        if not terminal:
+            log_warning("Terminal '{}' does not exist".format(name))
+        return terminal
 
-    def add_row(self, node_names: Sequence[Optional[str]]) -> None:
+    def add_row(self, terminal_names: Sequence[Optional[str]]) -> None:
         """Add a row at the end of the diagram.
 
         The input is a sequence of names that will be used to look up
-        the nodes that are to be placed in the row.  If a name does
-        not correspond to a node, the method prints a warning and
-        leaves an empty space in the row.  Use an empty string or None
-        to add an empty space on purpose.
+        the terminals whose pins are to be placed in the row.  If a
+        name does not correspond to a terminal, the method prints a
+        warning and leaves an empty space in the row.  Use an empty
+        string or None to add an empty space on purpose.
+
+        You can place the same terminal in more than one positions to
+        occupy a rectangle in the diagram grid.  The method will check
+        the geometry of the expanded terminal and will reject
+        positions that cause non-rectangular terminals.
 
         """
-        elements = []
-        placed = self._placed_nodes
-        for name in node_names:
-            node: Optional[Node] = None
+        pts = self._pins_to_terminals
+        rows = self._rows
+        i = len(rows)
+        j = 0
+        cells: List[Cell] = []
+        for name, length in self._split_row(terminal_names):
+            terminal: Optional[Terminal] = None
             if name:
-                node = self._node(name)
-                if not node:
-                    pass
-                elif node in placed:
-                    # Do not add the node to another row.
-                    log_warning("Node '{}' is already placed".format(name))
-                    node = None
+                terminal = self._terminal(name)
+                if terminal:
+                    p = IntPoint(i, j)
+                    if not terminal.can_occupy(p, length):
+                        terminal = None
+            for _ in range(length):
+                if terminal:
+                    p = IntPoint(i, j)
+                    pin = terminal.occupy(p)
+                    cell = Cell(terminal, pin)
+                    cells.append(cell)
+                    pts[pin] = terminal
                 else:
-                    # Mark node as placed, since we are going to add
-                    # it below.
-                    placed[node] = True
-            # None is acceptable here, denoting an empty space.  Nodes
-            # missing due to error will show up as empty spaces too.
-            elements.append(node)
-        row = DiagramRow(elements)
-        self._rows.append(row)
+                    cells.append(Cell())
+                j += 1
+        row = DiagramRow(cells)
+        rows.append(row)
 
+    def _split_row(
+            self, names: Sequence[Optional[str]]
+    ) -> Iterator[Tuple[Optional[str], int]]:
+        """Break the row definition into chunks of the same name.
+
+        This method returns an iterator that generates (name, length)
+        pairs.
+
+        """
+        chunk: List[Optional[str]] = []
+        for name in names:
+            if not chunk or name == chunk[-1]:
+                chunk.append(name)
+            else:
+                yield chunk[0], len(chunk)
+                chunk = [name]
+        if chunk:
+            yield chunk[0], len(chunk)
+        
     def rows(self) -> Iterator[DiagramRow]:
         """Return an iterator over the rows."""
         yield from self._rows
@@ -555,7 +705,7 @@ class Diagram:
     def max_row(self) -> int:
         """Return the length of the longest row.
 
-        It takes into account both nodes and empty spaces.
+        It takes into account both terminals and empty spaces.
 
         """
         result = 0
@@ -563,57 +713,61 @@ class Diagram:
             result = max(result, len(row))
         return result
 
+    def terminal_of_pin(self, pin: Pin) -> Terminal:
+        """Return the terminal that owns the given pin."""
+        return self._pins_to_terminals[pin]
+    
     def add_link(
             self,
-            start_node_name: str,
-            end_node_name: str,
+            start_terminal_name: str,
+            end_terminal_name: str,
             **attrs: Attributes,
     ) -> None:
-        """Create a link between two nodes.
+        """Create a link between two terminals.
 
         The process fails with a warning if:
 
-        1. any of the two node names does not correspond to a node
-           registered in the diagram or
+        1. any of the two terminal names does not correspond to a
+           terminal registered in the diagram or
 
-        2. any of the two nodes has not been placed in a row.
+        2. any of the two terminals has not a pin in a row.
 
         See DiagramAttributes for a list of available attributes.
 
         """
-        start = self._node(start_node_name)
-        end = self._node(end_node_name)
-        # Ensure that the two nodes were found and have been placed.
+        start = self._terminal(start_terminal_name)
+        end = self._terminal(end_terminal_name)
+        # Ensure that the two terminals were found and have been
+        # placed.
         if not (start and end):
             return
-        placed = self._placed_nodes
         ok = True
-        for node in (start, end):
-            if node not in placed:
-                log_warning("Node '{}' is not placed".format(node.name))
+        for terminal in (start, end):
+            if not terminal.is_placed():
+                log_warning("Terminal '{}' is not placed".format(terminal.name))
                 ok = False
         if not ok:
             return
-        # We have both nodes, let's make the connection.
+        # We have both terminals, let's make the connection.
         link = Link(start, end, **attrs)
         self._links.append(link)
 
     def add_links(
             self,
-            start_node_names: Sequence[str],
-            end_node_names: Sequence[str],
+            start_terminal_names: Sequence[str],
+            end_terminal_names: Sequence[str],
             **attrs: Attributes,
     ) -> None:
         """Create many links at once.
 
-        If the number of start nodes is n and the number of end nodes
-        in m, then the number of links created will be n*m (assuming
-        all nodes exist and are placed.)  See add_link() for further
-        information.
+        If the number of start terminals is n and the number of end
+        terminals in m, then the number of links created will be n*m
+        (assuming all terminals exist and are placed.)  See add_link()
+        for further information.
 
         """
-        for start in start_node_names:
-            for end in end_node_names:
+        for start in start_terminal_names:
+            for end in end_terminal_names:
                 self.add_link(start, end, **attrs)
 
     def links(self) -> Iterator[Link]:
@@ -622,14 +776,14 @@ class Diagram:
 
     def _pretty_print(self) -> None:
         """Print the diagram for debugging purposes."""
-        print("Nodes:")
-        for name, node in self._nodes.items():
-            print("\t{}: {}".format(name, node))
+        print("Terminals:")
+        for terminal in self._terminals.values():
+            print("\t{}".format(terminal))
         print("Rows:")
         for i, row in enumerate(self._rows):
             print("\tRow {}:".format(i))
-            for row_node in row:
-                print("\t\t{}".format(row_node))
+            for row_terminal in row:
+                print("\t\t{}".format(row_terminal))
         print("Links:")
         for link in self._links:
             print("\t{} -> {}".format(link.start, link.end))

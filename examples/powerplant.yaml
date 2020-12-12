@@ -9,7 +9,7 @@ diagram:
 
 styles:
 
-  default_node:
+  default_terminal:
     fill: white
 
   default_link:
@@ -49,7 +49,7 @@ groups:
   gas_to_steam:
     drawing_priority: -1
 
-nodes:
+terminals:
 
   air:
     label: Air
@@ -109,17 +109,19 @@ nodes:
     label: Exhaust
 
   tx:
-    label: "To\nTransformers"
+    label: "To Electrical Transformers"
     font_style: italic
+    text_orientation: vertical
+    min_width: 48
 
 rows:
 
-  - nodes: [""   , ""   , fuel                   ]
-  - nodes: [""   , cmp1 , cmb1 , gtb1 , egn1     ]
-  - nodes: [air                                  ]
-  - nodes: [""   , cmp2 , cmb2 , gtb2 , egn2 , tx]
-  - nodes: [""   , exst , ""   , sgn             ]
-  - nodes: [""   , cool , cdn  , stb  , egn3     ]
+  - pins: [""   , ""   , fuel                   ]
+  - pins: [""   , cmp1 , cmb1 , gtb1 , egn1 , tx]
+  - pins: [air  , ""   , ""   , ""   , ""   , tx]
+  - pins: [""   , cmp2 , cmb2 , gtb2 , egn2 , tx]
+  - pins: [""   , exst , ""   , sgn  , ""   , tx]
+  - pins: [""   , cool , cdn  , stb  , egn3 , tx]
 
 links:
 
