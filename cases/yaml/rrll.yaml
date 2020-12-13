@@ -1,0 +1,15 @@
+diagram:
+  label: Right-Right vs Left-Left
+
+terminals:
+  A:
+  B:
+
+rows:
+  - pins: [A, B]
+
+links:
+  - start: A
+    end: B
+  - start: B
+    end: A

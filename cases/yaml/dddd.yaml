@@ -1,0 +1,16 @@
+diagram:
+  label: Down-Down vs Down-Down
+
+terminals:
+  A:
+  B:
+
+rows:
+  - pins: [A]
+  - pins: [B]
+
+links:
+  - start: A
+    end: B
+  - start: A
+    end: B

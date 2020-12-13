@@ -2,4 +2,5 @@
 *.html
 *.pyc
 *~
+cases/svg/*.svg
 dist

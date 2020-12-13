@@ -1,0 +1,16 @@
+diagram:
+  label: Up-Up vs Up-Up
+
+terminals:
+  A:
+  B:
+
+rows:
+  - pins: [B]
+  - pins: [A]
+
+links:
+  - start: A
+    end: B
+  - start: A
+    end: B

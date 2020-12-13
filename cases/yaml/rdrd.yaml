@@ -1,0 +1,20 @@
+diagram:
+  label: Right-Down vs Right-Down
+
+terminals:
+  A:
+  B:
+
+rows:
+  - pins: [A    ]
+  - pins: ["", B]
+
+links:
+  - start: A
+    end: B
+    start_bias: horizontal
+    end_bias: vertical
+  - start: A
+    end: B
+    start_bias: horizontal
+    end_bias: vertical

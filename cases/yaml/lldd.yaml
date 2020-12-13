@@ -1,0 +1,19 @@
+diagram:
+  label: Left-Left vs Down-Down
+
+terminals:
+  A:
+  B:
+  C:
+  D:
+
+rows:
+  - pins: ["", C ,  ]
+  - pins: [B , "", A]
+  - pins: ["", D ,  ]
+
+links:
+  - start: A
+    end: B
+  - start: C
+    end: D

@@ -1,0 +1,20 @@
+diagram:
+  label: Up-Up vs Left-Up
+
+terminals:
+  A:
+  B:
+  C:
+
+rows:
+  - pins: [B    ]
+  - pins: ["", C]
+  - pins: [A    ]
+
+links:
+  - start: A
+    end: B
+  - start: C
+    end: B
+    start_bias: horizontal
+    end_bias: vertical

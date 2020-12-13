@@ -1,0 +1,19 @@
+diagram:
+  label: Right-Right vs Up-Up
+
+terminals:
+  A:
+  B:
+  C:
+  D:
+
+rows:
+  - pins: ["", D    ]
+  - pins: [A , "", B]
+  - pins: ["", C    ]
+
+links:
+  - start: A
+    end: B
+  - start: C
+    end: D
