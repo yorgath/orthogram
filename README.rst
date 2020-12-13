@@ -219,7 +219,7 @@ However, the program will reject the following invalid arrangements:
    rows:
      - pins: [a , "", a , b, ""]
      - pins: ["", "", "", b, b ]
-       
+
 ``links``
 ~~~~~~~~~
 
@@ -527,3 +527,81 @@ shortcuts:
 
    # or just this:
    translate("diagram.yaml", "diagram.svg")
+
+Acknowledgements
+----------------
+
+This program depends on the following excellent pieces of software:
+
+* `Python`_: The author's preferred programming language.  Flexible,
+  convenient and nice to look at.  Has a library for everything.
+
+* `python-igraph`_: Python interface to the powerful `igraph`_
+  library.  Orthogram uses it everywhere in its layout engine.  The
+  performance offered by the C-based implementation is much needed.
+
+* `pyyaml`_: Simple to use, efficient YAML parser.
+
+* `shapely`_: Python interface to the powerful `GEOS`_ geometry
+  library.  A bit overkill for the simple geometry manipulations
+  Orthogram does, but why reinvent the wheel?
+
+* `svgwrite`_: Orthogram uses this library to write the SVG files.
+  Much better than having to use straight XML!
+
+The following programs improved the development experience of the
+author a lot:
+
+* `mypy`_: Python static analyzer.  Makes refactoring so much easier.
+
+* `Poetry`_: Great Python package manager.  Also made publishing to
+  PyPI a breeze.
+
+.. _Python: https://python.org
+.. _python-igraph: https://igraph.org/python/
+.. _igraph: https://igraph.org/
+.. _shapely: https://github.com/Toblerity/Shapely
+.. _GEOS: https://trac.osgeo.org/geos
+.. _svgwrite: https://github.com/mozman/svgwrite
+.. _pyyaml: https://github.com/yaml/pyyaml
+.. _Poetry: https://python-poetry.org/
+.. _mypy: http://mypy-lang.org/
+
+Release history
+---------------
+
+0.1.0 (2020-12-09)
+~~~~~~~~~~~~~~~~~~
+
+* First release.
+* Important functionality already in place.
+
+0.1.1 (2020-12-10)
+~~~~~~~~~~~~~~~~~~
+
+* API breaking change: renamed ``convert_ddf()`` public function to
+  the arguably more user friendly ``translate()``.
+
+* Added the ``arrow_aspect`` and ``arrow_base`` attributes.
+
+* Fixed bug when ``buffer_width`` is not set.
+
+* Updated the documentation to reflect the changes and correct a few
+  errors; made the stability warning a bit less scary.
+
+* Added the scripts.
+
+0.2.0 (????-??-??)
+~~~~~~~~~~~~~~~~~~
+
+* Introduced the ability to create shapes spanning multiple rows and
+  columns.
+
+* Major API breaking changes: Replaced ``nodes`` with ``terminals``
+  and ``pins`` in order to facilitate the expansion of connected
+  objects.  Both API and diagram definition files affected.
+
+* Added the ``text_orientation`` attribute.
+
+* Updated the documentation to reflect the changes.  Added the
+  acknowledgments and release history sections.
