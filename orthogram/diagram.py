@@ -735,10 +735,15 @@ class Diagram:
         See DiagramAttributes for a list of available attributes.
 
         """
+        # Self connections are not supported.
+        if start_terminal_name == end_terminal_name:
+            log_warning("Cannot connect '{}' to itself".
+                        format(start_terminal_name))
+            return
+        # Ensure that the two terminals have been registered and
+        # placed.
         start = self._terminal(start_terminal_name)
         end = self._terminal(end_terminal_name)
-        # Ensure that the two terminals were found and have been
-        # placed.
         if not (start and end):
             return
         ok = True
