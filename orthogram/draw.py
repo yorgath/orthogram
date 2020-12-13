@@ -11,12 +11,10 @@ from typing import (
     Iterator,
     List,
     Mapping,
-    NamedTuple,
     Optional,
     Sequence,
     Set,
     Tuple,
-    Type,
 )
 
 from shapely.geometry import ( # type: ignore
@@ -60,17 +58,6 @@ from .layout import (
 
 ######################################################################
 
-# Key for link markers.  Depends on dimensions and color.
-MarkerKey = Tuple[int, int, str]
-
-######################################################################
-
-def _pt_to_px(pt: float) -> float:
-    """Convert points to pixels (a.k.a. user units)."""
-    return 1.25 * pt
-
-######################################################################
-
 # Geometry bounds.
 Bounds = Tuple[float, float, float, float]
 
@@ -84,7 +71,7 @@ class PinBox:
         self._terminal = terminal
         self._pin = pin
         self._layout_point = point
-        # These will be filled while drawing later on.
+        # The drawing will set these later on.
         self._central_point: FloatPoint
         self._width: float
         self._height: float
@@ -152,13 +139,13 @@ class TerminalBox:
         """Add the box of a terminal pin."""
         self._pin_boxes.add(box)
 
-    def calculate_bounds(self) -> None:
+    def update_bounds(self) -> None:
         """Calculate the bounds of the box and store them in it."""
-        self._calculate_drawing_bounds()
-        self._calculate_clipping_bounds()
-        
-    def _calculate_drawing_bounds(self) -> None:
-        """Calculate the bounds used to *draw* the box."""
+        self._update_drawing_bounds()
+        self._update_clipping_bounds()
+
+    def _update_drawing_bounds(self) -> None:
+        """Update the bounds used to *draw* the box."""
         points = []
         for box in self._pin_boxes:
             p = box.central_point
@@ -171,8 +158,12 @@ class TerminalBox:
         mp = MultiPoint(points)
         self._drawing_bounds = mp.bounds
 
-    def _calculate_clipping_bounds(self) -> None:
-        """Calculate the bounds used to clip the links with."""
+    def _update_clipping_bounds(self) -> None:
+        """Update the bounds used to clip the links with.
+
+        Uses the drawing bounds.
+
+        """
         stroke_width = self._terminal.attributes.stroke_width
         d = stroke_width / 2.0
         x1, y1, x2, y2 = self._drawing_bounds
@@ -186,7 +177,7 @@ class TerminalBox:
     def drawing_bounds(self) -> Bounds:
         """Bounds used when drawing the box."""
         return self._drawing_bounds
-        
+
     @property
     def central_point(self) -> FloatPoint:
         """Return the point at the center of the box."""
@@ -195,7 +186,7 @@ class TerminalBox:
         x = (x1 + x2) / 2.0
         y = (y1 + y2) / 2.0
         return FloatPoint(x, y)
-        
+
     @property
     def clipping_bounds(self) -> Bounds:
         """Bounds used to clip lines at the edges of the box."""
@@ -217,10 +208,20 @@ class Lane:
     """
 
     def __init__(self, offset: int):
+        """Initialize an empty lane at the given offset."""
         self._offset = offset
         self._connectors: Set[Connector] = set()
         self._width = 0.0
         self._position = 0.0
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({};width={},position={})".format(
+            self.__class__.__name__,
+            self._offset,
+            self._width,
+            self._position,
+        )
 
     def add_connector(self, connector: Connector) -> None:
         """Add a connector that runs through the lane."""
@@ -235,7 +236,7 @@ class Lane:
         """Width of the lane."""
         return self._width
 
-    def calculate_width(self) -> None:
+    def update_width(self) -> None:
         """Calculate the width of the lane and store it in the instance.
 
         The lane must be wide enough for the thickest of the connector
@@ -256,14 +257,6 @@ class Lane:
     @position.setter
     def position(self, value: float) -> None:
         self._position = value
-
-    def __repr__(self) -> str:
-        return "{}({};width={},position={})".format(
-            self.__class__.__name__,
-            self._offset,
-            self._width,
-            self._position,
-        )
 
 ######################################################################
 
@@ -304,7 +297,7 @@ class Track(OrientedLine):
         boxes.append(box)
 
     def boxes(self) -> Iterable[PinBox]:
-        """Provide access to the boxes."""
+        """Return an iterator over the associated boxes."""
         yield from self._boxes
 
     def get_lane(self, offset: int) -> Lane:
@@ -321,7 +314,11 @@ class Track(OrientedLine):
         return lane
 
     def lanes(self) -> Sequence[Lane]:
-        """Return the lanes of the track sorted by offset."""
+        """Return an iterator over the lanes.
+
+        The iterator traverses the lanes according to their offsets.
+
+        """
         lanes = self._lanes
         offsets = sorted(lanes.keys())
         result = []
@@ -330,9 +327,9 @@ class Track(OrientedLine):
             result.append(lane)
         return result
 
-    def calculate_width(self) -> None:
+    def update_width(self) -> None:
         """Calculate the width of the track and store it in the instance."""
-        self._calculate_width_of_lanes()
+        self._update_width_of_lanes()
         lanes_width = self._width_of_lanes()
         # Store the width of the lanes anyway, because we will need it
         # when we will be calculating their positions.
@@ -353,10 +350,10 @@ class Track(OrientedLine):
             width += 2 * attrs.row_margin
         self._width = width
 
-    def _calculate_width_of_lanes(self) -> None:
-        """Tell the lanes to calculate their width."""
+    def _update_width_of_lanes(self) -> None:
+        """Tell the lanes to recalculate their width."""
         for lane in self._lanes.values():
-            lane.calculate_width()
+            lane.update_width()
 
     def _width_of_lanes(self) -> float:
         """Calculate the width necessary for the lanes."""
@@ -393,14 +390,14 @@ class Track(OrientedLine):
         """Width of the track."""
         return self._width
 
-    def calculate_position_starting_from(self, base: float) -> None:
+    def update_position_starting_from(self, base: float) -> None:
         """Calculate the position of the track and store it.
 
         The track starts at the given base coordinate.  The position
         of the track is the coordinate of the central axis of the
         track, which lies halfway from the base.
 
-        This method sets the positions of the lanes as well.
+        This method updates the positions of the lanes as well.
 
         """
         c = base + self._width / 2.0
@@ -435,6 +432,14 @@ class Track(OrientedLine):
 
 ######################################################################
 
+# Key for link markers.  Depends on dimensions and color.
+_MarkerKey = Tuple[int, int, str]
+
+# Mapping from marker keys to markers.
+_Markers = Mapping[_MarkerKey, SvgMarker]
+
+######################################################################
+
 class Drawing:
     """Drawing of a diagram layout."""
 
@@ -446,15 +451,13 @@ class Drawing:
         self._terminal_boxes: Dict[Terminal, TerminalBox] = {}
         self._tracks: Dict[LayoutAxis, Track] = {}
         self._frame_size: Tuple[float, float] = (0.0, 0.0)
-        #
+        # Caution: call order is essential!
         self._init_boxes()
         self._init_tracks()
         self._add_boxes_to_tracks()
         self._add_lanes_to_tracks()
-        self._calculate_track_widths()
-        self._calculate_track_positions()
-        self._calculate_box_positions()
-        self._calculate_box_dimensions()
+        self._update_tracks()
+        self._update_boxes()
         self._init_frame_size()
 
     def _init_boxes(self) -> None:
@@ -465,7 +468,7 @@ class Drawing:
         terminal_boxes.clear()
         diagram = self._layout.diagram
         for pin, p in self._layout.pins_and_points():
-            terminal = diagram.terminal_of_pin(pin)
+            terminal = diagram.pin_terminal(pin)
             pin_box = PinBox(terminal, pin, p)
             pin_boxes[pin] = pin_box
             terminal_box = terminal_boxes.get(terminal)
@@ -534,21 +537,26 @@ class Drawing:
                 # This will create the lane.
                 _ = track.get_lane(0)
 
-    def _calculate_track_widths(self) -> None:
-        """Calculate the widths of the tracks."""
-        for track in self._tracks.values():
-            track.calculate_width()
+    def _update_tracks(self) -> None:
+        """Calculate the geometry of the tracks and lanes."""
+        self._update_track_widths()
+        self._update_track_positions()
 
-    def _calculate_track_positions(self) -> None:
+    def _update_track_widths(self) -> None:
+        """Tell the tracks to update their widhts."""
+        for track in self._tracks.values():
+            track.update_width()
+
+    def _update_track_positions(self) -> None:
         """Calculate the positions of the tracks."""
         x = self._main_area_x()
         y = self._main_area_y()
         for track in self._tracks.values():
             if track.is_horizontal():
-                track.calculate_position_starting_from(y)
+                track.update_position_starting_from(y)
                 y += track.width
             else:
-                track.calculate_position_starting_from(x)
+                track.update_position_starting_from(x)
                 x += track.width
 
     def _main_area_x(self) -> float:
@@ -592,12 +600,23 @@ class Drawing:
             n_lines = len(lines)
             line_height = attrs.text_line_height
             font_size = attrs.font_size
-            label_height = n_lines * line_height * _pt_to_px(font_size)
+            label_height = n_lines * line_height * self._pt_to_px(font_size)
         else:
             label_height = 0.0
         return label_height
 
-    def _calculate_box_positions(self) -> None:
+    def _update_boxes(self) -> None:
+        """Updates the geometry of the boxes.
+
+        This must be called after the geometry of the tracks and lanes
+        has been calculated.
+
+        """
+        self._update_box_positions()
+        self._update_box_dimensions()
+        self._update_box_bounds()
+
+    def _update_box_positions(self) -> None:
         """Calculate the positions of the boxes.
 
         It stores the positions inside the boxes themselves.
@@ -612,7 +631,7 @@ class Drawing:
             c = FloatPoint(x, y)
             box.central_point = c
 
-    def _calculate_box_dimensions(self) -> None:
+    def _update_box_dimensions(self) -> None:
         """Calculate the dimensions of the boxes.
 
         It stores the dimensions inside the boxes themselves.
@@ -629,7 +648,7 @@ class Drawing:
         bds: Dict[PinBox, Dict[Direction, Set[ConnectorSegment]]] = {}
         for conn in self._connectors():
             for seg in conn.segments():
-                joints = seg.joints()
+                joints = seg.joints
                 direc = seg.direction
                 sides = []
                 if direc is Dir.DOWN:
@@ -711,6 +730,11 @@ class Drawing:
             box.width = max(ver_length, box.width)
             box.height = max(hor_length, box.height)
 
+    def _update_box_bounds(self) -> None:
+        """Tell the boxes to update their bounds."""
+        for box in self._terminal_boxes.values():
+            box.update_bounds()
+
     def _init_frame_size(self) -> None:
         """Calculate the dimensions of the drawing.
 
@@ -784,13 +808,8 @@ class Drawing:
         dwg.add(rect)
 
     def _draw_terminals(self, dwg: SvgDrawing) -> None:
-        """Draw the terminals.
-
-        This method updates the bounds of the boxes.
-
-        """
+        """Draw the terminals."""
         for box in self._terminal_boxes.values():
-            box.calculate_bounds()
             self._draw_terminal_box(dwg, box)
             self._draw_terminal_label(dwg, box)
 
@@ -837,12 +856,12 @@ class Drawing:
         font_size = attrs.font_size
         line_height = attrs.text_line_height
         n_lines = len(lines)
-        d = -_pt_to_px(font_size) * 0.5 * line_height * (n_lines - 1)
+        d = self._pt_to_px(font_size) * 0.5 * line_height * (n_lines - 1)
         # Adjust for orientation.
         if attrs.text_orientation is Orientation.HORIZONTAL:
-            text.translate(0, d)
+            text.translate(0, -d)
         if attrs.text_orientation is Orientation.VERTICAL:
-            text.translate(d, 0)
+            text.translate(-d, 0)
             text.rotate(-90)
         # Add lines as `tspan` elements inside the text.
         for i, line in enumerate(lines):
@@ -863,11 +882,11 @@ class Drawing:
             text.add(tspan)
         dwg.add(text)
 
-    def _add_markers(self, dwg: SvgDrawing) -> Mapping[MarkerKey, SvgMarker]:
+    def _add_markers(self, dwg: SvgDrawing) -> _Markers:
         """Add markers for the arrows of the links to the drawing.
 
-        It returns a dictionary of the markers so that they can be
-        referenced by the link elements.
+        It returns the markers so that they can be referenced by the
+        link elements.
 
         """
         markers = {}
@@ -917,15 +936,11 @@ class Drawing:
         return round(width), round(length)
 
     @staticmethod
-    def _arrow_marker_key(width: int, length: int, stroke: str) -> MarkerKey:
+    def _arrow_marker_key(width: int, length: int, stroke: str) -> _MarkerKey:
         """Return a key for the marker with the given attributes."""
         return width, length, stroke
 
-    def _draw_links(
-            self,
-            dwg: SvgDrawing,
-            markers: Mapping[MarkerKey, SvgMarker],
-    ) -> None:
+    def _draw_links(self, dwg: SvgDrawing, markers: _Markers) -> None:
         """Draw the links."""
         for net in self._ordered_networks():
             # Collect the data necessary for the drawing.
@@ -996,7 +1011,7 @@ class Drawing:
         for joint in conn.joints():
             pin = joint.pin
             if pin:
-                terminal = diagram.terminal_of_pin(pin)
+                terminal = diagram.pin_terminal(pin)
                 box = boxes[terminal]
                 poly = box.clipping_polygon()
                 polygons.append(poly)
@@ -1074,7 +1089,7 @@ class Drawing:
             link_point: Point,
             box_polygon: Polygon,
             attrs: LinkAttributes,
-            markers: Mapping[MarkerKey, SvgMarker],
+            markers: _Markers,
     ) -> None:
         """Draw the marker at the end of a link."""
         # Find the point in the middle between the clipped line and
@@ -1118,10 +1133,12 @@ class Drawing:
             y = height - dy
         self._draw_label(dwg, label, attrs, x, y)
 
-    def _get_position(self,
-                      orientation: Orientation,
-                      coordinate: int,
-                      offset: Optional[int] = None) -> float:
+    def _get_position(
+            self,
+            orientation: Orientation,
+            coordinate: int,
+            offset: Optional[int] = None,
+    ) -> float:
         """Calculate the position for the given values."""
         axis = self._layout.grid.axis(orientation, coordinate)
         track = self._tracks[axis]
@@ -1129,6 +1146,11 @@ class Drawing:
             return track.position
         else:
             return track.position_with_offset(offset)
+
+    @staticmethod
+    def _pt_to_px(pt: float) -> float:
+        """Convert points to pixels (a.k.a. user units)."""
+        return 1.25 * pt
 
     @staticmethod
     def _list_of_strings(s: Optional[str]) -> List[str]:

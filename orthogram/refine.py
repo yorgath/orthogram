@@ -4,12 +4,10 @@ from enum import Enum, auto
 from itertools import permutations
 
 from typing import (
-    Collection,
     Dict,
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
     Set,
     Sequence,
@@ -220,8 +218,9 @@ class ConnectorSegment(OrientedVector):
         else:
             return joint.horizontal_offset
 
+    @property
     def joints(self) -> Tuple[Joint, Joint]:
-        """Return an iterator over the joints."""
+        """The joints at the two ends of the segment."""
         return self._start, self._end
 
 ######################################################################
@@ -247,7 +246,7 @@ class Connector:
         """Return an iterator over the joints of the connector."""
         done: Set[Joint] = set()
         for seg in self._segments:
-            for joint in seg.joints():
+            for joint in seg.joints:
                 if joint not in done:
                     yield joint
                     done.add(joint)
@@ -436,7 +435,7 @@ class Network:
         if net_pri is None:
             net_pri = 0
         return net_pri
-    
+
     def __repr__(self) -> str:
         """Convert to string."""
         return "{}({},{};routes={};bundles={})".format(
@@ -545,13 +544,13 @@ class Interaction:
 ######################################################################
 
 # Pair of route segments.
-RouteSegmentPair = Tuple[RouteSegment, RouteSegment]
+_RouteSegmentPair = Tuple[RouteSegment, RouteSegment]
 
 # Collection of route segment pairs.
-RouteSegmentPairs = Sequence[RouteSegmentPair]
+_RouteSegmentPairs = Sequence[_RouteSegmentPair]
 
 # Combination of a network and one of its bundles.
-NetworkAndBundle = Tuple[Network, Bundle]
+_NetworkAndBundle = Tuple[Network, Bundle]
 
 ######################################################################
 
@@ -566,7 +565,7 @@ class Refiner:
         #
         self._init_networks()
         self._init_segment_bundles()
-        self._calculate_offsets()
+        self._update_offsets()
 
     def _init_networks(self) -> None:
         """Create the networks."""
@@ -621,10 +620,10 @@ class Refiner:
                 for seg in bundle.route_segments():
                     seg_bundles[seg] = bundle
 
-    def _calculate_offsets(self) -> None:
+    def _update_offsets(self) -> None:
         """Calculate the offsets of the bundles."""
         dag = self._bundle_dag()
-        self._calculate_bundle_offsets(dag)
+        self._update_bundle_offsets(dag)
         self._stack_bundles()
 
     def _bundle_dag(self) -> igraph.Graph:
@@ -714,7 +713,7 @@ class Refiner:
             self,
             pt1: Passthrough,
             pt2: Passthrough
-    ) -> Optional[RouteSegmentPair]:
+    ) -> Optional[_RouteSegmentPair]:
         """Ordered pair of segments for the T-junction interaction.
 
         The two routes interact like this:
@@ -747,7 +746,11 @@ class Refiner:
         elif l1 and t1 and r2 and t2: return t1, t2
         else: return None
 
-    def _v_pairs(self, pt1: Passthrough, pt2: Passthrough) -> RouteSegmentPairs:
+    def _v_pairs(
+            self,
+            pt1: Passthrough,
+            pt2: Passthrough
+    ) -> _RouteSegmentPairs:
         """Ordered pairs for the vertex-to-vertex interaction.
 
         The two routes interact at a single point, like this:
@@ -778,7 +781,7 @@ class Refiner:
             self,
             pt1: Passthrough,
             pt2: Passthrough
-    ) -> Iterable[RouteSegmentPairs]:
+    ) -> Iterable[_RouteSegmentPairs]:
         """Ordered pairs for the "spoon" interaction.
 
         The two routes interact like this:
@@ -816,7 +819,7 @@ class Refiner:
     def _try_add_pairs_to_dag(
             self,
             g: igraph.Graph,
-            pairs: Sequence[RouteSegmentPair]
+            pairs: Sequence[_RouteSegmentPair]
     ) -> None:
         """Try to add the pairs as edges to the DAG.
 
@@ -845,7 +848,7 @@ class Refiner:
             for e in added:
                 g.delete_edges(e)
 
-    def _calculate_bundle_offsets(self, g: igraph.Graph) -> None:
+    def _update_bundle_offsets(self, g: igraph.Graph) -> None:
         """Calculate the offsets and store them in the bundles."""
         # Find the roots.
         roots = []
@@ -875,7 +878,7 @@ class Refiner:
 
         """
         # Group the bundles by axis.
-        parallel: Dict[LayoutAxis, List[NetworkAndBundle]] = {}
+        parallel: Dict[LayoutAxis, List[_NetworkAndBundle]] = {}
         for net in self._networks:
             for bundle in net.bundles():
                 axis = bundle.axis
@@ -895,8 +898,8 @@ class Refiner:
 
     def _overlapping_bundles(
             self,
-            nbs: Iterable[NetworkAndBundle]
-    ) -> Iterator[Iterable[NetworkAndBundle]]:
+            nbs: Iterable[_NetworkAndBundle]
+    ) -> Iterator[Iterable[_NetworkAndBundle]]:
         """Separate the bundles into collections of overlapping bundles.
 
         This method checks for overlapping bundles at the grid level.
@@ -934,12 +937,12 @@ class Refiner:
 
     def _stack_overlapping_bundles(
             self,
-            nbs: Iterable[NetworkAndBundle]
-    ) -> Sequence[Sequence[NetworkAndBundle]]:
+            nbs: Iterable[_NetworkAndBundle]
+    ) -> Sequence[Sequence[_NetworkAndBundle]]:
         """Stack collinear bundles so that they do not overlap."""
         key = lambda nb: nb[1].offset
         nbs = sorted(nbs, key=key)
-        result: List[List[NetworkAndBundle]] = []
+        result: List[List[_NetworkAndBundle]] = []
         for nb in nbs:
             overlap_on = -1
             n = len(result)
@@ -960,7 +963,10 @@ class Refiner:
         return result
 
     @staticmethod
-    def _bundles_overlap(nb1: NetworkAndBundle, nb2: NetworkAndBundle) -> bool:
+    def _bundles_overlap(
+            nb1: _NetworkAndBundle,
+            nb2: _NetworkAndBundle
+    ) -> bool:
         """True if the two bundles overlap.
 
         This method takes into account the offsets calculated in the

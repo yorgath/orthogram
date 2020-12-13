@@ -1,10 +1,6 @@
 """Lay out diagrams."""
 
-from typing import (
-    Iterable,
-    Iterator,
-    Optional,
-)
+from typing import Iterator
 
 from .diagram import Diagram
 
@@ -45,7 +41,7 @@ class Layout:
     def grid(self) -> LayoutGrid:
         """Layout grid."""
         return self._router.grid
-    
+
     def pins_and_points(self) -> PinsAndPointsIterator:
         """Return an iterator over the pins and their grid positions."""
         yield from self._router.pins_and_points()

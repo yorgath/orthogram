@@ -9,13 +9,14 @@ from typing import (
     Sequence,
 )
 
-from .geometry import Orientation
-
 from .diagram import (
-    Attributes,
+    AttributeDict,
+    AttributeMap,
     Diagram,
     LabelPosition,
 )
+
+from .geometry import Orientation
 
 from .util import log_warning
 
@@ -24,6 +25,9 @@ from .util import log_warning
 # Generic definition.
 _Definition = Mapping[str, Any]
 
+# Collection of definitions.
+_Definitions = Mapping[str, Any]
+
 ######################################################################
 
 class Builder:
@@ -31,8 +35,8 @@ class Builder:
 
     def __init__(self) -> None:
         """Initialize the builder."""
-        self._named_styles: Dict[str, Attributes] = {}
-        self._group_styles: Dict[str, Attributes] = {}
+        self._named_styles: Dict[str, AttributeMap] = {}
+        self._group_styles: Dict[str, AttributeMap] = {}
         self._diagram = Diagram()
 
     @property
@@ -40,7 +44,7 @@ class Builder:
         """The diagram being built."""
         return self._diagram
 
-    def add(self, defs: Mapping[str, Any]) -> None:
+    def add(self, defs: _Definitions) -> None:
         """Add the definitions to the diagram.
 
         Valid keys are:
@@ -74,7 +78,7 @@ class Builder:
         if link_defs:
             self.add_links(link_defs)
 
-    def add_styles(self, defs: Mapping[str, Any]) -> None:
+    def add_styles(self, defs: _Definitions) -> None:
         """Store named styles in the builder.
 
         The input is a mapping between style names and style
@@ -99,7 +103,7 @@ class Builder:
             log_warning("Replacing style '{}'".format(name))
         styles[name] = self._collect_attributes(style_def)
 
-    def add_groups(self, defs: Mapping[str, Any]) -> None:
+    def add_groups(self, defs: _Definitions) -> None:
         """Define groups of links in the diagram.
 
         The input is a mapping between group names and group
@@ -120,7 +124,7 @@ class Builder:
         definition is replaced with a warning.
 
         """
-        attrs: Attributes = {}
+        attrs: AttributeDict = {}
         # Merge attributes inherited from style reference.
         style_name = group_def.get('style')
         style_attrs = self._get_style(style_name, True)
@@ -144,7 +148,7 @@ class Builder:
         attrs = self._collect_attributes(dia_def)
         self._diagram.attributes.set_attributes(**attrs)
 
-    def add_terminals(self, defs: Mapping[str, Any]) -> None:
+    def add_terminals(self, defs: _Definitions) -> None:
         """Add terminals to the diagram.
 
         The input is a mapping between terminal names and terminal
@@ -165,7 +169,7 @@ class Builder:
         'style' reference to a named style.
 
         """
-        attrs: Attributes = {}
+        attrs: AttributeDict = {}
         # Merge default terminal attributes.
         def_attrs = self._get_style('default_terminal')
         self._merge_attributes(attrs, def_attrs)
@@ -205,7 +209,7 @@ class Builder:
         terminal_names = row_def.get('pins', list())
         self._diagram.add_row(terminal_names)
 
-    def add_links(self, defs: Sequence[Mapping[str, Any]]) -> None:
+    def add_links(self, defs: Sequence[_Definition]) -> None:
         """Add links to the diagram.
 
         The input is a sequence of link definitions.  See add_link()
@@ -229,7 +233,7 @@ class Builder:
         start = self._str_or_list(link_def['start'])
         end = self._str_or_list(link_def['end'])
         # Calculate the styles.
-        attrs: Attributes = {}
+        attrs: AttributeDict = {}
         # Merge default link attributes.
         def_attrs = self._get_style('default_link')
         self._merge_attributes(attrs, def_attrs)
@@ -248,9 +252,9 @@ class Builder:
         # Create the object(s).
         self._diagram.add_links(start, end, **attrs)
 
-    def _collect_attributes(self, any_def: _Definition) -> Attributes:
+    def _collect_attributes(self, any_def: _Definition) -> AttributeMap:
         """Collect the attributes from a definition."""
-        attrs: Attributes = {}
+        attrs: AttributeDict = {}
         if 'arrow_aspect' in any_def:
             attrs['arrow_aspect'] = float(any_def['arrow_aspect'])
         if 'arrow_back' in any_def:
@@ -326,7 +330,7 @@ class Builder:
                 attrs['text_orientation'] = text_orientation
         return attrs
 
-    def _merge_attributes(self, dest: Attributes, src: Attributes) -> None:
+    def _merge_attributes(self, dest: AttributeDict, src: AttributeMap) -> None:
         """Merge attributes from a definition."""
         if 'arrow_aspect' in src:
             dest['arrow_aspect'] = src['arrow_aspect']
@@ -393,7 +397,11 @@ class Builder:
         if 'text_orientation' in src:
             dest['text_orientation'] = src['text_orientation']
 
-    def _get_style(self, name: Optional[str], warn: bool = False) -> Attributes:
+    def _get_style(
+            self,
+            name: Optional[str],
+            warn: bool = False
+    ) -> AttributeMap:
         """Retrieve the attributes of the style with the given name.
 
         If the name is empty or the style does not exist, it returns
@@ -409,7 +417,7 @@ class Builder:
 
     @staticmethod
     def _str_or_list(text: Any) -> List[str]:
-        """Takes as input string or list of strings, returns a list."""
+        """Take a string or list of strings and return a list of strings."""
         result = []
         if isinstance(text, list):
             result.extend(text)
@@ -419,7 +427,7 @@ class Builder:
 
     @staticmethod
     def _parse_label_position(s: str) -> Optional[LabelPosition]:
-        """Parse the value of the label position definition."""
+        """Parse the value of a label position attribute."""
         a = s.lower()
         if a == 'bottom':
             return LabelPosition.BOTTOM
@@ -427,7 +435,7 @@ class Builder:
             return LabelPosition.TOP
         else:
             return None
-        
+
     @staticmethod
     def _parse_orientation(s: str) -> Optional[Orientation]:
         """Parse the value of an orientation attribute."""

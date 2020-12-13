@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -18,8 +19,11 @@ from .util import log_warning
 
 ######################################################################
 
-# Attributes as key-value pairs.
-Attributes = Dict[str, Any]
+# Abstract mapping from attribute names to attribute values.
+AttributeMap = Mapping[str, Any]
+
+# Concrete mapping from attribute names to attribute values.
+AttributeDict = Dict[str, Any]
 
 ######################################################################
 
@@ -39,7 +43,7 @@ class LineAttributes:
         self._stroke_dasharray: Optional[str] = None
         self._stroke_width = 2.0
 
-    def _set_line_attributes(self, attrs: Attributes) -> None:
+    def _set_line_attributes(self, attrs: AttributeMap) -> None:
         """Set the line attributes to the given values."""
         if 'stroke' in attrs:
             self._stroke = cast(Optional[str], attrs['stroke'])
@@ -75,7 +79,7 @@ class AreaAttributes:
         self._min_height = 0.0
         self._min_width = 0.0
 
-    def _set_area_attributes(self, attrs: Attributes) -> None:
+    def _set_area_attributes(self, attrs: AttributeMap) -> None:
         """Set the area attributes to the given values."""
         if 'fill' in attrs:
             self._fill = cast(Optional[str], attrs['fill'])
@@ -115,7 +119,7 @@ class TextAttributes:
         self._text_line_height = 1.25
         self._text_orientation = Orientation.HORIZONTAL
 
-    def _set_text_attributes(self, attrs: Attributes) -> None:
+    def _set_text_attributes(self, attrs: AttributeMap) -> None:
         """Set the text attributes to the given values."""
         if 'font_family' in attrs:
             self._font_family = cast(Optional[str], attrs['font_family'])
@@ -188,7 +192,7 @@ class Pin:
     def __repr__(self) -> str:
         """Convert to string."""
         return "{}({})".format(self.__class__.__name__, self._name)
-    
+
     @property
     def name(self) -> str:
         """Name that identifies the pin."""
@@ -198,13 +202,13 @@ class Pin:
     def point(self) -> IntPoint:
         """Position of the pin in the diagram."""
         return self._point
-    
+
 ######################################################################
 
 class TerminalAttributes(LineAttributes, AreaAttributes, TextAttributes):
     """Collection of attributes relevant to link terminals."""
 
-    def __init__(self, **attrs: Attributes):
+    def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
         LineAttributes.__init__(self)
         AreaAttributes.__init__(self)
@@ -213,14 +217,14 @@ class TerminalAttributes(LineAttributes, AreaAttributes, TextAttributes):
         self._min_width = 96.0
         self.set_attributes(**attrs)
 
-    def set_attributes(self, **attrs: Attributes) -> None:
+    def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
         self._set_line_attributes(attrs)
         self._set_area_attributes(attrs)
         self._set_text_attributes(attrs)
         self._set_terminal_attributes(attrs)
 
-    def _set_terminal_attributes(self, attrs: Attributes) -> None:
+    def _set_terminal_attributes(self, attrs: AttributeMap) -> None:
         """Set the attributes of the terminal to the given values."""
         pass
 
@@ -229,7 +233,7 @@ class TerminalAttributes(LineAttributes, AreaAttributes, TextAttributes):
 class Terminal:
     """Links terminate here."""
 
-    def __init__(self, name: str, **attrs: Attributes):
+    def __init__(self, name: str, **attrs: AttributeMap):
         """Initialize the terminal (with optional attributes)."""
         self._name = name
         self._attributes = TerminalAttributes(**attrs)
@@ -296,7 +300,7 @@ class Terminal:
             log_warning(t.format(self._name))
             return False
         return True
-        
+
     def occupy(self, p: IntPoint) -> Pin:
         """Occupy the given position in the diagram.
 
@@ -312,11 +316,11 @@ class Terminal:
     def pins(self) -> Iterator[Pin]:
         """Return an iterator over the pins of the terminal."""
         yield from self._pins
-    
+
     def is_placed(self) -> bool:
         """Return true if the terminal occupies positions in the diagram."""
         return len(self._pins) > 0
-    
+
     def label(self) -> str:
         """Return a label to draw on the terminal in the diagram."""
         label = self._attributes.label
@@ -349,7 +353,7 @@ class Cell:
     def pin(self) -> Optional[Pin]:
         """Terminal pin in this cell."""
         return self._pin
-    
+
 ######################################################################
 
 class DiagramRow:
@@ -378,7 +382,7 @@ class DiagramRow:
 class LinkAttributes(LineAttributes):
     """Collection of attributes relevant to links."""
 
-    def __init__(self, **attrs: Attributes):
+    def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
         LineAttributes.__init__(self)
         self._arrow_aspect = 1.5
@@ -394,12 +398,12 @@ class LinkAttributes(LineAttributes):
         self._stroke = "black"
         self.set_attributes(**attrs)
 
-    def set_attributes(self, **attrs: Attributes) -> None:
+    def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
         self._set_line_attributes(attrs)
         self._set_link_attributes(attrs)
 
-    def _set_link_attributes(self, attrs: Attributes) -> None:
+    def _set_link_attributes(self, attrs: AttributeMap) -> None:
         """Set the link attributes to the given values."""
         if 'arrow_aspect' in attrs:
             self._arrow_aspect = cast(float, attrs['arrow_aspect'])
@@ -477,7 +481,7 @@ class LinkAttributes(LineAttributes):
 class Link:
     """A link between two terminals in the diagram."""
 
-    def __init__(self, start: Terminal, end: Terminal, **attrs: Attributes):
+    def __init__(self, start: Terminal, end: Terminal, **attrs: AttributeMap):
         """Initialize a link between the given terminals."""
         self._start = start
         self._end = end
@@ -503,7 +507,7 @@ class Link:
 class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
     """Collection of attributes relevant to diagrams."""
 
-    def __init__(self, **attrs: Attributes):
+    def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
         LineAttributes.__init__(self)
         AreaAttributes.__init__(self)
@@ -522,14 +526,14 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
         self._stroke_width = 0.0
         self.set_attributes(**attrs)
 
-    def set_attributes(self, **attrs: Attributes) -> None:
+    def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
         self._set_line_attributes(attrs)
         self._set_area_attributes(attrs)
         self._set_text_attributes(attrs)
         self._set_diagram_attributes(attrs)
 
-    def _set_diagram_attributes(self, attrs: Attributes) -> None:
+    def _set_diagram_attributes(self, attrs: AttributeMap) -> None:
         """Set the diagram attributes to the given values."""
         if 'collapse_links' in attrs:
             self._collapse_links = cast(bool, attrs['collapse_links'])
@@ -593,7 +597,7 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
 class Diagram:
     """Container for the terminals and links of the diagram."""
 
-    def __init__(self, **attrs: Attributes):
+    def __init__(self, **attrs: AttributeMap):
         """Initialize the diagram with the given attributes."""
         self._terminals: Dict[str, Terminal] = {}
         self._pins_to_terminals: Dict[Pin, Terminal] = {}
@@ -606,7 +610,7 @@ class Diagram:
         """Attributes attached to the diagram."""
         return self._attributes
 
-    def add_terminal(self, name: str, **attrs: Attributes) -> None:
+    def add_terminal(self, name: str, **attrs: AttributeMap) -> None:
         """Add a new terminal to the diagram.
 
         Rejects the terminal with a warning if there is already a
@@ -693,7 +697,7 @@ class Diagram:
                 chunk = [name]
         if chunk:
             yield chunk[0], len(chunk)
-        
+
     def rows(self) -> Iterator[DiagramRow]:
         """Return an iterator over the rows."""
         yield from self._rows
@@ -705,7 +709,7 @@ class Diagram:
     def max_row(self) -> int:
         """Return the length of the longest row.
 
-        It takes into account both terminals and empty spaces.
+        It takes into account both occupied and empty positions.
 
         """
         result = 0
@@ -713,15 +717,15 @@ class Diagram:
             result = max(result, len(row))
         return result
 
-    def terminal_of_pin(self, pin: Pin) -> Terminal:
+    def pin_terminal(self, pin: Pin) -> Terminal:
         """Return the terminal that owns the given pin."""
         return self._pins_to_terminals[pin]
-    
+
     def add_link(
             self,
             start_terminal_name: str,
             end_terminal_name: str,
-            **attrs: Attributes,
+            **attrs: AttributeMap,
     ) -> None:
         """Create a link between two terminals.
 
@@ -730,7 +734,9 @@ class Diagram:
         1. any of the two terminal names does not correspond to a
            terminal registered in the diagram or
 
-        2. any of the two terminals has not a pin in a row.
+        2. any of the two terminals has not a pin in a row or
+
+        3. start and end are both the same terminal.
 
         See DiagramAttributes for a list of available attributes.
 
@@ -761,7 +767,7 @@ class Diagram:
             self,
             start_terminal_names: Sequence[str],
             end_terminal_names: Sequence[str],
-            **attrs: Attributes,
+            **attrs: AttributeMap,
     ) -> None:
         """Create many links at once.
 

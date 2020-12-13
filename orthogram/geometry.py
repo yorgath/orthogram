@@ -145,7 +145,7 @@ class Axis(OrientedObject):
 
 class OrientedLine(OrientedObject, metaclass=ABCMeta):
     """Linear object that lies on a grid axis."""
-    
+
     @property
     @abstractmethod
     def axis(self) -> Axis:

@@ -14,20 +14,18 @@ from typing import (
 
 import igraph # type: ignore
 
-from .geometry import (
-    Axis,
-    Direction,
-    IntPoint,
-    Orientation,
-    OrientedVector,
-)
-
 from .diagram import (
     Cell,
     Diagram,
     Link,
     Pin,
-    Terminal,
+)
+
+from .geometry import (
+    Axis,
+    IntPoint,
+    Orientation,
+    OrientedVector,
 )
 
 ######################################################################
@@ -36,7 +34,7 @@ from .diagram import (
 PinsAndPointsIterator = Iterator[Tuple[Pin, IntPoint]]
 
 # Iterator of grid points and placed terminal pins.
-_PointsAndPinsIterator = Iterator[Tuple[IntPoint, Optional[Pin]]]
+PointsAndPinsIterator = Iterator[Tuple[IntPoint, Optional[Pin]]]
 
 ######################################################################
 
@@ -67,7 +65,7 @@ class LayoutAxis(Axis):
     def location(self) -> AxisLocation:
         """Location of the axis relative to the pins."""
         return self._location
-    
+
 ######################################################################
 
 class LayoutGrid:
@@ -82,9 +80,9 @@ class LayoutGrid:
         self._pin_points: Dict[Pin, IntPoint]
         self._forbidden_points: Set[IntPoint]
         #
-        self._make_rows(diagram)
+        self._init_rows(diagram)
         self._collect_forbidden_points()
-        
+
     def  __repr__(self) -> str:
         """Convert to string."""
         return "{}(height={}, width={})".format(
@@ -93,7 +91,7 @@ class LayoutGrid:
             self._width,
         )
 
-    def _make_rows(self, diagram: Diagram) -> None:
+    def _init_rows(self, diagram: Diagram) -> None:
         """Create the cells of the grid."""
         # Create an empty grid first.
         g_rows = []
@@ -138,7 +136,7 @@ class LayoutGrid:
                         p = IntPoint(i + 1, j)
                         forbidden.add(p)
         self._forbidden_points = forbidden
-                
+
     @property
     def height(self) -> int:
         """Number of grid rows."""
@@ -158,7 +156,7 @@ class LayoutGrid:
     def cell_at(self, p: IntPoint) -> Cell:
         """Return the cell at the given grid point."""
         return self._rows[p.i][p.j]
-    
+
     def pin_point(self, pin: Pin) -> IntPoint:
         """Return the position of the pin in the grid."""
         return self._pin_points[pin]
@@ -166,8 +164,8 @@ class LayoutGrid:
     def pins_and_points(self) -> PinsAndPointsIterator:
         """Return an iterator over the terminal pins and their positions."""
         yield from self._pin_points.items()
-    
-    def points_and_pins(self) -> _PointsAndPinsIterator:
+
+    def points_and_pins(self) -> PointsAndPinsIterator:
         """Return an iterator over the points and associated pins."""
         for i, row in enumerate(self._rows):
             for j, cell in enumerate(row):
@@ -175,12 +173,12 @@ class LayoutGrid:
                 yield p, cell.pin
 
     def permitted_edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
-        """Return an iterator over the edges that the router can use."""
+        """Return an iterator over the edges that one can follow."""
         forbidden = self._forbidden_points
         for p1, p2 in self._edges():
             if p1 not in forbidden and p2 not in forbidden:
                 yield p1, p2
-            
+
     def _edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
         """Return an iterator over all the edges of the grid."""
         h = self._height
@@ -199,7 +197,7 @@ class LayoutGrid:
         """Return an axis of the grid."""
         loc = self._axis_location(orientation, coord)
         return LayoutAxis(orientation, coord, loc)
-        
+
     def _axis_location(
             self,
             orientation: Orientation,
@@ -248,7 +246,7 @@ class RouteSegment(OrientedVector):
         self._name = name
         self._axis = axis
         self._coords = (c1, c2)
-    
+
     def __repr__(self) -> str:
         """Convert to string."""
         coords = self._coords
@@ -274,7 +272,7 @@ class RouteSegment(OrientedVector):
     def coordinates(self) -> Tuple[int, int]:
         """First and last coordinates along the axis."""
         return self._coords
-            
+
 ######################################################################
 
 class Route:
@@ -335,9 +333,9 @@ class Router:
         """
         self._grid_graph = graph = igraph.Graph(directed=False)
         grid = self._grid
-        for p, elt in grid.points_and_pins():
-            graph.add_vertex(p.name(), point=p, pin=elt)
-        
+        for p, n in grid.points_and_pins():
+            graph.add_vertex(p.name(), point=p, pin=n)
+
     def _init_routes(self) -> None:
         """Create the routes for all the links of the diagram."""
         routes: List[Route] = []
@@ -370,7 +368,7 @@ class Router:
                     shortest_length = length
         assert shortest_path
         return shortest_path
-        
+
     def _shortest_path_between_pins(
             self,
             link: Link,
@@ -444,7 +442,7 @@ class Router:
             self,
             prefix: str,
             points: Sequence[IntPoint]
-    ) -> List[RouteSegment]:
+    ) -> Sequence[RouteSegment]:
         """Generate segments for a route."""
         segments: List[RouteSegment] = []
         seg_points: List[IntPoint] = []
@@ -476,6 +474,24 @@ class Router:
         segments.append(seg)
         return segments
 
+    def _make_segment_for_route(
+            self,
+            prefix: str,
+            index: int,
+            p1: IntPoint, p2: IntPoint
+    ) -> RouteSegment:
+        """Create a new segment for a route."""
+        ori = self._points_orientation(p1, p2)
+        if ori is Orientation.HORIZONTAL:
+            axis_coord = p1.i
+            c1, c2 = p1.j, p2.j
+        else:
+            axis_coord = p1.j
+            c1, c2 = p1.i, p2.i
+        axis = self._grid.axis(ori, axis_coord)
+        name = "{}{}".format(prefix, index)
+        return RouteSegment(name, axis, c1, c2)
+
     @staticmethod
     def _points_orientation(p1: IntPoint, p2: IntPoint) -> Orientation:
         """Orientation of the segment formed by the two points."""
@@ -484,30 +500,11 @@ class Router:
         else:
             return Orientation.VERTICAL
 
-    def _make_segment_for_route(
-            self,
-            prefix: str,
-            index: int,
-            p1: IntPoint, p2: IntPoint
-    ) -> RouteSegment:
-        """Create a new segment for a route."""
-        if p1.i == p2.i:
-            ori = Orientation.HORIZONTAL
-            axis_coord = p1.i
-            c1, c2 = p1.j, p2.j
-        else:
-            ori = Orientation.VERTICAL
-            axis_coord = p1.j
-            c1, c2 = p1.i, p2.i
-        axis = self._grid.axis(ori, axis_coord)
-        name = "{}{}".format(prefix, index)
-        return RouteSegment(name, axis, c1, c2)
-    
     @property
     def diagram(self) -> Diagram:
         """The diagram for which the router was created."""
         return self._diagram
-    
+
     @property
     def grid(self) -> LayoutGrid:
         """Layout grid."""
@@ -516,11 +513,11 @@ class Router:
     def pin_at(self, p: IntPoint) -> Optional[Pin]:
         """Return the terminal pin at the given grid point."""
         return self._grid.cell_at(p).pin
-    
+
     def pins_and_points(self) -> PinsAndPointsIterator:
         """Return an iterator over the pins and their grid positions."""
         yield from self.grid.pins_and_points()
-    
+
     def routes(self) -> Iterator[Route]:
         """Return an iterator over the routes."""
         yield from self._routes
