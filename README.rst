@@ -591,7 +591,7 @@ Release history
 
 * Added the scripts.
 
-0.2.0 (????-??-??)
+0.2.0 (2020-12-14)
 ~~~~~~~~~~~~~~~~~~
 
 * Introduced the ability to create shapes spanning multiple rows and
