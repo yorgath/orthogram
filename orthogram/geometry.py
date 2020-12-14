@@ -135,9 +135,9 @@ class Axis(OrientedObject):
 
     def __repr__(self) -> str:
         """Convert to string."""
-        return "{}({},{})".format(
+        return "{}({}{})".format(
             self.__class__.__name__,
-            self._orientation.name,
+            self._orientation.name[0],
             self._coordinate
         )
 

@@ -7,6 +7,7 @@ from typing import Any, Optional
 import yaml
 
 from .build import Builder
+from .debug import Debug
 from .diagram import Diagram
 from .draw import Drawing
 from .layout import Layout
@@ -23,12 +24,19 @@ def translate_from_command_line() -> int:
         help="path of diagram definition file"
     )
     parser.add_argument(
+        "-d", "--debug",
+        action='store_true',
+        help="print debug information while running",
+        dest='debug',
+    )
+    parser.add_argument(
         "-o", "--out",
         metavar='OUTFILE',
         help="write diagram to this file",
         dest='out_file',
     )
     args = parser.parse_args()
+    Debug.set_debug(args.debug)
     translate(args.in_file, args.out_file)
     return 0
 

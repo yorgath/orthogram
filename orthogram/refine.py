@@ -16,6 +16,7 @@ from typing import (
 
 import igraph # type: ignore
 
+from .debug import Debug
 from .diagram import Link, Pin
 
 from .geometry import (
@@ -33,6 +34,8 @@ from .route import (
     RouteSegment,
     Router,
 )
+
+from .util import log_debug
 
 ######################################################################
 
@@ -543,14 +546,40 @@ class Interaction:
 
 ######################################################################
 
-# Pair of route segments.
-_RouteSegmentPair = Tuple[RouteSegment, RouteSegment]
-
-# Collection of route segment pairs.
-_RouteSegmentPairs = Sequence[_RouteSegmentPair]
-
 # Combination of a network and one of its bundles.
 _NetworkAndBundle = Tuple[Network, Bundle]
+
+######################################################################
+
+class _Rule:
+    """Declares that one route segment comes after another."""
+
+    def __init__(self, first: RouteSegment, second: RouteSegment):
+        """Initialize with the two segments."""
+        assert first.orientation is second.orientation
+        self._first = first
+        self._second = second
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        if self._first.orientation is Orientation.HORIZONTAL:
+            adverb = "OVER"
+        else:
+            adverb = "BEFORE"
+        return "{}({} {} {})".format(
+            self.__class__.__name__,
+            self._first, adverb, self._second,
+        )
+
+    @property
+    def first(self) -> RouteSegment:
+        """The segment that comes before."""
+        return self._first
+
+    @property
+    def second(self) -> RouteSegment:
+        """The segment that comes after."""
+        return self._second
 
 ######################################################################
 
@@ -646,25 +675,25 @@ class Refiner:
                         g.add_vertices(1, attrs)
                         added.add(name)
         # Edges represent the order of two bundles.
-        tv_pairs = []
-        s_pairs = []
+        tv_rules = []
+        s_rules = []
         for inter in interactions:
             pt1, pt2 = inter.passthroughs
-            # Store T and V pairs one by one, because we roll them
+            # Store T and V rules one by one, because we roll them
             # back individually.
-            pair = self._t_pair(pt1, pt2)
-            if pair:
-                tv_pairs.append(pair)
-            for pair in self._v_pairs(pt1, pt2):
-                tv_pairs.append(pair)
-            # Store S pairs as lists of pairs, because we must be able
+            rule = self._t_rule(pt1, pt2)
+            if rule:
+                tv_rules.append(rule)
+            for rule in self._v_rules(pt1, pt2):
+                tv_rules.append(rule)
+            # Store S rules as lists of rules, because we must be able
             # to roll back the whole list.
-            for pairs in self._s_pairs(pt1, pt2):
-                s_pairs.append(pairs)
-        for pair in tv_pairs:
-            self._try_add_pairs_to_dag(g, [pair])
-        for pairs in s_pairs:
-            self._try_add_pairs_to_dag(g, pairs)
+            for rules in self._s_rules(pt1, pt2):
+                s_rules.append(rules)
+        for rule in tv_rules:
+            self._try_add_rules_to_dag(g, [rule])
+        for rules in s_rules:
+            self._try_add_rules_to_dag(g, rules)
         return g
 
     def _interactions(self) -> Iterator[Interaction]:
@@ -709,12 +738,8 @@ class Refiner:
                 segment_out=None,
             )
 
-    def _t_pair(
-            self,
-            pt1: Passthrough,
-            pt2: Passthrough
-    ) -> Optional[_RouteSegmentPair]:
-        """Ordered pair of segments for the T-junction interaction.
+    def _t_rule(self, pt1: Passthrough, pt2: Passthrough) -> Optional[_Rule]:
+        """Rule between segments for the T-junction interaction.
 
         The two routes interact like this:
 
@@ -731,27 +756,24 @@ class Refiner:
         l2 = pt2.segment_left
         r2 = pt2.segment_right
         t2 = pt2.segment_top
+        R = _Rule
         if False: pass
-        elif b1 and l1 and b2 and r2: return b1, b2
-        elif b1 and l1 and b2 and t2: return b1, b2
-        elif b1 and l1 and l2 and r2: return l2, l1
-        elif b1 and l1 and l2 and t2: return l2, l1
-        elif b1 and r1 and b2 and t2: return b2, b1
-        elif b1 and r1 and l2 and r2: return r2, r1
-        elif b1 and r1 and r2 and t2: return r2, r1
-        elif b1 and t1 and l2 and t2: return t2, t1
-        elif b1 and t1 and r2 and t2: return t1, t2
-        elif l1 and r1 and l2 and t2: return l2, l1
-        elif l1 and r1 and r2 and t2: return r2, r1
-        elif l1 and t1 and r2 and t2: return t1, t2
+        elif b1 and l1 and b2 and r2: return R(b1, b2)
+        elif b1 and l1 and b2 and t2: return R(b1, b2)
+        elif b1 and l1 and l2 and r2: return R(l2, l1)
+        elif b1 and l1 and l2 and t2: return R(l2, l1)
+        elif b1 and r1 and b2 and t2: return R(b2, b1)
+        elif b1 and r1 and l2 and r2: return R(r2, r1)
+        elif b1 and r1 and r2 and t2: return R(r2, r1)
+        elif b1 and t1 and l2 and t2: return R(t2, t1)
+        elif b1 and t1 and r2 and t2: return R(t1, t2)
+        elif l1 and r1 and l2 and t2: return R(l2, l1)
+        elif l1 and r1 and r2 and t2: return R(r2, r1)
+        elif l1 and t1 and r2 and t2: return R(t1, t2)
         else: return None
 
-    def _v_pairs(
-            self,
-            pt1: Passthrough,
-            pt2: Passthrough
-    ) -> _RouteSegmentPairs:
-        """Ordered pairs for the vertex-to-vertex interaction.
+    def _v_rules(self, pt1: Passthrough, pt2: Passthrough) -> Sequence[_Rule]:
+        """Rules for the vertex-to-vertex interaction.
 
         The two routes interact at a single point, like this:
 
@@ -760,8 +782,8 @@ class Refiner:
            '--
            |
 
-        The method returns two pairs of segments for each case; either
-        one of them will do.
+        The method returns two rules for each case; *either* one of
+        them will do.
 
         """
         b1 = pt1.segment_bottom
@@ -772,17 +794,18 @@ class Refiner:
         l2 = pt2.segment_left
         r2 = pt2.segment_right
         t2 = pt2.segment_top
+        R = _Rule
         if False: pass
-        elif b1 and l1 and r2 and t2: return [(b1, t2), (r2, l1)]
-        elif b1 and r1 and l2 and t2: return [(l2, r1), (t2, b1)]
+        elif b1 and l1 and r2 and t2: return [R(b1, t2), R(r2, l1)]
+        elif b1 and r1 and l2 and t2: return [R(l2, r1), R(t2, b1)]
         else: return []
 
-    def _s_pairs(
+    def _s_rules(
             self,
             pt1: Passthrough,
             pt2: Passthrough
-    ) -> Iterable[_RouteSegmentPairs]:
-        """Ordered pairs for the "spoon" interaction.
+    ) -> Iterable[Sequence[_Rule]]:
+        """Rules for the "spoon" interaction.
 
         The two routes interact like this:
 
@@ -790,9 +813,9 @@ class Refiner:
         |`--
         `---
 
-        This method returns *pairs* of segment pairs; either both
-        pairs must be added to the DAG or neither.  However, either
-        pair of pairs will do.
+        This method returns *pairs* of rules; either both rules of a
+        pair must be added to the DAG or neither.  However, either
+        pair will do.
 
         """
         b1 = pt1.segment_bottom
@@ -803,25 +826,38 @@ class Refiner:
         l2 = pt2.segment_left
         r2 = pt2.segment_right
         t2 = pt2.segment_top
+        R = _Rule
         if False:
             pass
         elif b1 and l1 and b2 and l2:
-            return [[(b1, b2), (l2, l1)], [(b2, b1), (l1, l2)]]
+            return [
+                [R(b1, b2), R(l2, l1)],
+                [R(b2, b1), R(l1, l2)],
+            ]
         elif b1 and r1 and b2 and r2:
-            return [[(b1, b2), (r1, r2)], [(b2, b1), (r2, r1)]]
+            return [
+                [R(b1, b2), R(r1, r2)],
+                [R(b2, b1), R(r2, r1)],
+            ]
         elif l1 and t1 and l2 and t2:
-            return [[(l1, l2), (t1, t2)], [(l2, l1), (t2, t1)]]
+            return [
+                [R(l1, l2), R(t1, t2)],
+                [R(l2, l1), R(t2, t1)],
+            ]
         elif r1 and t1 and r2 and t2:
-            return [[(r2, r1), (t1, t2)], [(r1, r2), (t2, t1)]]
+            return [
+                [R(r2, r1), R(t1, t2)],
+                [R(r1, r2), R(t2, t1)],
+            ]
         else:
             return []
 
-    def _try_add_pairs_to_dag(
+    def _try_add_rules_to_dag(
             self,
             g: igraph.Graph,
-            pairs: Sequence[_RouteSegmentPair]
+            rules: Sequence[_Rule]
     ) -> None:
-        """Try to add the pairs as edges to the DAG.
+        """Try to add the rules as edges to the DAG.
 
         It rolls back all the edges if one of them causes a cycle.
 
@@ -829,9 +865,9 @@ class Refiner:
         seg_bundles = self._segment_bundles
         added = []
         ok = True
-        for seg1, seg2 in pairs:
-            bundle1 = seg_bundles[seg1]
-            bundle2 = seg_bundles[seg2]
+        for rule in rules:
+            bundle1 = seg_bundles[rule.first]
+            bundle2 = seg_bundles[rule.second]
             # Do not use the bundle against itself!
             if bundle1 is bundle2:
                 continue
@@ -843,30 +879,48 @@ class Refiner:
             if not g.is_dag():
                 ok = False
                 break
-        # Remove the edges in case of cycles.
+        if ok:
+            if Debug.debug:
+                for rule in rules:
+                    log_debug("Added {}".format(rule))
         if not ok:
+            # Remove the edges in case of cycles.
             for e in added:
                 g.delete_edges(e)
+            if Debug.debug:
+                for rule in rules:
+                    log_debug("Rejected {}".format(rule))
 
     def _update_bundle_offsets(self, g: igraph.Graph) -> None:
         """Calculate the offsets and store them in the bundles."""
-        # Find the roots.
-        roots = []
+        # Assign inital depths to the vertices.
         for v in g.vs:
             is_root = True
-            for _ in g.predecessors(v):
+            for idx in g.predecessors(v):
                 is_root = False
                 break
             if is_root:
-                roots.append(v)
-        # Calculate the distances of all the vertices.
-        for root in roots:
-            for v, dist, _ in g.bfsiter(root, advanced=True):
-                v['distance'] = dist
+                v['depth'] = 0
+            else:
+                v['depth'] = -1
+        # Calculate the depths of all the vertices.
+        while True:
+            changed = False
+            for v1 in g.vs:
+                depth1 = v1['depth']
+                if depth1 >= 0:
+                    for idx2 in g.successors(v1):
+                        v2 = g.vs[idx2]
+                        depth2 = v2['depth']
+                        if depth1 + 1 > depth2:
+                            v2['depth'] = max(depth1 + 1, depth2)
+                            changed = True
+            if not changed:
+                break
         # We can now store the offsets in the bundles.
         for v in g.vs:
             bundle = v['bundle']
-            offset = v['distance']
+            offset = v['depth']
             bundle.offset = offset
 
     def _stack_bundles(self) -> None:

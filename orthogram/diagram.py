@@ -487,6 +487,14 @@ class Link:
         self._end = end
         self._attributes = LinkAttributes(**attrs)
 
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({}->{})".format(
+            self.__class__.__name__,
+            self._start.name,
+            self._end.name,
+        )
+
     @property
     def start(self) -> Terminal:
         """Source terminal of the link."""
@@ -563,11 +571,6 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
         return self._column_margin
 
     @property
-    def link_distance(self) -> float:
-        """Distance between links."""
-        return self._link_distance
-
-    @property
     def label_distance(self) -> float:
         """Distance of the label from the border."""
         return self._label_distance
@@ -576,6 +579,11 @@ class DiagramAttributes(LineAttributes, AreaAttributes, TextAttributes):
     def label_position(self) -> LabelPosition:
         """Position of the label."""
         return self._label_position
+
+    @property
+    def link_distance(self) -> float:
+        """Distance between links."""
+        return self._link_distance
 
     @property
     def padding(self) -> float:

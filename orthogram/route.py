@@ -235,7 +235,13 @@ class LayoutGrid:
 class RouteSegment(OrientedVector):
     """Segment of a route between angles."""
 
-    def __init__(self, name: str, axis: LayoutAxis, c1: int, c2: int):
+    def __init__(
+            self,
+            name: str,
+            link: Link,
+            axis: LayoutAxis,
+            c1: int, c2: int,
+    ):
         """Initialize the segment.
 
         The name of the segment must be unique among *all* the
@@ -244,15 +250,17 @@ class RouteSegment(OrientedVector):
 
         """
         self._name = name
+        self._link = link
         self._axis = axis
         self._coords = (c1, c2)
 
     def __repr__(self) -> str:
         """Convert to string."""
         coords = self._coords
-        return "{}({};{};{}->{})".format(
+        return "{}({}; {}; {}; {}->{})".format(
             self.__class__.__name__,
             self._name,
+            self._link,
             self._axis,
             coords[0],
             coords[1],
@@ -349,7 +357,7 @@ class Router:
         """Create the route between two terminal pins."""
         points = self._shortest_path_of_link(link)
         prefix = "{}.".format(name)
-        segments = self._make_segments_for_route(prefix, points)
+        segments = self._make_segments_for_route(prefix, points, link)
         return Route(name, link, segments)
 
     def _shortest_path_of_link(self, link: Link) -> Sequence[IntPoint]:
@@ -380,12 +388,13 @@ class Router:
         length of the path.
 
         """
+        bias_s = 0.9
+        bias_l = 0.8
         attrs = link.attributes
         b1 = attrs.start_bias
         b2 = attrs.end_bias
         hor = Orientation.HORIZONTAL
         ver = Orientation.VERTICAL
-        bias_weight = 0.9
         grid = self._grid
         p1 = grid.pin_point(n1)
         p2 = grid.pin_point(n2)
@@ -407,15 +416,27 @@ class Router:
                 # for aesthetic reasons mainly.
                 weight = 1.0
                 if pa.i == pb.i:
-                    if (n1 is na or n1 is nb) and b1 is hor:
-                        weight = bias_weight
-                    elif (n2 is na or n2 is nb) and b2 is hor:
-                        weight = bias_weight
+                    if b1 is hor:
+                        if na is n1 or nb is n1:
+                            weight = bias_l
+                        elif pa.i == p1.i or pb.i == p1.i:
+                            weight = bias_s
+                    if b2 is hor:
+                        if na is n2 or nb is n2:
+                            weight = bias_l
+                        elif pa.i == p2.i or pb.i == p2.i:
+                            weight = bias_s
                 elif pa.j == pb.j:
-                    if (n1 is na or n1 is nb) and b1 is ver:
-                        weight = bias_weight
-                    elif (n2 is na or n2 is nb) and b2 is ver:
-                        weight = bias_weight
+                    if b1 is ver:
+                        if na is n1 or nb is n1:
+                            weight = bias_l
+                        elif pa.j == p1.j or pb.j == p1.j:
+                            weight = bias_s
+                    if b2 is ver:
+                        if na is n2 or nb is n2:
+                            weight = bias_l
+                        elif pa.j == p2.j or pb.j == p2.j:
+                            weight = bias_s
                 graph.add_edge(pa.name(), pb.name(), weight=weight)
         paths = graph.get_shortest_paths(
             p1.name(), p2.name(),
@@ -441,7 +462,8 @@ class Router:
     def _make_segments_for_route(
             self,
             prefix: str,
-            points: Sequence[IntPoint]
+            points: Sequence[IntPoint],
+            link: Link,
     ) -> Sequence[RouteSegment]:
         """Generate segments for a route."""
         segments: List[RouteSegment] = []
@@ -462,6 +484,7 @@ class Router:
                         prefix,
                         len(segments),
                         seg_points[0], p2,
+                        link,
                     )
                     segments.append(seg)
                     seg_points = [p2, p]
@@ -470,6 +493,7 @@ class Router:
             prefix,
             len(segments),
             seg_points[0], seg_points[-1],
+            link,
         )
         segments.append(seg)
         return segments
@@ -478,7 +502,8 @@ class Router:
             self,
             prefix: str,
             index: int,
-            p1: IntPoint, p2: IntPoint
+            p1: IntPoint, p2: IntPoint,
+            link: Link,
     ) -> RouteSegment:
         """Create a new segment for a route."""
         ori = self._points_orientation(p1, p2)
@@ -490,7 +515,7 @@ class Router:
             c1, c2 = p1.i, p2.i
         axis = self._grid.axis(ori, axis_coord)
         name = "{}{}".format(prefix, index)
-        return RouteSegment(name, axis, c1, c2)
+        return RouteSegment(name, link, axis, c1, c2)
 
     @staticmethod
     def _points_orientation(p1: IntPoint, p2: IntPoint) -> Orientation:
