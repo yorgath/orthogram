@@ -64,6 +64,8 @@ The program creates Scalable Vector Graphics (SVG) files.  Use your
 web browser to view the drawing.  Use `Inkscape`_ to convert it to PNG
 or other supported formats.
 
+**NOTE:** The character encoding of the definition file must be UTF-8.
+
 .. _Inkscape: https://inkscape.org
 
 Hello world
@@ -605,3 +607,8 @@ Release history
 
 * Updated the documentation to reflect the changes.  Added the
   acknowledgments and release history sections.
+
+0.2.1 (2020-12-15)
+~~~~~~~~~~~~~~~~~~
+
+* Enforce the UTF-8 character encoding for the definition file.

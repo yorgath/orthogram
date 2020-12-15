@@ -57,7 +57,7 @@ def load_ddf(file: str) -> Diagram:
 
 def _load_yaml(file: str) -> Any:
     """Read diagram definitions from a YAML file."""
-    with open(file) as s:
+    with open(file, encoding='utf-8') as s:
         return yaml.safe_load(s)
 
 def write_svg(diagram: Diagram, file: str) -> None:
