@@ -880,14 +880,14 @@ class Refiner:
                 ok = False
                 break
         if ok:
-            if Debug.debug:
+            if Debug.is_enabled():
                 for rule in rules:
                     log_debug("Added {}".format(rule))
         if not ok:
             # Remove the edges in case of cycles.
             for e in added:
                 g.delete_edges(e)
-            if Debug.debug:
+            if Debug.is_enabled():
                 for rule in rules:
                     log_debug("Rejected {}".format(rule))
 

@@ -6,9 +6,8 @@ class Debug:
     _debug = False
 
     @classmethod
-    @property
-    def debug(cls) -> bool:
-        """Set this to enable debug messages."""
+    def is_enabled(cls) -> bool:
+        """Return True if debugging is activated."""
         return cls._debug
 
     @classmethod
