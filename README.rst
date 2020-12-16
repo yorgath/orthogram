@@ -287,9 +287,9 @@ highest priority among all links in the group.
 ~~~~~~~~~~
 
 You can add style definitions to the ``styles`` section to create
-named styles that can be referred to by the terminals and links.  Each
-style definition consists of attribute key-value pairs.  For example,
-the following two terminals are drawn in the same color:
+named styles that can be referred to by the terminals, links and
+groups.  Each style definition consists of attribute key-value pairs.
+For example, the following two terminals are drawn in the same color:
 
 .. code:: yaml
 
@@ -306,12 +306,18 @@ the following two terminals are drawn in the same color:
        stroke_width: 3.0
        fill: "#FFDDDD"
 
-Attributes you define in the element itself override the attributes it
-inherits from the linked named style.
+You add style references to an element using the ``style`` attribute.
+The value of this attribute can be either a single style name or a
+list of style names.  When in a list, later styles override the ones
+coming before them.  Attributes you define in the element itself
+override the attributes it inherits from the referenced named styles.
 
 There are two special style names, ``default_terminal`` and
 ``default_link``, which you can use to set default values for all the
 terminals and links in the diagram respectively.
+
+Styles themselves *cannot* reference other styles, i.e. the program
+ignores the ``style`` attribute in style definitions.
 
 ``groups``
 ~~~~~~~~~~
@@ -335,10 +341,10 @@ attributes.  In the example that follows, all links are drawn in blue:
        end: d
        group: water
 
-A group definition may contain a reference to a named ``style`` if
-needed.  Note that creating an entry in the ``groups`` section is not
-necessary for the grouping of the links; a common ``group`` name in
-each link definition is sufficient.
+A group definition may contain references to named styles.  Note that
+creating an entry in the ``groups`` section is not necessary for the
+grouping of the links; a common ``group`` name in each link definition
+is sufficient.
 
 Attributes
 ----------
@@ -611,4 +617,10 @@ Release history
 0.2.1 (2020-12-15)
 ~~~~~~~~~~~~~~~~~~
 
-* Enforce the UTF-8 character encoding for the definition file.
+* Enforced the UTF-8 character encoding for the definition file.
+
+0.2.2 (2020-12-16)
+~~~~~~~~~~~~~~~~~~
+
+* Enabled multiple style references in definition files.
+* Made debug switch compatible with Python 3.8.

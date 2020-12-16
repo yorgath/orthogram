@@ -125,9 +125,8 @@ class Builder:
 
         """
         attrs: AttributeDict = {}
-        # Merge attributes inherited from style reference.
-        style_name = group_def.get('style')
-        style_attrs = self._get_style(style_name, True)
+        # Merge attributes inherited from style references.
+        style_attrs = self._collect_style_attributes(group_def)
         self._merge_attributes(attrs, style_attrs)
         # Merge attributes defined here.
         own_attrs = self._collect_attributes(group_def)
@@ -175,9 +174,8 @@ class Builder:
         self._merge_attributes(attrs, def_attrs)
         # The terminal definition may be None: an empty definition.
         if terminal_def:
-            # Merge attributes inherited from style reference.
-            style_name = terminal_def.get('style')
-            style_attrs = self._get_style(style_name, True)
+            # Merge attributes inherited from style references.
+            style_attrs = self._collect_style_attributes(terminal_def)
             self._merge_attributes(attrs, style_attrs)
             # Merge attributes defined here.
             own_attrs = self._collect_attributes(terminal_def)
@@ -242,15 +240,24 @@ class Builder:
         if group and group in self._group_styles:
             group_attrs = self._group_styles[group]
             self._merge_attributes(attrs, group_attrs)
-        # Merge attributes inherited from style reference.
-        style_name = link_def.get('style')
-        style_attrs = self._get_style(style_name, True)
+        # Merge attributes inherited from style references.
+        style_attrs = self._collect_style_attributes(link_def)
         self._merge_attributes(attrs, style_attrs)
         # Merge attributes defined here.
         own_attrs = self._collect_attributes(link_def)
         self._merge_attributes(attrs, own_attrs)
         # Create the object(s).
         self._diagram.add_links(start, end, **attrs)
+
+    def _collect_style_attributes(self, any_def: _Definition) -> AttributeMap:
+        """Collect the attributes of the named styles in the definition."""
+        style_value = any_def.get('style')
+        style_names = self._str_or_list(style_value)
+        attrs: AttributeDict = {}
+        for style_name in style_names:
+            style_attrs = self._get_style(style_name, True)
+            self._merge_attributes(attrs, style_attrs)
+        return attrs
 
     def _collect_attributes(self, any_def: _Definition) -> AttributeMap:
         """Collect the attributes from a definition."""
@@ -418,7 +425,9 @@ class Builder:
     @staticmethod
     def _str_or_list(text: Any) -> List[str]:
         """Take a string or list of strings and return a list of strings."""
-        result = []
+        result: List[str] = []
+        if not text:
+            return result
         if isinstance(text, list):
             result.extend(text)
         else:

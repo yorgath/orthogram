@@ -19,24 +19,33 @@ styles:
     buffer_fill: lightyellow
     stroke_width: 3
 
+  cold_gas:
+    stroke: turquoise
+
+  combustion:
+    label: "Combustion\nChamber"
+
+  compressor:
+    label: Compressor
+
+  electrical_generator:
+    label: "Electrical\nGenerator"
+
+  gas_turbine:
+    label: Gas Turbine
+
+  hot_gas:
+    stroke: orangered
+    fill: gold
+
+  low_priority:
+    drawing_priority: -1
+
   shaft:
     arrow_forward: false
     stroke: dimgrey
     stroke_width: 8
     stroke_dasharray: 8 8
-
-  compressor:
-    label: Compressor
-
-  cold_gas:
-    stroke: turquoise
-
-  electrical_generator:
-    label: "Electrical\nGenerator"
-
-  hot_gas:
-    stroke: orangered
-    fill: gold
 
   steam:
     stroke: grey
@@ -47,7 +56,7 @@ styles:
 groups:
 
   gas_to_steam:
-    drawing_priority: -1
+    style: low_priority
 
 terminals:
 
@@ -67,12 +76,10 @@ terminals:
     style: compressor
 
   cmb1:
-    label: "Combustion\nChamber"
-    style: hot_gas
+    style: [combustion, hot_gas]
 
   cmb2:
-    label: "Combustion\nChamber"
-    style: hot_gas
+    style: [combustion, hot_gas]
 
   cool:
     label: "Cooling\nTower"
@@ -90,12 +97,10 @@ terminals:
     style: electrical_generator
 
   gtb1:
-    label: Gas Turbine
-    style: hot_gas
+    style: [gas_turbine, hot_gas]
 
   gtb2:
-    label: Gas Turbine
-    style: hot_gas
+    style: [gas_turbine, hot_gas]
 
   sgn:
     label: "Steam\nGenerator"
@@ -140,7 +145,7 @@ links:
 
   - start: fuel
     end: [cmb1, cmb2]
-    drawing_priority: -1
+    style: low_priority
     end_bias: vertical
     stroke: olive
 
