@@ -14,7 +14,7 @@ from typing import (
     Tuple,
 )
 
-import igraph # type: ignore
+import networkx as nx # type: ignore
 
 from .debug import Debug
 from .diagram import Link, Pin
@@ -57,18 +57,14 @@ class NetworkOrigin(Enum):
 class Bundle(OrientedVector):
     """Collection of collinear interacting route segments."""
 
-    def __init__(self, name: str, route_segments: Iterable[RouteSegment]):
+    def __init__(self, route_segments: Iterable[RouteSegment]):
         """Initialize with the given route segments.
 
         At least one route segment must be given.  This is necessary
         in order to compute the properties of the bundle.  Empty
         bundles cannot exist.
 
-        The name must be unique among all the bundles in the layout,
-        because it is used as a key in graphs.
-
         """
-        self._name = name
         seg_list = list(route_segments)
         assert len(seg_list) > 0
         self._route_segments = seg_list
@@ -90,18 +86,12 @@ class Bundle(OrientedVector):
     def __repr__(self) -> str:
         """Convert to string."""
         coords = self._coords
-        return "{}({};{};{}->{})".format(
+        return "{}({};{}->{})".format(
             self.__class__.__name__,
-            self._name,
             self._axis,
             coords[0],
             coords[1],
         )
-
-    @property
-    def name(self) -> str:
-        """Name that identifies the bundle."""
-        return self._name
 
     @property
     def axis(self) -> LayoutAxis:
@@ -261,14 +251,12 @@ class Network:
 
     def __init__(
             self,
-            name: str,
             origin: NetworkOrigin,
             group: str,
             routes: Iterable[Route]
     ):
         """Initialize with the given routes."""
         #
-        self._name = name
         self._origin = origin
         self._group = group
         self._routes = list(routes)
@@ -283,31 +271,28 @@ class Network:
     def _init_bundles(self) -> None:
         """Create the bundles of segments."""
         # Use a graph to discover the interactions.
-        graph = igraph.Graph(directed=False)
+        graph = nx.Graph()
         segments = []
         for route in self._routes:
             for seg in route.segments():
                 segments.append(seg)
-                graph.add_vertex(seg.name, segment=seg)
+                graph.add_node(seg)
         n = len(segments)
         for i in range(n):
             seg1 = segments[i]
             for j in range(i + 1, n):
                 seg2 = segments[j]
                 if self._segments_interact(seg1, seg2):
-                    graph.add_edge(seg1.name, seg2.name)
+                    graph.add_edge(seg1, seg2)
         bundles = self._bundles
         bundles.clear()
         done = set()
-        for idxs in graph.components():
+        for segments in nx.connected_components(graph):
             bundle_segments = []
-            for idx in idxs:
-                v = graph.vs[idx]
-                seg = v['segment']
+            for seg in segments:
                 bundle_segments.append(seg)
                 done.add(seg)
-            name = "{}.{}".format(self._name, len(bundles))
-            bundle = Bundle(name, bundle_segments)
+            bundle = Bundle(bundle_segments)
             bundles.append(bundle)
 
     @staticmethod
@@ -623,8 +608,7 @@ class Refiner:
         nets = self._networks
         nets.clear()
         for key, group_routes in per_group.items():
-            name = "N{}".format(len(nets))
-            net = Network(name, *key, group_routes)
+            net = Network(*key, group_routes)
             self._set_joint_pins(net)
             nets.append(net)
 
@@ -655,25 +639,18 @@ class Refiner:
         self._update_bundle_offsets(dag)
         self._stack_bundles()
 
-    def _bundle_dag(self) -> igraph.Graph:
+    def _bundle_dag(self) -> nx.DiGraph:
         """Create a DAG of bundles out of the route interactions."""
-        g = igraph.Graph(directed=True)
+        g = nx.DiGraph()
         seg_bundles = self._segment_bundles
-        added = set()
-        # The bundles are the vertices of the graph.
+        # The bundles are the nodes of the graph.
         interactions = list(self._interactions())
         for inter in interactions:
             for pt in inter.passthroughs:
                 for seg in pt.segments():
                     bundle = seg_bundles[seg]
-                    name = bundle.name
-                    if name not in added:
-                        attrs = {
-                            'name': [name],
-                            'bundle': [bundle],
-                        }
-                        g.add_vertices(1, attrs)
-                        added.add(name)
+                    if bundle not in g:
+                        g.add_node(bundle)
         # Edges represent the order of two bundles.
         tv_rules = []
         s_rules = []
@@ -854,7 +831,7 @@ class Refiner:
 
     def _try_add_rules_to_dag(
             self,
-            g: igraph.Graph,
+            g: nx.DiGraph,
             rules: Sequence[_Rule]
     ) -> None:
         """Try to add the rules as edges to the DAG.
@@ -871,12 +848,10 @@ class Refiner:
             # Do not use the bundle against itself!
             if bundle1 is bundle2:
                 continue
-            name1 = bundle1.name
-            name2 = bundle2.name
-            g.add_edge(name1, name2)
-            added.append((name1, name2))
+            g.add_edge(bundle1, bundle2)
+            added.append((bundle1, bundle2))
             # Abort if there are cycles.
-            if not g.is_dag():
+            if not nx.is_directed_acyclic_graph(g):
                 ok = False
                 break
         if ok:
@@ -886,41 +861,40 @@ class Refiner:
         if not ok:
             # Remove the edges in case of cycles.
             for e in added:
-                g.delete_edges(e)
+                g.remove_edge(*e)
             if Debug.is_enabled():
                 for rule in rules:
                     log_debug("Rejected {}".format(rule))
 
-    def _update_bundle_offsets(self, g: igraph.Graph) -> None:
+    def _update_bundle_offsets(self, g: nx.DiGraph) -> None:
         """Calculate the offsets and store them in the bundles."""
-        # Assign inital depths to the vertices.
-        for v in g.vs:
+        # Assign inital depths to the nodes.
+        nodes = g.nodes
+        for bundle in nodes:
             is_root = True
-            for idx in g.predecessors(v):
+            for _ in g.predecessors(bundle):
                 is_root = False
                 break
             if is_root:
-                v['depth'] = 0
+                nodes[bundle]['depth'] = 0
             else:
-                v['depth'] = -1
-        # Calculate the depths of all the vertices.
+                nodes[bundle]['depth'] = -1
+        # Calculate the depths of all the nodes.
         while True:
             changed = False
-            for v1 in g.vs:
-                depth1 = v1['depth']
+            for bundle1 in nodes:
+                depth1 = nodes[bundle1]['depth']
                 if depth1 >= 0:
-                    for idx2 in g.successors(v1):
-                        v2 = g.vs[idx2]
-                        depth2 = v2['depth']
+                    for bundle2 in g.successors(bundle1):
+                        depth2 = nodes[bundle2]['depth']
                         if depth1 + 1 > depth2:
-                            v2['depth'] = max(depth1 + 1, depth2)
+                            nodes[bundle2]['depth'] = max(depth1 + 1, depth2)
                             changed = True
             if not changed:
                 break
         # We can now store the offsets in the bundles.
-        for v in g.vs:
-            bundle = v['bundle']
-            offset = v['depth']
+        for bundle in nodes:
+            offset = nodes[bundle]['depth']
             bundle.offset = offset
 
     def _stack_bundles(self) -> None:
@@ -963,30 +937,27 @@ class Refiner:
         """
         #
         # Use an undirected graph to find the sets of overlapping
-        # bundles.  The bundles will be the vertices of the graph.  If
+        # bundles.  The bundles will be the nodes of the graph.  If
         # two bundles overlap, add an edge between them.  The
         # connected components of the resulting graph are the sets
         # that we are after.
         #
         nbs = list(nbs)
-        g = igraph.Graph(directed=False)
+        g = nx.Graph()
         for nb in nbs:
             bundle = nb[1]
-            name = bundle.name
-            g.add_vertex(name, nb=nb)
+            g.add_node(bundle, nb=nb)
         for i, nb1 in enumerate(nbs):
-            (net1, bundle1) = nb1
-            name1 = bundle1.name
+            _, bundle1 = nb1
             for nb2 in nbs[i + 1:]:
-                net2, bundle2 = nb2
+                _, bundle2 = nb2
                 if self._bundles_overlap(nb1, nb2):
-                    name2 = bundle2.name
-                    g.add_edge(name1, name2)
-        for idxs in g.components():
+                    g.add_edge(bundle1, bundle2)
+        for bundles in nx.connected_components(g):
             block = []
-            for idx in idxs:
-                v = g.vs[idx]
-                block.append(v['nb'])
+            for bundle in bundles:
+                nb = g.nodes[bundle]['nb']
+                block.append(nb)
             yield block
 
     def _stack_overlapping_bundles(

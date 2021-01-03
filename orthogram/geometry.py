@@ -53,10 +53,6 @@ class IntPoint:
         """Convert to string."""
         return "P(i={},j={})".format(self.i, self.j)
 
-    def name(self) -> str:
-        """Used as a key in graphs."""
-        return repr(self)
-
 ######################################################################
 
 class FloatPoint:

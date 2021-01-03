@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "orthogram"
-version = "0.2.2"
+version = "0.3.0"
 description = "Draw diagrams of graphs."
 license = "GPL-3.0-or-later"
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
@@ -15,15 +15,15 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-python-igraph = "^0.8.3"
-pyyaml = "^5.3.1"
-shapely = "^1.7.1"
+python = "^3.7"
+networkx = "^2.5"
+Shapely = "^1.7.1"
+PyYAML = "^5.3.1"
 svgwrite = "^1.4"
 
 [tool.poetry.dev-dependencies]
-pytest = ">=5.2"
+mypy = "^0.790"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

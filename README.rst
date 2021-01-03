@@ -27,23 +27,12 @@ definition file is written in YAML.
 Installation
 ------------
 
-You must have Python 3.8 or newer installed in your system.  Run the
+You must have Python 3.7 or newer installed in your system.  Run the
 following command to install package ``orthogram`` from PyPi:
 
 .. code:: console
 
    python -m pip install orthogram
-
-Note however that some of Orthogram's dependencies rely on C/C++
-libraries that you may have to install on your system:
-
-=================  ===========
-Python Package     Library
-=================  ===========
-``python-igraph``  igraph
-``pyyaml``         LibYAML
-``shapely``        GEOS
-=================  ===========
 
 Command line interface
 ----------------------
@@ -268,7 +257,7 @@ not connected at the intersection points.  The ``drawing_priority``
 lets you draw sets of links as layers on top of each other, giving a
 more consistent look to your diagram.
 
-Another way to avoid intersecting links appearing as if the were
+Another way to avoid intersecting links appearing as if they were
 connected at the intersections is to draw a *buffer* around the links.
 Attributes ``buffer_fill`` and ``buffer_width`` control the appearance
 of the buffer.  By default, the program draws the links without a
@@ -367,10 +356,10 @@ Attribute             Diagram          Terminal      Link
 ``drawing_priority``                                 0
 ``end_bias``                                         None
 ``fill``              "none"           "none"
-``font_family``       None             None          None
+``font_family``       None             None
 ``font_size``         14.0             10.0
-``font_style``        None             None          None
-``font_weight``       None             None          None
+``font_style``        None             None
+``font_weight``       None             None
 ``group``                                            None
 ``label_distance``    6.0
 ``label_position``    "top"
@@ -544,11 +533,9 @@ This program depends on the following excellent pieces of software:
 * `Python`_: The author's preferred programming language.  Flexible,
   convenient and nice to look at.  Has a library for everything.
 
-* `python-igraph`_: Python interface to the powerful `igraph`_
-  library.  Orthogram uses it everywhere in its layout engine.  The
-  performance offered by the C-based implementation is much needed.
-
-* `pyyaml`_: Simple to use, efficient YAML parser.
+* `NetworkX`_: Very comprehensive network analysis library.
+  Implemented in pure Python, so easy to install and convenient to
+  use.
 
 * `shapely`_: Python interface to the powerful `GEOS`_ geometry
   library.  A bit overkill for the simple geometry manipulations
@@ -556,6 +543,8 @@ This program depends on the following excellent pieces of software:
 
 * `svgwrite`_: Orthogram uses this library to write the SVG files.
   Much better than having to use straight XML!
+
+* `pyyaml`_: Simple to use, efficient YAML parser.
 
 The following programs improved the development experience of the
 author a lot:
@@ -566,8 +555,7 @@ author a lot:
   PyPI a breeze.
 
 .. _Python: https://python.org
-.. _python-igraph: https://igraph.org/python/
-.. _igraph: https://igraph.org/
+.. _NetworkX: https://networkx.org/
 .. _shapely: https://github.com/Toblerity/Shapely
 .. _GEOS: https://trac.osgeo.org/geos
 .. _svgwrite: https://github.com/mozman/svgwrite
@@ -624,3 +612,9 @@ Release history
 
 * Enabled multiple style references in definition files.
 * Made debug switch compatible with Python 3.8.
+
+0.3.0 (2021-01-03)
+~~~~~~~~~~~~~~~~~~
+
+* Made compatible with Python 3.7!
+* Replaced igraph with NetworkX to ease installation.

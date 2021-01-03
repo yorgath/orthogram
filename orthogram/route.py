@@ -12,7 +12,7 @@ from typing import (
     Tuple,
 )
 
-import igraph # type: ignore
+import networkx as nx # type: ignore
 
 from .diagram import (
     Cell,
@@ -237,19 +237,11 @@ class RouteSegment(OrientedVector):
 
     def __init__(
             self,
-            name: str,
             link: Link,
             axis: LayoutAxis,
             c1: int, c2: int,
     ):
-        """Initialize the segment.
-
-        The name of the segment must be unique among *all* the
-        segments of the diagram, because it is used as a key in
-        graphs.
-
-        """
-        self._name = name
+        """Initialize the segment for a given link."""
         self._link = link
         self._axis = axis
         self._coords = (c1, c2)
@@ -257,19 +249,13 @@ class RouteSegment(OrientedVector):
     def __repr__(self) -> str:
         """Convert to string."""
         coords = self._coords
-        return "{}({}; {}; {}; {}->{})".format(
+        return "{}({}; {}; {}->{})".format(
             self.__class__.__name__,
-            self._name,
             self._link,
             self._axis,
             coords[0],
             coords[1],
         )
-
-    @property
-    def name(self) -> str:
-        """A name that identifies the segment."""
-        return self._name
 
     @property
     def axis(self) -> LayoutAxis:
@@ -326,7 +312,7 @@ class Router:
         #
         self._diagram = diagram
         self._grid = LayoutGrid(diagram)
-        self._grid_graph: igraph.Graph
+        self._grid_graph: nx.Graph
         self._routes: List[Route]
         #
         self._init_grid_graph()
@@ -335,14 +321,14 @@ class Router:
     def _init_grid_graph(self) -> None:
         """Initialize the graph of the edges of the grid.
 
-        The initial graph contains only vertices.  The edges are
-        created differently for each shortest path run.
+        The initial graph contains only nodes.  The edges are created
+        differently for each shortest path run.
 
         """
-        self._grid_graph = graph = igraph.Graph(directed=False)
+        self._grid_graph = graph = nx.Graph()
         grid = self._grid
         for p, n in grid.points_and_pins():
-            graph.add_vertex(p.name(), point=p, pin=n)
+            graph.add_node(p, pin=n)
 
     def _init_routes(self) -> None:
         """Create the routes for all the links of the diagram."""
@@ -356,8 +342,7 @@ class Router:
     def _make_route(self, name: str, link: Link) -> Route:
         """Create the route between two terminal pins."""
         points = self._shortest_path_of_link(link)
-        prefix = "{}.".format(name)
-        segments = self._make_segments_for_route(prefix, points, link)
+        segments = self._make_segments_for_route(points, link)
         return Route(name, link, segments)
 
     def _shortest_path_of_link(self, link: Link) -> Sequence[IntPoint]:
@@ -399,17 +384,17 @@ class Router:
         p1 = grid.pin_point(n1)
         p2 = grid.pin_point(n2)
         graph = self._grid_graph
-        # Connect the vertices to form a grid, except the ones leading
-        # to other pins.  We need to clear the edges of the previous
-        # run first.
-        graph.delete_edges()
+        # Connect the nodes to form a grid, except the ones leading to
+        # other pins.  We need to clear the edges of the previous run
+        # first.
+        graph.clear_edges()
         for pa, pb in grid.permitted_edges():
             ca = grid.cell_at(pa)
             ta, na = ca.terminal, ca.pin
             na = ca.pin
             cb = grid.cell_at(pb)
             tb, nb = cb.terminal, cb.pin
-            # Do not connect vertices of foreign pins!
+            # Do not connect nodes of foreign pins!
             if ((na is None or na is n1 or na is n2) and
                 (nb is None or nb is n1 or nb is n2)):
                 # Give an appropriate weight to the edge
@@ -437,31 +422,18 @@ class Router:
                             weight = bias_l
                         elif pa.j == p2.j or pb.j == p2.j:
                             weight = bias_s
-                graph.add_edge(pa.name(), pb.name(), weight=weight)
-        paths = graph.get_shortest_paths(
-            p1.name(), p2.name(),
-            weights='weight',
-        )
-        assert paths
-        path = paths[0]
-        assert path
-        # The path consists of vertices.  Collect the points.
-        points: List[IntPoint] = []
-        for idx in path:
-            v = graph.vs[idx]
-            points.append(v['point'])
+                graph.add_edge(pa, pb, weight=weight)
+        path = nx.shortest_path(graph, p1, p2, weight='weight')
         # Calculate the length of the path.
         length = 0.0
-        for i, idx1 in enumerate(path[:-1]):
-            idx2 = path[i + 1]
-            eid = graph.get_eid(idx1, idx2)
-            e = graph.es[eid]
+        for i, p1 in enumerate(path[:-1]):
+            p2 = path[i + 1]
+            e = graph.edges[p1, p2]
             length += e['weight']
-        return points, length
+        return path, length
 
     def _make_segments_for_route(
             self,
-            prefix: str,
             points: Sequence[IntPoint],
             link: Link,
     ) -> Sequence[RouteSegment]:
@@ -481,7 +453,6 @@ class Router:
                     seg_points.append(p)
                 else:
                     seg = self._make_segment_for_route(
-                        prefix,
                         len(segments),
                         seg_points[0], p2,
                         link,
@@ -490,7 +461,6 @@ class Router:
                     seg_points = [p2, p]
         # Last segment.
         seg = self._make_segment_for_route(
-            prefix,
             len(segments),
             seg_points[0], seg_points[-1],
             link,
@@ -500,7 +470,6 @@ class Router:
 
     def _make_segment_for_route(
             self,
-            prefix: str,
             index: int,
             p1: IntPoint, p2: IntPoint,
             link: Link,
@@ -514,8 +483,7 @@ class Router:
             axis_coord = p1.j
             c1, c2 = p1.i, p2.i
         axis = self._grid.axis(ori, axis_coord)
-        name = "{}{}".format(prefix, index)
-        return RouteSegment(name, link, axis, c1, c2)
+        return RouteSegment(link, axis, c1, c2)
 
     @staticmethod
     def _points_orientation(p1: IntPoint, p2: IntPoint) -> Orientation:

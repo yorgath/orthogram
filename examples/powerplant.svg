@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="full" height="100%" version="1.1" viewBox="0 0 837.0 696.875" width="100%">
+<svg baseProfile="full" height="100%" version="1.1" viewBox="0 0 837.0 696.875" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <marker id="id1" markerHeight="9" markerUnits="userSpaceOnUse" markerWidth="14" orient="auto" refX="7.0" refY="4.5">
       <polyline fill="turquoise" points="0,0 14,4.5 0,9" stroke-width="0"/>
