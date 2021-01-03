@@ -4,3 +4,4 @@
 *~
 cases/svg/*.svg
 dist
+docs/_build

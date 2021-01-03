@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Build the documentation using Sphinx.
+cd docs
+make html

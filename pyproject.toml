@@ -7,6 +7,7 @@ authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
 maintainers = ["Georgios Athanasiou <yorgath@gmail.com>"]
 readme = "README.rst"
 repository = "https://github.com/yorgath/orthogram"
+documentation = "https://readthedocs.org/projects/orthogram/"
 keywords = ["diagram", "graph"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -23,6 +24,8 @@ svgwrite = "^1.4"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.790"
+Sphinx = "^3.4.1"
+sphinx-rtd-theme = "^0.5.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
