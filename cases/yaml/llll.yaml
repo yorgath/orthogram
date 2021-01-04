@@ -1,12 +1,8 @@
 diagram:
   label: Left-Left vs Left-Left
 
-terminals:
-  A:
-  B:
-
 rows:
-  - pins: [B, A]
+  - [B, A]
 
 links:
   - start: A

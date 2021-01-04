@@ -1,16 +1,10 @@
 diagram:
   label: Left-Left vs Up-Up
 
-terminals:
-  A:
-  B:
-  C:
-  D:
-
 rows:
-  - pins: ["", D     ]
-  - pins: [B , "", A ]
-  - pins: ["", C     ]
+  - ["", D     ]
+  - [B , "", A ]
+  - ["", C     ]
 
 links:
   - start: A

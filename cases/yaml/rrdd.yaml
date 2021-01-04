@@ -1,16 +1,10 @@
 diagram:
   label: Right-Right vs Down-Down
 
-terminals:
-  A:
-  B:
-  C:
-  D:
-
 rows:
-  - pins: ["", C    ]
-  - pins: [A , "", B]
-  - pins: ["", D    ]
+  - ["", C    ]
+  - [A , "", B]
+  - ["", D    ]
 
 links:
   - start: A

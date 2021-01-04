@@ -8,7 +8,7 @@ import yaml
 
 from .build import Builder
 from .debug import Debug
-from .diagram import Diagram
+from .diagram import DiagramDef
 from .draw import Drawing
 from .layout import Layout
 
@@ -48,20 +48,20 @@ def translate(in_file: str, out_file: Optional[str] = None) -> None:
         out_file = pre + ".svg"
     write_svg(diagram, out_file)
 
-def load_ddf(file: str) -> Diagram:
+def load_ddf(file: str) -> DiagramDef:
     """Load a diagram definition from a file."""
     definitions = _load_yaml(file)
     builder = Builder()
     builder.add(definitions)
-    return builder.diagram
+    return builder.diagram_def
 
 def _load_yaml(file: str) -> Any:
     """Read diagram definitions from a YAML file."""
     with open(file, encoding='utf-8') as s:
         return yaml.safe_load(s)
 
-def write_svg(diagram: Diagram, file: str) -> None:
+def write_svg(diagram_def: DiagramDef, file: str) -> None:
     """Produce a SVG file of the diagram."""
-    layout = Layout(diagram)
+    layout = Layout(diagram_def)
     drawing = Drawing(layout)
     drawing.write_svg(file)

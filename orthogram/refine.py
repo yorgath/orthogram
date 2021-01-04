@@ -17,9 +17,15 @@ from typing import (
 import networkx as nx # type: ignore
 
 from .debug import Debug
-from .diagram import Link, Pin
+
+from .diagram import (
+    Link,
+    Node,
+    Terminal,
+)
 
 from .geometry import (
+    Axis,
     Direction,
     FloatPoint,
     IntPoint,
@@ -28,8 +34,7 @@ from .geometry import (
 )
 
 from .route import (
-    LayoutAxis,
-    PinsAndPointsIterator,
+    NodesAndPointsIterator,
     Route,
     RouteSegment,
     Router,
@@ -94,7 +99,7 @@ class Bundle(OrientedVector):
         )
 
     @property
-    def axis(self) -> LayoutAxis:
+    def axis(self) -> Axis:
         """Axis on which the bundle lies."""
         return self._axis
 
@@ -132,13 +137,13 @@ class Joint:
             point: IntPoint,
             horizontal: Optional[Bundle],
             vertical: Optional[Bundle],
-            pin: Optional[Pin] = None,
+            node: Optional[Node] = None,
     ):
         """Initialize the joint at the meeting point of the two bundles."""
         self._point = point
         self._horizontal_bundle = horizontal
         self._vertical_bundle = vertical
-        self._pin = pin
+        self._node = node
 
     def __repr__(self) -> str:
         """Convert to string."""
@@ -173,13 +178,13 @@ class Joint:
             return 0
 
     @property
-    def pin(self) -> Optional[Pin]:
-        """Terminal pin on which the joint lies."""
-        return self._pin
+    def node(self) -> Optional[Node]:
+        """Node on which the joint lies."""
+        return self._node
 
-    @pin.setter
-    def pin(self, pin: Pin) -> None:
-        self._pin = pin
+    @node.setter
+    def node(self, node: Node) -> None:
+        self._node = node
 
 ######################################################################
 
@@ -193,7 +198,7 @@ class ConnectorSegment(OrientedVector):
         self._end = end
 
     @property
-    def axis(self) -> LayoutAxis:
+    def axis(self) -> Axis:
         """Axis on which the segment lies."""
         return self._route_segment.axis
 
@@ -225,6 +230,13 @@ class Connector:
         """Create a connector with the given segments for a route."""
         self._route = route
         self._segments = list(segments)
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({})".format(
+            self.__class__.__name__,
+            self._route.name,
+        )
 
     def segments(self) -> Iterator[ConnectorSegment]:
         """Return an iterator over the segments."""
@@ -381,14 +393,14 @@ class Network:
     def _float_point(self, bundle: Bundle, joint: Joint) -> FloatPoint:
         """Calculated using the central integer point and the offsets.
 
-        If there is a pin associated with the joint, the point is
-        moved a bit to avoid bundles interacting at the pins.
+        If there is a node associated with the joint, the point is
+        moved a bit to avoid bundles interacting at the nodes.
 
         """
         p = joint.point
         h = joint.horizontal_offset
         v = joint.vertical_offset
-        if joint.pin:
+        if joint.node:
             ori = bundle.orientation
             out = (p == bundle.first_point)
             key = (ori, out)
@@ -609,20 +621,20 @@ class Refiner:
         nets.clear()
         for key, group_routes in per_group.items():
             net = Network(*key, group_routes)
-            self._set_joint_pins(net)
+            self._set_joint_nodes(net)
             nets.append(net)
 
     def _must_collapse_links(self) -> bool:
         """Collapse links in the same group?"""
         return self._router.diagram.attributes.collapse_links
 
-    def _set_joint_pins(self, net: Network) -> None:
-        """Associate joints with terminal pins."""
+    def _set_joint_nodes(self, net: Network) -> None:
+        """Associate joints with nodes."""
         router = self._router
         for joint in net.joints():
-            joint_pin = router.pin_at(joint.point)
-            if joint_pin:
-                joint.pin = joint_pin
+            joint_node = router.node_at(joint.point)
+            if joint_node:
+                joint.node = joint_node
 
     def _init_segment_bundles(self) -> None:
         """Map each route segment to the bundle to which it belongs."""
@@ -906,7 +918,7 @@ class Refiner:
 
         """
         # Group the bundles by axis.
-        parallel: Dict[LayoutAxis, List[_NetworkAndBundle]] = {}
+        parallel: Dict[Axis, List[_NetworkAndBundle]] = {}
         for net in self._networks:
             for bundle in net.bundles():
                 axis = bundle.axis

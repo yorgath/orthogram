@@ -9,15 +9,9 @@ from typing import (
     Sequence,
 )
 
-from .diagram import (
-    AttributeDict,
-    AttributeMap,
-    Diagram,
-    LabelPosition,
-)
-
+from .attributes import Attributes, LabelPosition
+from .diagram import DiagramDef
 from .geometry import Orientation
-
 from .util import log_warning
 
 ######################################################################
@@ -35,14 +29,14 @@ class Builder:
 
     def __init__(self) -> None:
         """Initialize the builder."""
-        self._named_styles: Dict[str, AttributeMap] = {}
-        self._group_styles: Dict[str, AttributeMap] = {}
-        self._diagram = Diagram()
+        self._named_styles: Dict[str, Attributes] = {}
+        self._group_styles: Dict[str, Attributes] = {}
+        self._diagram_def = DiagramDef()
 
     @property
-    def diagram(self) -> Diagram:
-        """The diagram being built."""
-        return self._diagram
+    def diagram_def(self) -> DiagramDef:
+        """The definition of the diagram being built."""
+        return self._diagram_def
 
     def add(self, defs: _Definitions) -> None:
         """Add the definitions to the diagram.
@@ -50,8 +44,8 @@ class Builder:
         Valid keys are:
 
         - diagram
-        - terminals
         - rows
+        - terminals
         - links
         - styles
         - groups
@@ -68,12 +62,12 @@ class Builder:
         dia_def = defs.get('diagram')
         if dia_def:
             self.configure_diagram(dia_def)
-        terminal_defs = defs.get('terminals')
-        if terminal_defs:
-            self.add_terminals(terminal_defs)
         row_defs = defs.get('rows')
         if row_defs:
             self.add_rows(row_defs)
+        terminal_defs = defs.get('terminals')
+        if terminal_defs:
+            self.add_terminals(terminal_defs)
         link_defs = defs.get('links')
         if link_defs:
             self.add_links(link_defs)
@@ -101,7 +95,10 @@ class Builder:
         styles = self._named_styles
         if name in styles:
             log_warning("Replacing style '{}'".format(name))
-        styles[name] = self._collect_attributes(style_def)
+        attrs = self._collect_attributes(style_def)
+        if name == 'default_terminal':
+            self._diagram_def.set_auto_terminal_attributes(**attrs)
+        styles[name] = attrs
 
     def add_groups(self, defs: _Definitions) -> None:
         """Define groups of links in the diagram.
@@ -124,13 +121,13 @@ class Builder:
         definition is replaced with a warning.
 
         """
-        attrs: AttributeDict = {}
+        attrs = Attributes()
         # Merge attributes inherited from style references.
         style_attrs = self._collect_style_attributes(group_def)
-        self._merge_attributes(attrs, style_attrs)
+        attrs.merge(style_attrs)
         # Merge attributes defined here.
         own_attrs = self._collect_attributes(group_def)
-        self._merge_attributes(attrs, own_attrs)
+        attrs.merge(own_attrs)
         # Store the group attributes for later use.
         styles = self._group_styles
         if name in styles:
@@ -145,7 +142,26 @@ class Builder:
 
         """
         attrs = self._collect_attributes(dia_def)
-        self._diagram.attributes.set_attributes(**attrs)
+        self._diagram_def.attributes.merge(attrs)
+
+    def add_rows(self, row_defs: Sequence[Sequence[str]]) -> None:
+        """Add rows of terminal pins to the diagram.
+
+        The input is a sequence of row definitions.  See add_row() for
+        the structure of a row definition.
+
+        """
+        for row_def in row_defs:
+            self.add_row(row_def)
+
+    def add_row(self, row_def: Sequence[str]) -> None:
+        """Add a row of terminal pins to the diagram.
+
+        The input is a sequence of cell tags.  An empty string results
+        in an untagged cell.
+
+        """
+        self._diagram_def.add_row(row_def)
 
     def add_terminals(self, defs: _Definitions) -> None:
         """Add terminals to the diagram.
@@ -164,48 +180,30 @@ class Builder:
     ) -> None:
         """Add a terminal to the diagram.
 
-        The terminal definition may contain any attributes plus a
-        'style' reference to a named style.
+        The terminal definition may contain any attributes plus the
+        following:
+
+        - cover: sequence of strings (optional)
+        - style: string (optional)
 
         """
-        attrs: AttributeDict = {}
-        # Merge default terminal attributes.
-        def_attrs = self._get_style('default_terminal')
-        self._merge_attributes(attrs, def_attrs)
+        attrs = Attributes()
+        tags = []
         # The terminal definition may be None: an empty definition.
         if terminal_def:
+            # Merge default attributes.
+            def_attrs = self._get_style('default_terminal')
+            attrs.merge(def_attrs)
             # Merge attributes inherited from style references.
             style_attrs = self._collect_style_attributes(terminal_def)
-            self._merge_attributes(attrs, style_attrs)
+            attrs.merge(style_attrs)
             # Merge attributes defined here.
             own_attrs = self._collect_attributes(terminal_def)
-            self._merge_attributes(attrs, own_attrs)
+            attrs.merge(own_attrs)
+            # Additional cells to cover.
+            tags = terminal_def.get('cover', ())
         # Create the object.
-        self._diagram.add_terminal(name, **attrs)
-
-    def add_rows(self, row_defs: Sequence[_Definition]) -> None:
-        """Add rows of terminal pins to the diagram.
-
-        The input is a sequence of row definitions.  See add_row() for
-        the structure of a rwo definition.
-
-        """
-        for row_def in row_defs:
-            self.add_row(row_def)
-
-    def add_row(self, row_def: _Definition) -> None:
-        """Add a row of terminal pins to the diagram.
-
-        The names of the terminals go under the following key:
-
-        - pins: list of terminal names (optional)
-
-        An empty string as a terminal name inserts an empty space into
-        the row.
-
-        """
-        terminal_names = row_def.get('pins', list())
-        self._diagram.add_row(terminal_names)
+        self._diagram_def.add_terminal(name, tags, **attrs)
 
     def add_links(self, defs: Sequence[_Definition]) -> None:
         """Add links to the diagram.
@@ -231,37 +229,37 @@ class Builder:
         start = self._str_or_list(link_def['start'])
         end = self._str_or_list(link_def['end'])
         # Calculate the styles.
-        attrs: AttributeDict = {}
-        # Merge default link attributes.
+        attrs = Attributes()
+        # Merge default attributes.
         def_attrs = self._get_style('default_link')
-        self._merge_attributes(attrs, def_attrs)
+        attrs.merge(def_attrs)
         # Merge attributes inherited from group.
         group = link_def.get('group')
         if group and group in self._group_styles:
             group_attrs = self._group_styles[group]
-            self._merge_attributes(attrs, group_attrs)
+            attrs.merge(group_attrs)
         # Merge attributes inherited from style references.
         style_attrs = self._collect_style_attributes(link_def)
-        self._merge_attributes(attrs, style_attrs)
+        attrs.merge(style_attrs)
         # Merge attributes defined here.
         own_attrs = self._collect_attributes(link_def)
-        self._merge_attributes(attrs, own_attrs)
+        attrs.merge(own_attrs)
         # Create the object(s).
-        self._diagram.add_links(start, end, **attrs)
+        self._diagram_def.add_links(start, end, **attrs)
 
-    def _collect_style_attributes(self, any_def: _Definition) -> AttributeMap:
+    def _collect_style_attributes(self, any_def: _Definition) -> Attributes:
         """Collect the attributes of the named styles in the definition."""
         style_value = any_def.get('style')
         style_names = self._str_or_list(style_value)
-        attrs: AttributeDict = {}
+        attrs = Attributes()
         for style_name in style_names:
             style_attrs = self._get_style(style_name, True)
-            self._merge_attributes(attrs, style_attrs)
+            attrs.merge(style_attrs)
         return attrs
 
-    def _collect_attributes(self, any_def: _Definition) -> AttributeMap:
+    def _collect_attributes(self, any_def: _Definition) -> Attributes:
         """Collect the attributes from a definition."""
-        attrs: AttributeDict = {}
+        attrs = Attributes()
         if 'arrow_aspect' in any_def:
             attrs['arrow_aspect'] = float(any_def['arrow_aspect'])
         if 'arrow_back' in any_def:
@@ -270,20 +268,22 @@ class Builder:
             attrs['arrow_base'] = float(any_def['arrow_base'])
         if 'arrow_forward' in any_def:
             attrs['arrow_forward'] = bool(any_def['arrow_forward'])
+        if 'bias_end' in any_def:
+            bias_end = self._parse_orientation(any_def['bias_end'])
+            if bias_end:
+                attrs['bias_end'] = bias_end
+        if 'bias_start' in any_def:
+            bias_start = self._parse_orientation(any_def['bias_start'])
+            if bias_start:
+                attrs['bias_start'] = bias_start
         if 'buffer_fill' in any_def:
             attrs['buffer_fill'] = str(any_def['buffer_fill'])
         if 'buffer_width' in any_def:
             attrs['buffer_width'] = float(any_def['buffer_width'])
         if 'collapse_links' in any_def:
             attrs['collapse_links'] = bool(any_def['collapse_links'])
-        if 'column_margin' in any_def:
-            attrs['column_margin'] = float(any_def['column_margin'])
         if 'drawing_priority' in any_def:
             attrs['drawing_priority'] = int(any_def['drawing_priority'])
-        if 'end_bias' in any_def:
-            end_bias = self._parse_orientation(any_def['end_bias'])
-            if end_bias:
-                attrs['end_bias'] = end_bias
         if 'fill' in any_def:
             attrs['fill'] = str(any_def['fill'])
         if 'font_family' in any_def:
@@ -306,18 +306,28 @@ class Builder:
                 attrs['label_position'] = lpos
         if 'link_distance' in any_def:
             attrs['link_distance'] = float(any_def['link_distance'])
+        if 'margin_bottom' in any_def:
+            attrs['margin_bottom'] = float(any_def['margin_bottom'])
+        if 'margin_left' in any_def:
+            attrs['margin_left'] = float(any_def['margin_left'])
+        if 'margin_right' in any_def:
+            attrs['margin_right'] = float(any_def['margin_right'])
+        if 'margin_top' in any_def:
+            attrs['margin_top'] = float(any_def['margin_top'])
         if 'min_height' in any_def:
             attrs['min_height'] = float(any_def['min_height'])
         if 'min_width' in any_def:
             attrs['min_width'] = float(any_def['min_width'])
-        if 'padding' in any_def:
-            attrs['padding'] = float(any_def['padding'])
-        if 'row_margin' in any_def:
-            attrs['row_margin'] = float(any_def['row_margin'])
-        if 'start_bias' in any_def:
-            start_bias = self._parse_orientation(any_def['start_bias'])
-            if start_bias:
-                attrs['start_bias'] = start_bias
+        if 'padding_bottom' in any_def:
+            attrs['padding_bottom'] = float(any_def['padding_bottom'])
+        if 'padding_left' in any_def:
+            attrs['padding_left'] = float(any_def['padding_left'])
+        if 'padding_right' in any_def:
+            attrs['padding_right'] = float(any_def['padding_right'])
+        if 'padding_top' in any_def:
+            attrs['padding_top'] = float(any_def['padding_top'])
+        if 'pass_through' in any_def:
+            attrs['pass_through'] = bool(any_def['pass_through'])
         if 'stretch' in any_def:
             attrs['stretch'] = bool(any_def['stretch'])
         if 'stroke' in any_def:
@@ -337,90 +347,27 @@ class Builder:
                 attrs['text_orientation'] = text_orientation
         return attrs
 
-    def _merge_attributes(self, dest: AttributeDict, src: AttributeMap) -> None:
-        """Merge attributes from a definition."""
-        if 'arrow_aspect' in src:
-            dest['arrow_aspect'] = src['arrow_aspect']
-        if 'arrow_back' in src:
-            dest['arrow_back'] = src['arrow_back']
-        if 'arrow_base' in src:
-            dest['arrow_base'] = src['arrow_base']
-        if 'arrow_forward' in src:
-            dest['arrow_forward'] = src['arrow_forward']
-        if 'buffer_fill' in src:
-            dest['buffer_fill'] = src['buffer_fill']
-        if 'buffer_width' in src:
-            dest['buffer_width'] = src['buffer_width']
-        if 'collapse_links' in src:
-            dest['collapse_links'] = src['collapse_links']
-        if 'column_margin' in src:
-            dest['column_margin'] = src['column_margin']
-        if 'drawing_priority' in src:
-            dest['drawing_priority'] = src['drawing_priority']
-        if 'end_bias' in src:
-            dest['end_bias'] = src['end_bias']
-        if 'fill' in src:
-            dest['fill'] = src['fill']
-        if 'font_family' in src:
-            dest['font_family'] = src['font_family']
-        if 'font_size' in src:
-            dest['font_size'] = src['font_size']
-        if 'font_style' in src:
-            dest['font_style'] = src['font_style']
-        if 'font_weight' in src:
-            dest['font_weight'] = src['font_weight']
-        if 'group' in src:
-            dest['group'] = src['group']
-        if 'label' in src:
-            dest['label'] = src['label']
-        if 'label_distance' in src:
-            dest['label_distance'] = src['label_distance']
-        if 'label_position' in src:
-            dest['label_position'] = src['label_position']
-        if 'link_distance' in src:
-            dest['link_distance'] = src['link_distance']
-        if 'min_height' in src:
-            dest['min_height'] = src['min_height']
-        if 'min_width' in src:
-            dest['min_width'] = src['min_width']
-        if 'padding' in src:
-            dest['padding'] = src['padding']
-        if 'row_margin' in src:
-            dest['row_margin'] = src['row_margin']
-        if 'stretch' in src:
-            dest['stretch'] = src['stretch']
-        if 'stroke' in src:
-            dest['stroke'] = src['stroke']
-        if 'stroke_dasharray' in src:
-            dest['stroke_dasharray'] = src['stroke_dasharray']
-        if 'start_bias' in src:
-            dest['start_bias'] = src['start_bias']
-        if 'stroke_width' in src:
-            dest['stroke_width'] = src['stroke_width']
-        if 'text_fill' in src:
-            dest['text_fill'] = src['text_fill']
-        if 'text_line_height' in src:
-            dest['text_line_height'] = src['text_line_height']
-        if 'text_orientation' in src:
-            dest['text_orientation'] = src['text_orientation']
-
     def _get_style(
             self,
             name: Optional[str],
             warn: bool = False
-    ) -> AttributeMap:
+    ) -> Attributes:
         """Retrieve the attributes of the style with the given name.
 
         If the name is empty or the style does not exist, it returns
         an empty attribute set.
 
         """
+        empty = Attributes()
         if not name:
-            return {}
-        attrs = self._named_styles.get(name, {})
-        if not attrs and warn:
-            log_warning("Style '{}' not found".format(name))
-        return attrs
+            return empty
+        attrs = self._named_styles.get(name)
+        if attrs:
+            return attrs
+        else:
+            if warn:
+                log_warning("Style '{}' not found".format(name))
+            return empty
 
     @staticmethod
     def _str_or_list(text: Any) -> List[str]:
@@ -437,21 +384,21 @@ class Builder:
     @staticmethod
     def _parse_label_position(s: str) -> Optional[LabelPosition]:
         """Parse the value of a label position attribute."""
-        a = s.lower()
-        if a == 'bottom':
-            return LabelPosition.BOTTOM
-        elif a == 'top':
-            return LabelPosition.TOP
-        else:
-            return None
+        result = None
+        a = s.strip().upper()
+        for member in LabelPosition:
+            if member.name == a:
+                result = member
+                break
+        return result
 
     @staticmethod
     def _parse_orientation(s: str) -> Optional[Orientation]:
         """Parse the value of an orientation attribute."""
-        a = s.lower()
-        if a == 'horizontal':
-            return Orientation.HORIZONTAL
-        elif a == 'vertical':
-            return Orientation.VERTICAL
-        else:
-            return None
+        result = None
+        a = s.strip().upper()
+        for member in Orientation:
+            if member.name == a:
+                result = member
+                break
+        return result

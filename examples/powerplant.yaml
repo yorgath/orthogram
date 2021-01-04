@@ -3,6 +3,7 @@
 diagram:
 
   label: Combined Cycle Power Plant
+  font_family: Arial
   collapse_links: true
   fill: lightyellow
   link_distance: 6
@@ -11,12 +12,19 @@ styles:
 
   default_terminal:
     fill: white
+    font_family: Arial
+    margin_bottom: 18
+    margin_left: 18
+    margin_right: 18
+    margin_top: 18
+    padding_bottom: 6
+    padding_left: 6
+    padding_right: 6
+    padding_top: 6
 
   default_link:
-    start_bias: horizontal
-    end_bias: horizontal
-    buffer_width: 2
-    buffer_fill: lightyellow
+    bias_start: horizontal
+    bias_end: horizontal
     stroke_width: 3
 
   cold_gas:
@@ -31,6 +39,13 @@ styles:
   electrical_generator:
     label: "Electrical\nGenerator"
 
+  gas_engine:
+    pass_through: true
+    drawing_priority: -1
+    stroke_width: 1
+    stroke_dasharray: 4 4
+    fill: palegreen
+
   gas_turbine:
     label: Gas Turbine
 
@@ -38,8 +53,29 @@ styles:
     stroke: orangered
     fill: gold
 
+  inside_gas_engine:
+    buffer_fill: palegreen
+    buffer_width: 2
+
+  intra_section:
+    stroke_width: 12
+    arrow_aspect: 0.75
+    drawing_priority: -2
+    stroke: lightgrey
+
   low_priority:
     drawing_priority: -1
+
+  section:
+    pass_through: true
+    drawing_priority: -2
+    stroke_width: 0
+    fill: moccasin
+    padding_bottom: 12
+    padding_left: 12
+    padding_right: 12
+    padding_top: 12
+    label_distance: 6
 
   shaft:
     arrow_forward: false
@@ -62,9 +98,11 @@ terminals:
 
   air:
     label: Air
-    stroke: none
-    min_width: 24
+    margin_bottom: 0
+    margin_top: 0
     min_height: 0
+    min_width: 24
+    stroke: none
 
   cdn:
     label: Condenser
@@ -88,10 +126,10 @@ terminals:
     label: Fuel
 
   egn1:
-    style: electrical_generator
+    style: [electrical_generator]
 
   egn2:
-    style: electrical_generator
+    style: [electrical_generator]
 
   egn3:
     style: electrical_generator
@@ -114,19 +152,52 @@ terminals:
     label: Exhaust
 
   tx:
-    label: "To Electrical Transformers"
+    label: To Electrical Transformers
     font_style: italic
     text_orientation: vertical
     min_width: 48
 
+  ge1:
+    label: Gas Engine 1
+    label_position: top_left
+    cover: [cmp1, cmb1, gtb1]
+    style: gas_engine
+
+  ge2:
+    label: Gas Engine 2
+    label_position: top_left
+    cover: [cmp2, cmb2, gtb2]
+    style: gas_engine
+
+  gas_section:
+    label: Gas Section
+    label_position: top
+    cover: [gsec, cmb2, fuel, cmp1, cmb1, gtb1, cmp2, gtb2]
+    style: section
+    margin_right: 24
+
+  steam_section:
+    label: Steam Section
+    label_position: bottom
+    cover: [sgn, stb, cdn, exst, cool]
+    style: section
+    margin_top: 24
+
+  electric_section:
+    label: Electrical Section
+    label_position: top
+    cover: [egn1, egn2, egn3, tx]
+    style: section
+    margin_left: 24
+
 rows:
 
-  - pins: [""   , ""   , fuel                   ]
-  - pins: [""   , cmp1 , cmb1 , gtb1 , egn1 , tx]
-  - pins: [air  , ""   , ""   , ""   , ""   , tx]
-  - pins: [""   , cmp2 , cmb2 , gtb2 , egn2 , tx]
-  - pins: [""   , exst , ""   , sgn  , ""   , tx]
-  - pins: [""   , cool , cdn  , stb  , egn3 , tx]
+  - [""   , ""   , fuel                   ]
+  - [""   , cmp1 , cmb1 , gtb1 , egn1 , tx]
+  - [air  , ""   , ""   , gsec , ""   , tx]
+  - [""   , cmp2 , cmb2 , gtb2 , egn2 , tx]
+  - [""   , exst , ""   , sgn  , ""   , tx]
+  - [""   , cool , cdn  , stb  , egn3 , tx]
 
 links:
 
@@ -137,7 +208,7 @@ links:
 
   - start: cmp1
     end: cmb1
-    style: cold_gas
+    style: [cold_gas, inside_gas_engine]
 
   - start: cmp2
     end: cmb2
@@ -146,7 +217,7 @@ links:
   - start: fuel
     end: [cmb1, cmb2]
     style: low_priority
-    end_bias: vertical
+    bias_end: vertical
     stroke: olive
 
   - start: cmb1
@@ -155,7 +226,7 @@ links:
 
   - start: cmb2
     end: gtb2
-    style: hot_gas
+    style: [hot_gas, inside_gas_engine]
 
   - start: gtb1
     end: egn1
@@ -167,8 +238,8 @@ links:
 
   - start: [gtb1, gtb2]
     end: sgn
-    start_bias: vertical
-    end_bias: vertical
+    bias_start: vertical
+    bias_end: vertical
     style: hot_gas
     group: gas_to_steam
 
@@ -186,7 +257,7 @@ links:
 
   - start: cdn
     end: sgn
-    start_bias: vertical
+    bias_start: vertical
     style: water
 
   - start: cdn
@@ -200,3 +271,15 @@ links:
   - start: sgn
     end: exst
     style: hot_gas
+
+  - start: gas_section
+    end: steam_section
+    style: intra_section
+
+  - start: gas_section
+    end: electric_section
+    style: intra_section
+
+  - start: steam_section
+    end: electric_section
+    style: intra_section

@@ -1,23 +1,17 @@
 diagram:
   label: Left-Down vs Down-Left
 
-terminals:
-  A:
-  B:
-  C:
-  D:
-
 rows:
-  - pins: ["", C    ]
-  - pins: [D , "", A]
-  - pins: ["", B    ]
+  - ["", C    ]
+  - [D , "", A]
+  - ["", B    ]
 
 links:
   - start: A
     end: B
-    start_bias: horizontal
-    end_bias: vertical
+    bias_start: horizontal
+    bias_end: vertical
   - start: C
     end: D
-    start_bias: vertical
-    end_bias: horizontal
+    bias_start: vertical
+    bias_end: horizontal

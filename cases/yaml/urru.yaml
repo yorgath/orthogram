@@ -1,23 +1,17 @@
 diagram:
   label: Up-Right vs Right-Up
 
-terminals:
-  A:
-  B:
-  C:
-  D:
-
 rows:
-  - pins: ["", D    ]
-  - pins: [C , "", B]
-  - pins: ["", A    ]
+  - ["", D    ]
+  - [C , "", B]
+  - ["", A    ]
 
 links:
   - start: A
     end: B
-    start_bias: vertical
-    end_bias: horizontal
+    bias_start: vertical
+    bias_end: horizontal
   - start: C
     end: D
-    start_bias: horizontal
-    end_bias: vertical
+    bias_start: horizontal
+    bias_end: vertical
