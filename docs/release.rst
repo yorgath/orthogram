@@ -54,3 +54,21 @@ Release history
 * Made compatible with Python 3.7.
 * Replaced igraph with NetworkX to ease installation.
 * Moved documentation to Read the Docs.
+
+0.4.0 (????-??-??)
+------------------
+
+* Breaking change: Removed ``column_margin`` and ``row_margin``
+  diagram attributes.  Added ``margin_*`` terminal attributes.
+
+* Breaking change: Replaced ``padding`` diagram attribute with
+  ``padding_*`` attributes.
+
+* Breaking change: Renamed ``start_bias`` to ``bias_start`` and
+  ``end_bias`` to ``bias_end``.
+
+* Breaking change: Got rid of the ``pins`` key in row definitions.
+
+* Added autogeneration of terminals.
+
+* Made diagram center on the drawing area.

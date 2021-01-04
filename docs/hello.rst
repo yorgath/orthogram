@@ -6,14 +6,14 @@ of YAML:
 
 .. code-block:: yaml
 
+   rows:
+     - [a]
+     - ["", b]
    terminals:
      a:
        label: Hello
      b:
        label: world
-   rows:
-     - pins: [a]
-     - pins: ["", b]
    links:
      - start: a
        end: b

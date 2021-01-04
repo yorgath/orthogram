@@ -3,12 +3,12 @@ Diagram definition file
 
 Orthogram uses YAML for its input file format.  Of course, YAML being
 a superset of JSON, you can use JSON if you prefer so.  The top-level
-structure must be a YAML mapping; the following keys are recognized,
-each one containing a different category of definitions:
+structure must be a YAML mapping; the program recognizes the following
+keys, each one containing a different category of definitions:
 
 * ``diagram``
-* ``terminals``
 * ``rows``
+* ``terminals``
 * ``links``
 * ``styles``
 * ``groups``
@@ -25,9 +25,30 @@ section:
 
    diagram:
      label: This is my diagram!
+     label_position: bottom
      font_weight: bold
 
-The following diagram attributes are of particular significance:
+The optional label of the diagram is the title of the drawing.  If you
+want a label with more than one line of text, use the newline
+character in the string:
+
+.. code-block:: yaml
+
+   diagram:
+     label: Two lines separated by\na newline character
+
+For longer texts, the YAML literal style may be more convenient:
+
+.. code-block:: yaml
+
+   diagram:
+     label: |-
+       You can also use
+       YAML literal style
+
+Consult the :ref:`Attributes` section for a list of attributes
+available for diagrams.  Out of all those attributes, however, the
+following are of particular significance to the program:
 
 ``collapse_links``
   If you set this to ``true``, collinear segments of links belonging
@@ -40,12 +61,52 @@ The following diagram attributes are of particular significance:
   contains it.  Set this attribute to ``false`` to make the browser
   render the diagram in its original dimensions.
 
+``rows``
+--------
+
+The ``rows`` section of the diagram definition file defines the layout
+of the diagram.  It is essential; without one the program cannot
+determine the position of any element to draw!
+
+The program lays out the elements of the diagram in a rectangular
+grid.  The grid consists of *cells*, which are arranged in rows and
+columns.  You define the grid one row at a time.
+
+The ``rows`` structure is a sequence of row definitions.  Each row
+definition is a sequence of strings.  Each string corresponds to one
+cell in the row.  If the string is *not* empty the cell is *tagged*
+with the string; otherwise it is an anonymous cell.  Here is an
+example:
+
+.. code-block:: yaml
+
+   rows:
+     - [a, "", c, c]
+     - [b, "", c, c]
+
+The grid above contains a cell tagged with "a", another one tagged
+with "b", two anonymous cells, and four cells tagged with "c".
+
+You use the tags to refer to a cell or group of cells.  More
+precisely, you use the tags to define the positions of the
+*terminals*, which is the subject of the section that follows.
+
+Note that, since the grid is rectangular, all the rows must contain
+the same number of cells, which is the length of the longest row in
+the definition.  You do not have to worry about it, though; the
+program will pad shorter rows with anonymous cells, until all rows
+have the same length.
+
 ``terminals``
 -------------
 
+The terminals are the elements of the diagram where links terminate.
+Each terminal occupies a rectangular area of the diagram grid.  You
+must have at least a couple of terminals to produce a meaningful
+diagram.
+
 The ``terminals`` section contains mappings between terminal names and
-terminal definitions.  You must have at least a couple of terminals to
-produce a meaningful diagram.  Here is an example:
+terminal definitions.  Here is an example:
 
 .. code-block:: yaml
 
@@ -56,73 +117,90 @@ produce a meaningful diagram.  Here is an example:
        label: Another terminal
        stroke: blue
 
-If you want a label with more than one line of text, use the newline
-character in the string.  Even better, you can use the YAML literal
-style:
+Note that if you do not define a label for a terminal, the program
+will use its name as a label instead.
+
+A terminal occupies the minimal rectangular area of the grid that
+contains all the cells tagged with the name of the terminal.  In the
+example that follows, terminal "b" is just one cell, whereas terminal
+"b" covers six cells, including the cell on which "a" stands:
 
 .. code-block:: yaml
 
-   terminals:
-
-     single-line:
-       label: A single line label
-
-     multi-with-newlines:
-       label: Two lines separated by\na newline character
-
-     multi-with-newlines-again:
-       label: |-
-         You can also use
-         YAML literal style
-
-Note that if the label of a terminal is not defined, the name of the
-terminal is used as a label instead.
-
-``rows``
---------
-
-The ``rows`` section of the diagram definition file is used to arrange
-the terminals in the layout grid.  It is essential; terminals that
-have not been placed in the grid are not drawn at all.
-
-The ``rows`` structure is a sequence of row definitions.  Each row
-definition contains a sequence of terminal names.  You can use an
-empty string between the terminal names to leave an empty spot in the
-row.  Here is an example:
-
-.. code-block:: yaml
-
+   rows:
+     - ["b", "a"     ]
+     - ["" , "" , "b"]
    terminals:
      a:
+       label: A single-cell terminal
+       drawing_priority: 1
      b:
-     c:
+       label: A terminal of 6 cells
+
+Terminals can overlap each other.  In the example above, terminal "b"
+contains terminal "a" in its entirety.  The ``drawing_priority``
+attribute ensures that the program draws "a" *over* "b"; otherwise it
+will be completely hidden by it.  The program draws terminals with
+higher priority over terminals with lower priority.  The default
+priority is zero.
+
+If you want to expand a terminal beyond the cells tagged with its own
+name, you can add more tags to it using the ``cover``
+pseudo-attribute:
+
+.. code-block:: yaml
+
    rows:
-     - pins: [a]
-     - pins: [b, "", c]
+     - ["a", "", "b"]
+     - ["a", "", "c"]
+     - ["a", "", "" ]
+   terminals:
+     a:
+       label: Covers 9 cells!
+       cover: ["b", "c"]
 
-Note that the ``pins`` key is necessary.  Row definitions do not have
-any attributes, though this may change in the future.
+The ``cover`` pseudo-attribute has an additional function.  Terminal
+"a" in the example above has eight *nodes* on which links can be
+attached, one for each outer cell that it occupies (the cell in the
+middle cannot be used for connections.)  The program creates links
+using a shortest path algorithm; however when it has to chose among
+paths with the same length, it gives precedence to the nodes according
+to the sequnce in the ``cover`` attribute.  The name of the terminal
+comes last, unless you explicitly include it in the ``cover``
+sequence.
 
-A terminal can have many pins in multiple rows as long as the area
-they occupy in the grid is rectangular.  This way you can draw
-terminals that span multiple diagram rows or columns.  The following
-example contains valid arrangements:
+The ability to have overlapping terminals is most useful when you want
+to draw a frame around a bunch of terminals.  In the example that
+follows, a terminal named "frame" functions as a frame around
+terminals "a" and "b":
 
 .. code-block:: yaml
 
    rows:
-     - pins: [a, b , b , c, c]
-     - pins: [a, "", "", c, c]
+     - ["a", "b"]
+   terminals:
+     frame:
+       cover: ["a", "b"]
+       label: Frame around a and b
+       label_position: top
+       drawing_priority: -1
 
-However, the program will reject the following invalid arrangements:
+Tags that are neither names of terminals nor mentioned in a ``cover``
+sequence are "leftover" tags.  The program does not throw them away.
+Instead, it uses them to *autogenerate* terminals, one terminal for
+each unique tag.  These automatically generated terminals come with
+default attributes and are labelled with their name.  This is a
+convenience for simple quick-and-dirty diagrams.  The example below is
+a complete, self-contained diagram definition, without a ``terminals``
+section in it:
 
 .. code-block:: yaml
 
-   # These are wrong!  Terminal 'a' has a gap; terminal 'b' is
-   # L-shaped.
    rows:
-     - pins: [a , "", a , b, ""]
-     - pins: ["", "", "", b, b ]
+     - ["a", "b"]
+   links:
+     - start: a
+       end: b
 
 ``links``
 ---------
@@ -130,9 +208,7 @@ However, the program will reject the following invalid arrangements:
 The ``links`` section defines the connections between the terminals.
 It is a sequence of link definitions. Each link must declare the names
 of the ``start`` and ``end`` terminals, as well as any
-:ref:`Attributes` appropriate for links.  Note that the terminals must
-have at least one pin placed before making a connection. Here is an
-example:
+:ref:`Attributes` appropriate for links.  Here is an example:
 
 .. code-block:: yaml
 
@@ -141,8 +217,8 @@ example:
      b: {label: Second terminal}
      c: {label: Third terminal}
    rows:
-     - pins: [a,  b]
-     - pins: ["", c]
+     - [a,  b]
+     - ["", c]
    links:
      - start: a
        end: b
@@ -162,14 +238,14 @@ attributes.  For example, the following definition creates six links:
      - start: [a, b]
        end: [c, d, e]
 
-Of particular interest is the ``drawing_priority`` attribute.  Links
-with a higher priority number are drawn over links with a lower
-priority.  Since the intersection of links cannot typically be avoided
-in complex diagrams, it is advised that you draw intersecting links
-with a different ``stroke`` color to make obvious that the links are
-not connected at the intersection points.  The ``drawing_priority``
-lets you draw sets of links as layers on top of each other, giving a
-more consistent look to your diagram.
+Of particular interest is the ``drawing_priority`` attribute.  The
+program draws links with a higher priority number *over* links with a
+lower priority.  Since it is not easy to avoid the intersection of
+links in complex diagrams, it is better that you draw intersecting
+links with a different ``stroke`` color to make obvious that the links
+are not connected at the intersection points.  The
+``drawing_priority`` lets you draw sets of links as layers on top of
+each other, giving a more consistent look to your diagram.
 
 Another way to avoid intersecting links appearing as if they were
 connected at the intersections is to draw a *buffer* around the links.
@@ -190,9 +266,10 @@ highest priority among all links in the group.
 ----------
 
 You can add style definitions to the ``styles`` section to create
-named styles that can be referred to by the terminals, links and
-groups.  Each style definition consists of attribute key-value pairs.
-For example, the following two terminals are drawn in the same color:
+named styles that the elements of the diagram (terminals, links and
+groups) can refer to.  Each style definition consists of attribute
+key-value pairs.  For example, the following two terminals are drawn
+in the same color:
 
 .. code-block:: yaml
 
@@ -202,7 +279,7 @@ For example, the following two terminals are drawn in the same color:
      b:
        style: reddish
    rows:
-     - pins: [a, b]
+     - [a, b]
    styles:
      reddish:
        stroke: "#880000"

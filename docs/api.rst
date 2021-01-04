@@ -25,7 +25,9 @@ You can now add terminals to the diagram:
    diagram.add_terminal("c", label="World")
 
 Again, you can provide :ref:`Attributes` for the terminals as
-key-value pairs.
+key-value pairs.  If you want to set default attributes for the new
+terminals, use the :py:meth:`set_default_terminal_attributes()`
+method.
 
 In order to use the terminals, you must first place pins for them in
 the grid:
@@ -35,7 +37,7 @@ the grid:
    diagram.add_row(["a"])
    diagram.add_row(["b", "", "c"])
 
-The :py:meth:`add_row` method takes a list of terminal names.  Note
+The :py:meth:`add_row()` method takes a list of terminal names.  Note
 that you must have added the terminals to the diagram before placing
 pins for them in the grid.  Use an empty string or None to leave an
 empty space between terminals.
@@ -46,9 +48,9 @@ After placing the terminals, you can connect them via links like this:
 
    diagram.add_link("a", "b", stroke="red")
 
-Note that the :py:class:`Diagram` class offers an :py:meth:`add_links`
-method as well, which lets you create links en masse (all having the
-same attributes).
+Note that the :py:class:`Diagram` class offers an
+:py:meth:`add_links()` method as well, which lets you create links en
+masse (all having the same attributes).
 
 After you have finished building your diagram, use the
 :py:func:`write_svg()` function to write the SVG file:
@@ -76,7 +78,7 @@ definition into the builder:
        builder.add(data)
    write_svg(builder.diagram, "diagram.svg")
 
-If you have to be more specific, :py:class:`Builder` provides the
+If you have to be more specific, :py:meth:`Builder` provides the
 following methods:
 
 ==============================  ==========================
