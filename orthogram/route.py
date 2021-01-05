@@ -1,4 +1,4 @@
-"""Route links between diagram terminals."""
+"""Route connections between diagram blocks."""
 
 from typing import (
     Dict,
@@ -14,10 +14,10 @@ from typing import (
 import networkx as nx # type: ignore
 
 from .diagram import (
+    Block,
+    Connection,
     Diagram,
-    Link,
     Node,
-    Terminal,
 )
 
 from .geometry import (
@@ -40,29 +40,29 @@ PointsAndNodesIterator = Iterator[Tuple[IntPoint, Optional[Node]]]
 ######################################################################
 
 class LayoutCell:
-    """Position in the grid, may hold a node and its connected terminals."""
+    """Position in the grid, may hold a node and its connected blocks."""
 
     def __init__(
             self,
             node: Optional[Node] = None,
-            terminals: Iterable[Terminal] = (),
+            blocks: Iterable[Block] = (),
     ):
         """Initialize with the given contents."""
         self._node = node
-        self._terminals = set(terminals)
+        self._blocks = set(blocks)
 
     @property
     def node(self) -> Optional[Node]:
         """node in this cell."""
         return self._node
 
-    def terminals(self) -> Iterator[Terminal]:
-        """Return an iterator over the terminals that cover the cell."""
-        yield from self._terminals
+    def blocks(self) -> Iterator[Block]:
+        """Return an iterator over the blocks that cover the cell."""
+        yield from self._blocks
 
-    def has_terminal(self, terminal: Terminal) -> bool:
-        """Return true if the terminal is on this cell."""
-        return terminal in self._terminals
+    def has_block(self, block: Block) -> bool:
+        """Return true if the block is on this cell."""
+        return block in self._blocks
 
 ######################################################################
 
@@ -73,7 +73,7 @@ class LayoutGrid:
         """Initialize for the given diagram."""
         # The dimensions of the layout grid are such that they permit
         # the creation of routes between and also around the
-        # terminals.
+        # blocks.
         diagram_grid = diagram.grid
         self._height = 2 * diagram_grid.height + 1
         self._width = 2 * diagram_grid.width + 1
@@ -103,10 +103,10 @@ class LayoutGrid:
             rows.append(row)
         # Now put the nodes into the cells.
         nps = {}
-        for node, terminals in diagram.nodes_and_terminals():
+        for node, blocks in diagram.nodes_and_blocks():
             dp = node.point
             lp = self._diagram_to_layout(dp)
-            cell = LayoutCell(node, terminals)
+            cell = LayoutCell(node, blocks)
             li, lj = lp.i, lp.j
             rows[li][lj] = cell
             nps[node] = lp
@@ -116,22 +116,22 @@ class LayoutGrid:
     def _collect_forbidden_points(self) -> None:
         """Find the points through which routes cannot pass.
 
-        These are the points between the nodes of a terminal that does
-        not let links pass through it.
+        These are the points between the nodes of a block that does
+        not let connections pass through it.
 
         """
         forbidden: Set[IntPoint] = set()
         rows = self._rows
         for i in range(0, self._height - 2):
             for j in range(0, self._width - 2):
-                for terminal in rows[i][j].terminals():
-                    if not terminal.attributes.pass_through:
+                for block in rows[i][j].blocks():
+                    if not block.attributes.pass_through:
                         cell = rows[i][j + 2]
-                        if cell.has_terminal(terminal):
+                        if cell.has_block(block):
                             p = IntPoint(i, j + 1)
                             forbidden.add(p)
                         cell = rows[i + 2][j]
-                        if cell.has_terminal(terminal):
+                        if cell.has_block(block):
                             p = IntPoint(i + 1, j)
                             forbidden.add(p)
         self._forbidden_points = forbidden
@@ -211,9 +211,9 @@ class LayoutGrid:
 class RouteSegment(OrientedVector):
     """Segment of a route between angles."""
 
-    def __init__(self, link: Link, axis: Axis, c1: int, c2: int):
-        """Initialize the segment for a given link."""
-        self._link = link
+    def __init__(self, connection: Connection, axis: Axis, c1: int, c2: int):
+        """Initialize the segment for a given connection."""
+        self._connection = connection
         self._axis = axis
         self._coords = (c1, c2)
 
@@ -222,7 +222,7 @@ class RouteSegment(OrientedVector):
         coords = self._coords
         return "{}({}; {}; {}->{})".format(
             self.__class__.__name__,
-            self._link,
+            self._connection,
             self._axis,
             coords[0],
             coords[1],
@@ -241,18 +241,23 @@ class RouteSegment(OrientedVector):
 ######################################################################
 
 class Route:
-    """Path between two terminals."""
+    """Path between two blocks."""
 
-    def __init__(self, name: str, link: Link, segments: Sequence[RouteSegment]):
-        """Initialize the route of a link with the given segments.
+    def __init__(
+            self,
+            name: str,
+            connection: Connection,
+            segments: Sequence[RouteSegment],
+    ):
+        """Initialize the route of a connection with the given segments.
 
         The name must be unique among all the routes of the diagram,
-        because it is used as a group name when the link does not
-        belong to a named group.
+        because it is used as a group name when the connection does
+        not belong to a named group.
 
         """
         self._name = name
-        self._link = link
+        self._connection = connection
         self._segments = list(segments)
 
     def __repr__(self) -> str:
@@ -265,9 +270,9 @@ class Route:
         return self._name
 
     @property
-    def link(self) -> Link:
-        """Associated diagram link."""
-        return self._link
+    def connection(self) -> Connection:
+        """Associated diagram connection."""
+        return self._connection
 
     def segments(self) -> Iterator[RouteSegment]:
         """Return an iterator over the segments that make up the route."""
@@ -276,7 +281,7 @@ class Route:
 ######################################################################
 
 class Router:
-    """Calculates the routes between the linked terminals of a diagram."""
+    """Calculates the routes between the connected blocks of a diagram."""
 
     def __init__(self, diagram: Diagram):
         """Initialize the router for the given diagram."""
@@ -302,39 +307,43 @@ class Router:
             graph.add_node(p, node=n)
 
     def _init_routes(self) -> None:
-        """Create the routes for all the links of the diagram."""
+        """Create the routes for all the connections of the diagram."""
         routes: List[Route] = []
-        for link in self._diagram.links():
+        for connection in self._diagram.connections():
             name = "R{}".format(len(routes))
-            route = self._make_route(name, link)
+            route = self._make_route(name, connection)
             if route:
                 routes.append(route)
         self._routes = routes
 
-    def _make_route(self, name: str, link: Link) -> Optional[Route]:
+    def _make_route(self, name: str, connection: Connection) -> Optional[Route]:
         """Create the route between two nodes.
 
-        Returns None if it fails to connect the two ends of the link.
+        Returns None if it fails to connect the two ends of the
+        connection.
 
         """
-        points = self._shortest_path_of_link(link)
+        points = self._shortest_path_of_connection(connection)
         if points:
-            segments = self._make_segments_for_route(points, link)
-            return Route(name, link, segments)
+            segments = self._make_segments_for_route(points, connection)
+            return Route(name, connection, segments)
         else:
             return None
 
-    def _shortest_path_of_link(self, link: Link) -> Sequence[IntPoint]:
-        """Calculate the shortest path between the two link terminals.
+    def _shortest_path_of_connection(
+            self,
+            connection: Connection,
+    ) -> Sequence[IntPoint]:
+        """Calculate the shortest path between the two blocks.
 
         Returns the points through which the path passes.
 
         """
         shortest_path: Optional[List[IntPoint]] = None
         shortest_length: Optional[float] = None
-        for n1 in link.start.outer_nodes():
-            for n2 in link.end.outer_nodes():
-                result = self._shortest_path_between_nodes(link, n1, n2)
+        for n1 in connection.start.outer_nodes():
+            for n2 in connection.end.outer_nodes():
+                result = self._shortest_path_between_nodes(connection, n1, n2)
                 if result:
                     path, length = result
                     if shortest_length is None or length < shortest_length:
@@ -342,7 +351,7 @@ class Router:
                         shortest_length = length
         if not shortest_path:
             msg = "No path between {} and {}".format(
-                link.start.name, link.end.name)
+                connection.start.name, connection.end.name)
             log_warning(msg)
             return []
         else:
@@ -350,7 +359,7 @@ class Router:
 
     def _shortest_path_between_nodes(
             self,
-            link: Link,
+            connection: Connection,
             n1: Node, n2: Node
     ) -> Optional[Tuple[List[IntPoint], float]]:
         """Calculate the shortest path between two nodes.
@@ -362,7 +371,7 @@ class Router:
         """
         bias_s = 0.9
         bias_l = 0.8
-        attrs = link.attributes
+        attrs = connection.attributes
         b1 = attrs.bias_start
         b2 = attrs.bias_end
         hor = Orientation.HORIZONTAL
@@ -421,7 +430,7 @@ class Router:
     def _make_segments_for_route(
             self,
             points: Sequence[IntPoint],
-            link: Link,
+            connection: Connection,
     ) -> Sequence[RouteSegment]:
         """Generate segments for a route."""
         segments: List[RouteSegment] = []
@@ -441,7 +450,7 @@ class Router:
                     seg = self._make_segment_for_route(
                         len(segments),
                         seg_points[0], p2,
-                        link,
+                        connection,
                     )
                     segments.append(seg)
                     seg_points = [p2, p]
@@ -449,7 +458,7 @@ class Router:
         seg = self._make_segment_for_route(
             len(segments),
             seg_points[0], seg_points[-1],
-            link,
+            connection,
         )
         segments.append(seg)
         return segments
@@ -458,7 +467,7 @@ class Router:
             self,
             index: int,
             p1: IntPoint, p2: IntPoint,
-            link: Link,
+            connection: Connection,
     ) -> RouteSegment:
         """Create a new segment for a route."""
         ori = self._points_orientation(p1, p2)
@@ -469,7 +478,7 @@ class Router:
             axis_coord = p1.j
             c1, c2 = p1.i, p2.i
         axis = self._grid.axis(ori, axis_coord)
-        return RouteSegment(link, axis, c1, c2)
+        return RouteSegment(connection, axis, c1, c2)
 
     @staticmethod
     def _points_orientation(p1: IntPoint, p2: IntPoint) -> Orientation:

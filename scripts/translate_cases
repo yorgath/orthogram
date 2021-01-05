@@ -3,17 +3,10 @@
 # Translate the cases.
 
 import os
-from orthogram import translate
+from orthogram import translate_dir
 
 if __name__ == '__main__':
     root = "cases"
     in_dir = os.path.join(root, "yaml")
     out_dir = os.path.join(root, "svg")
-    in_files = sorted(os.listdir(in_dir))
-    for in_file in in_files:
-        if in_file.endswith(".yaml"):
-            in_path = os.path.join(in_dir, in_file)
-            out_file = in_file.replace(".yaml", ".svg")
-            out_path = os.path.join(out_dir, out_file)
-            print(in_path, "=>", out_path)
-            translate(in_path, out_path)
+    translate_dir(in_dir, out_dir)

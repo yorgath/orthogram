@@ -4,7 +4,7 @@ diagram:
 rows:
   - [B, A]
 
-links:
+connections:
   - start: A
     end: B
   - start: A

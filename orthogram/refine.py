@@ -19,9 +19,9 @@ import networkx as nx # type: ignore
 from .debug import Debug
 
 from .diagram import (
-    Link,
+    Block,
+    Connection,
     Node,
-    Terminal,
 )
 
 from .geometry import (
@@ -188,11 +188,11 @@ class Joint:
 
 ######################################################################
 
-class ConnectorSegment(OrientedVector):
-    """Segment of a connector between two angles."""
+class WireSegment(OrientedVector):
+    """Segment between two angles of a wire."""
 
     def __init__(self, route_segment: RouteSegment, start: Joint, end: Joint):
-        """Initialize the connector."""
+        """Initialize the wire."""
         self._route_segment = route_segment
         self._start = start
         self._end = end
@@ -223,11 +223,11 @@ class ConnectorSegment(OrientedVector):
 
 ######################################################################
 
-class Connector:
-    """Connector between two terminals."""
+class Wire:
+    """Connects two blocks together."""
 
-    def __init__(self, route: Route, segments: Sequence[ConnectorSegment]):
-        """Create a connector with the given segments for a route."""
+    def __init__(self, route: Route, segments: Sequence[WireSegment]):
+        """Create a wire with the given segments for a route."""
         self._route = route
         self._segments = list(segments)
 
@@ -238,17 +238,17 @@ class Connector:
             self._route.name,
         )
 
-    def segments(self) -> Iterator[ConnectorSegment]:
+    def segments(self) -> Iterator[WireSegment]:
         """Return an iterator over the segments."""
         yield from self._segments
 
     @property
-    def link(self) -> Link:
-        """Associated link."""
-        return self._route.link
+    def connection(self) -> Connection:
+        """Associated connection."""
+        return self._route.connection
 
     def joints(self) -> Iterator[Joint]:
-        """Return an iterator over the joints of the connector."""
+        """Return an iterator over the joints of the wire."""
         done: Set[Joint] = set()
         for seg in self._segments:
             for joint in seg.joints:
@@ -274,11 +274,11 @@ class Network:
         self._routes = list(routes)
         self._bundles: List[Bundle] = []
         self._joints: Dict[IntPoint, Joint] = {}
-        self._connectors: List[Connector] = []
+        self._wires: List[Wire] = []
         #
         self._init_bundles()
         self._init_joints()
-        self._init_connectors()
+        self._init_wires()
 
     def _init_bundles(self) -> None:
         """Create the bundles of segments."""
@@ -351,28 +351,28 @@ class Network:
                         joint = Joint(p, hor, ver)
                         joints[p] = joint
 
-    def _init_connectors(self) -> None:
-        """Create the connectors."""
-        connectors = self._connectors
-        connectors.clear()
+    def _init_wires(self) -> None:
+        """Create the wires."""
+        wires = self._wires
+        wires.clear()
         joints = self._joints
         for route in self._routes:
             segments = []
             for rseg in route.segments():
                 j1 = joints[rseg.first_point]
                 j2 = joints[rseg.last_point]
-                cseg = ConnectorSegment(rseg, j1, j2)
+                cseg = WireSegment(rseg, j1, j2)
                 segments.append(cseg)
-            conn = Connector(route, segments)
-            connectors.append(conn)
+            wire = Wire(route, segments)
+            wires.append(wire)
 
     def bundles(self) -> Iterator[Bundle]:
         """Return an iterator over the bundles of the network."""
         yield from self._bundles
 
-    def connectors(self) -> Iterator[Connector]:
-        """Return an iterator over the calculated connectors."""
-        yield from self._connectors
+    def wires(self) -> Iterator[Wire]:
+        """Return an iterator over the calculated wires."""
+        yield from self._wires
 
     def joints(self) -> Iterator[Joint]:
         """Return an iterator over all the joints of the network."""
@@ -419,19 +419,19 @@ class Network:
         return FloatPoint(x, y)
 
     def drawing_priority(self) -> int:
-        """Return a drawing priority for all the links.
+        """Return a drawing priority for all the connections.
 
-        It returns the highest priority of all the links in the
+        It returns the highest priority of all the connections in the
         network.
 
         """
         net_pri = None
-        for conn in self._connectors:
-            link_pri = conn.link.attributes.drawing_priority
+        for wire in self._wires:
+            connection_pri = wire.connection.attributes.drawing_priority
             if net_pri is None:
-                net_pri = link_pri
+                net_pri = connection_pri
             else:
-                net_pri = max(net_pri, link_pri)
+                net_pri = max(net_pri, connection_pri)
         if net_pri is None:
             net_pri = 0
         return net_pri
@@ -596,16 +596,16 @@ class Refiner:
     def _init_networks(self) -> None:
         """Create the networks."""
         #
-        # Group routes by link group.  If the link does not belong to
-        # any group, make a group for the route alone.
+        # Group routes by connection group.  If the connection does
+        # not belong to any group, make a group for the route alone.
         #
-        collapse_links = self._must_collapse_links()
+        collapse_connections = self._must_collapse_connections()
         K = Tuple[NetworkOrigin, str]
         per_group: Dict[K, List[Route]] = {}
         for route in self._router.routes():
-            group = route.link.attributes.group
+            group = route.connection.attributes.group
             # Use an extra key to avoid name collisions.
-            if group and collapse_links:
+            if group and collapse_connections:
                 origin = NetworkOrigin.GROUP
             else:
                 origin = NetworkOrigin.ROUTE
@@ -624,9 +624,9 @@ class Refiner:
             self._set_joint_nodes(net)
             nets.append(net)
 
-    def _must_collapse_links(self) -> bool:
-        """Collapse links in the same group?"""
-        return self._router.diagram.attributes.collapse_links
+    def _must_collapse_connections(self) -> bool:
+        """Collapse connections in the same group?"""
+        return self._router.diagram.attributes.collapse_connections
 
     def _set_joint_nodes(self, net: Network) -> None:
         """Associate joints with nodes."""

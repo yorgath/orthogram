@@ -11,16 +11,15 @@ Drawing object, which consists of the following steps:
    horizontal and vertical tracks.
 
 2. Lane objects are added to the tracks, each lane corresponding to an
-   integer offset and containing one or more overlapping connector
+   integer offset and containing one or more overlapping wire
    segments.  The width of the lane is calculated to be large enough
-   for the thickest of the connectors, the thickness of a connector
-   being determined by the stroke width of the underlying link.
+   for the thickest of the wires, the thickness of a wire being
+   determined by the stroke width of the underlying connection.
 
 3. The width of each track is calculated using the width of the lanes
-   and the distance between the links as defined in the attributes of
+   and the distance between the wires as defined in the attributes of
    the diagram.  This is, however, not the final width of the track,
-   because it does not take into account the dimensions of the
-   terminals.
+   because it does not take into account the dimensions of the blocks.
 
 TODO: Complete explanation.
 
@@ -53,17 +52,17 @@ from svgwrite import Drawing as SvgDrawing # type: ignore
 from svgwrite.container import Marker as SvgMarker # type: ignore
 
 from .attributes import (
+    ConnectionAttributes,
     ContainerAttributes,
     DiagramAttributes,
-    LinkAttributes,
     TextAttributes,
 )
 
 from .diagram import (
+    Block,
+    Connection,
     Diagram,
-    Link,
     Node,
-    Terminal,
 )
 
 from .geometry import (
@@ -77,10 +76,10 @@ from .geometry import (
 )
 
 from .layout import (
-    Connector,
-    ConnectorSegment,
     Layout,
     Network,
+    Wire,
+    WireSegment,
 )
 
 from .util import log_warning
@@ -90,7 +89,7 @@ from .util import log_warning
 class Lane:
     """Subdivision of a track, corresponds to an offset.
 
-    Many overlapping connector segments may pass through a lane.
+    Many overlapping wire segments may pass through a lane.
 
     """
 
@@ -103,7 +102,7 @@ class Lane:
         self._name = name
         self._relative_position = 0.0
         self._width = 0.0
-        self._connectors: List[Connector] = []
+        self._wires: List[Wire] = []
 
     def __repr__(self) -> str:
         """Convert to string."""
@@ -128,18 +127,18 @@ class Lane:
         """Width of the lane."""
         return self._width
 
-    def connectors(self) -> Iterator[Connector]:
-        """Return an iterator over the connectors."""
-        yield from self._connectors
+    def wires(self) -> Iterator[Wire]:
+        """Return an iterator over the wires."""
+        yield from self._wires
 
-    def add_connector(self, connector: Connector) -> None:
-        """Add a connector that runs through the lane."""
-        connectors = self._connectors
-        if connector in connectors:
+    def add_wire(self, wire: Wire) -> None:
+        """Add a wire that runs through the lane."""
+        wires = self._wires
+        if wire in wires:
             return
-        connectors.append(connector)
-        # Adapt the width of the lane to fit the new connector.
-        width = connector.link.attributes.stroke_width
+        wires.append(wire)
+        # Adapt the width of the lane to fit the new wire.
+        width = wire.connection.attributes.stroke_width
         self._width = max(self._width, width)
 
 ######################################################################
@@ -149,7 +148,7 @@ class Track(OrientedLine):
 
     The lanes are thought to run side by side along the track.  Each
     lane corresponds to an integer offset from the central axis.  Many
-    overlapping connector segments may run through each lane.
+    overlapping wire segments may run through each lane.
 
     """
 
@@ -256,7 +255,7 @@ class Track(OrientedLine):
         # Add the spaces between and around the lanes, only in case
         # there is at least one.
         if lanes:
-            distance = self._diagram_attributes.link_distance
+            distance = self._diagram_attributes.connection_distance
             width += distance * (len(lanes) + 1)
         # Distribute width evenly around the axis.
         self._rel_min = -width / 2.0
@@ -270,7 +269,7 @@ class Track(OrientedLine):
 
         """
         # Center the lanes around the axis.
-        distance = self._diagram_attributes.link_distance
+        distance = self._diagram_attributes.connection_distance
         c = self._rel_min
         for lane in self.lanes():
             lane_width = lane.width
@@ -349,7 +348,7 @@ class ContainerBox:
 
     @property
     def bounds(self) -> FloatBounds:
-        """Bounding box of the terminal box."""
+        """Bounding box of the block box."""
         return self._bounds
 
     @bounds.setter
@@ -408,16 +407,16 @@ class ContainerBox:
 
 ######################################################################
 
-class TerminalBox(ContainerBox):
-    """Box to draw for a terminal."""
+class BlockBox(ContainerBox):
+    """Box to draw for a block."""
 
     def __init__(
             self,
-            terminal: Terminal,
+            block: Block,
             tracks: Iterable[Track],
             attrs: DiagramAttributes,
     ):
-        """Initialize a box for the given terminal.
+        """Initialize a box for the given block.
 
         Note that, in order to calculate the relative dimensions of
         the box, the geometry of the lanes in the tracks must have
@@ -425,8 +424,8 @@ class TerminalBox(ContainerBox):
         needed in order to know the distance between the lanes.
 
         """
-        ContainerBox.__init__(self, terminal.attributes, terminal.label())
-        self._terminal = terminal
+        ContainerBox.__init__(self, block.attributes, block.label())
+        self._block = block
         self._diagram_attributes = attrs
         self._horizontal_tracks = self._pick_tracks(
             Orientation.HORIZONTAL, tracks
@@ -445,7 +444,7 @@ class TerminalBox(ContainerBox):
         """Convert to string."""
         return "{}({};rxmin={},rymin={},rxmax={},rymax={})".format(
             self.__class__.__name__,
-            self._terminal.name,
+            self._block.name,
             self._rel_xmin,
             self._rel_ymin,
             self._rel_xmax,
@@ -453,9 +452,9 @@ class TerminalBox(ContainerBox):
         )
 
     @property
-    def terminal(self) -> Terminal:
-        """Terminal for which the box has been created."""
-        return self._terminal
+    def block(self) -> Block:
+        """Block for which the box has been created."""
+        return self._block
 
     @property
     def rel_xmin(self) -> float:
@@ -517,71 +516,71 @@ class TerminalBox(ContainerBox):
 
     def _calculate_rel_xmin(self) -> float:
         """Return the relative coordinate of the left side."""
-        # Start with the minimum width of the terminal.
-        terminal = self._terminal
-        xmin = -terminal.attributes.min_width / 2.0
+        # Start with the minimum width of the block.
+        block = self._block
+        xmin = -block.attributes.min_width / 2.0
         # Adjust for the lanes of the leftmost track.
         track = self.track_left
-        d = self._diagram_attributes.link_distance
+        d = self._diagram_attributes.connection_distance
         for lane in track.lanes():
             x = lane.relative_position - (lane.width + d) / 2.0
-            for conn in lane.connectors():
-                link = conn.link
-                if terminal is link.start or terminal is link.end:
+            for wire in lane.wires():
+                connection = wire.connection
+                if block is connection.start or block is connection.end:
                     xmin = min(xmin, x)
         return xmin
 
     def _calculate_rel_ymin(self) -> float:
         """Return the relative coordinate of the top side."""
-        # Start with the minimum height of the terminal.
-        terminal = self._terminal
-        ymin = -terminal.attributes.min_height / 2.0
+        # Start with the minimum height of the block.
+        block = self._block
+        ymin = -block.attributes.min_height / 2.0
         # Adjust for the lanes of the top track.
         track = self.track_top
-        d = self._diagram_attributes.link_distance
+        d = self._diagram_attributes.connection_distance
         for lane in track.lanes():
             y = lane.relative_position - (lane.width + d) / 2.0
-            for conn in lane.connectors():
-                link = conn.link
-                if terminal is link.start or terminal is link.end:
+            for wire in lane.wires():
+                connection = wire.connection
+                if block is connection.start or block is connection.end:
                     ymin = min(ymin, y)
         return ymin
 
     def _calculate_rel_xmax(self) -> float:
         """Return the relative coordinate of the right side."""
-        # Start with the minimum width of the terminal.
-        terminal = self._terminal
-        xmax = terminal.attributes.min_width / 2.0
+        # Start with the minimum width of the block.
+        block = self._block
+        xmax = block.attributes.min_width / 2.0
         # Adjust for the lanes of the rightmost track.
         track = self.track_right
-        d = self._diagram_attributes.link_distance
+        d = self._diagram_attributes.connection_distance
         for lane in track.lanes():
             x = lane.relative_position + (lane.width + d) / 2.0
-            for conn in lane.connectors():
-                link = conn.link
-                if terminal is link.start or terminal is link.end:
+            for wire in lane.wires():
+                connection = wire.connection
+                if block is connection.start or block is connection.end:
                     xmin = max(xmax, x)
         return xmax
 
     def _calculate_rel_ymax(self) -> float:
         """Return the relative coordinate of the bottom side."""
-        # Start with the minimum height of the terminal.
-        terminal = self._terminal
-        ymax = terminal.attributes.min_height / 2.0
+        # Start with the minimum height of the block.
+        block = self._block
+        ymax = block.attributes.min_height / 2.0
         # Adjust for the lanes of the bottom track.
         track = self.track_bottom
-        d = self._diagram_attributes.link_distance
+        d = self._diagram_attributes.connection_distance
         for lane in track.lanes():
             y = lane.relative_position + (lane.width + d) / 2.0
-            for conn in lane.connectors():
-                link = conn.link
-                if terminal is link.start or terminal is link.end:
+            for wire in lane.wires():
+                connection = wire.connection
+                if block is connection.start or block is connection.end:
                     ymax = max(ymax, y)
         return ymax
 
-    def overlaps_with(self, other: 'TerminalBox') -> bool:
+    def overlaps_with(self, other: 'BlockBox') -> bool:
         """True if this box overlaps with the other box."""
-        return self._terminal.overlaps_with(other.terminal)
+        return self._block.overlaps_with(other.block)
 
     def pad_top_from(self, y: float) -> None:
         """Pad box so that it is higher than the given coordinate."""
@@ -605,7 +604,7 @@ class TerminalBox(ContainerBox):
 
     def update_tracks(self) -> None:
         """Update the geometry of the associated tracks."""
-        attrs = self._terminal.attributes
+        attrs = self._block.attributes
         self.track_bottom.adjust_rel_max(self._rel_ymax + attrs.margin_bottom)
         self.track_left.adjust_rel_min(self._rel_xmin - attrs.margin_left)
         self.track_right.adjust_rel_max(self._rel_xmax + attrs.margin_right)
@@ -626,41 +625,41 @@ class TerminalBox(ContainerBox):
 
 ######################################################################
 
-class ConnectorLine:
-    """Encapsulates the line string for a connector."""
+class WireLine:
+    """Encapsulates the line string for a connection wire."""
 
     def __init__(
             self,
-            connector: Connector,
-            start_box: TerminalBox,
-            end_box: TerminalBox,
+            wire: Wire,
+            start_box: BlockBox,
+            end_box: BlockBox,
             line_string: LineString,
     ):
-        """Initialize for the given connector.
+        """Initialize for the given wire.
 
         The line string must be the one calculated directly from the
         positions of the tracks.  The boxes will be used to clip the
         line to its proper dimensions.
 
         """
-        self._connector = connector
+        self._wire = wire
         self._start_box = start_box
         self._end_box = end_box
-        self._link_line_string = line_string
+        self._wire_line_string = line_string
         self._start_marker_line_string: Optional[LineString] = None
         self._end_marker_line_string: Optional[LineString] = None
         self._clip_start()
         self._clip_end()
 
     @property
-    def link_attributes(self) -> LinkAttributes:
-        """Attributes of the underlying diagram link."""
-        return self._connector.link.attributes
+    def connection_attributes(self) -> ConnectionAttributes:
+        """Attributes of the underlying diagram connection."""
+        return self._wire.connection.attributes
 
     @property
-    def link_line_string(self) -> LineString:
+    def wire_line_string(self) -> LineString:
         """The line string to draw."""
-        return self._link_line_string
+        return self._wire_line_string
 
     @property
     def start_marker_line_string(self) -> Optional[LineString]:
@@ -682,26 +681,26 @@ class ConnectorLine:
 
     def _clip_start(self) -> None:
         """Clip the line at the start."""
-        ls = self._link_line_string
+        ls = self._wire_line_string
         poly = self._start_box.polygon
-        attrs = self._connector.link.attributes
+        attrs = self._wire.connection.attributes
         arrow_length: Optional[float] = None
         if attrs.arrow_back:
             _, arrow_length = _arrow_dimensions(attrs)
         ls, ms = self._clip(ls, poly, arrow_length, True)
-        self._link_line_string = ls
+        self._wire_line_string = ls
         self._start_marker_line_string = ms
 
     def _clip_end(self) -> None:
         """Clip the line at the end."""
-        ls = self._link_line_string
+        ls = self._wire_line_string
         poly = self._end_box.polygon
-        attrs = self._connector.link.attributes
+        attrs = self._wire.connection.attributes
         arrow_length: Optional[float] = None
         if attrs.arrow_forward:
             _, arrow_length = _arrow_dimensions(attrs)
         ls, ms = self._clip(ls, poly, arrow_length, False)
-        self._link_line_string = ls
+        self._wire_line_string = ls
         self._end_marker_line_string = ms
 
     def _clip(
@@ -713,7 +712,7 @@ class ConnectorLine:
     ) -> Tuple[LineString, Optional[LineString]]:
         """Clip a line at the polygon.
 
-        Returns the line for the link and, if an arrow length is
+        Returns the line for the wire and, if an arrow length is
         given, a line for the marker.  The 'start' argument tells
         whether the clipping is done at the start of the line or not.
 
@@ -722,8 +721,8 @@ class ConnectorLine:
         # reverse it if this not the case.
         if start:
             ls = LineString(reversed(ls.coords))
-        # Clip the link line at the boundary of the box.  This is the
-        # final link line if there is no arrow marker.
+        # Clip the wire line at the boundary of the box.  This is the
+        # final wire line if there is no arrow marker.
         ls = ls.difference(poly)
         ms = None
         if arrow_length:
@@ -741,15 +740,17 @@ class ConnectorLine:
                 ls2 = ls.difference(poly2)
                 p2 = ls2.coords[-1]
                 ms = LineString([p1, p2])
-                # Clip the line of the link at *nearly* the distance of an
-                # arrow length.  Make it a bit longer so that the line and
-                # the arrow marker do not appear disconnected.
+                # Clip the line of the wire at *nearly* the distance
+                # of an arrow length.  Make it a bit longer so that
+                # the line and the arrow marker do not appear
+                # disconnected.
                 poly3 = _buffer(poly, arrow_length - 1.0)
                 ls = ls.difference(poly3)
             else:
-                temp = "No room for arrow of link '{}' -> '{}', omitted"
-                link = self._connector.link
-                log_warning(temp.format(link.start.name, link.end.name))
+                temp = "No room for arrow of connection '{}' -> '{}', omitted"
+                connection = self._wire.connection
+                msg = temp.format(connection.start.name, connection.end.name)
+                log_warning(msg)
         # Do not forget to reverse the result if necessary.
         if start:
             ls = LineString(reversed(ls.coords))
@@ -813,7 +814,7 @@ class DiagramBox(ContainerBox):
 
 ######################################################################
 
-# Key for link markers.  Depends on dimensions and color.
+# Key for markers.  Depends on dimensions and color.
 _MarkerKey = Tuple[int, int, str]
 
 def _arrow_marker_key(width: int, length: int, stroke: str) -> _MarkerKey:
@@ -836,7 +837,7 @@ class Drawing:
         self._tracks: Dict[Axis, Track] = {}
         self._init_tracks()
         self._add_lanes_to_tracks()
-        self._terminal_boxes: Dict[Terminal, TerminalBox] = {}
+        self._block_boxes: Dict[Block, BlockBox] = {}
         self._init_boxes()
         self._pad_boxes()
         self._update_tracks_with_boxes()
@@ -844,30 +845,28 @@ class Drawing:
         self._update_track_positions()
         self._update_box_bounds()
 
-    def _connectors(self) -> Iterator[Connector]:
-        """Return an iterator over the connectors."""
+    def _wires(self) -> Iterator[Wire]:
+        """Return an iterator over the wires."""
         for net in self._layout.networks():
-            yield from net.connectors()
+            yield from net.wires()
 
     def _ordered_networks(self) -> Sequence[Network]:
-        """Return the link networks ordered by drawing priority."""
+        """Return the networks ordered by drawing priority."""
         key = lambda net: net.drawing_priority()
         return sorted(self._layout.networks(), key=key)
 
-    def _ordered_connectors(
-            self, connectors: Iterable[Connector]
-    ) -> Sequence[Connector]:
-        """Return the connectors ordered by drawing priority."""
-        key = lambda conn: conn.link.attributes.drawing_priority
-        return sorted(connectors, key=key)
+    def _ordered_wires(self, wires: Iterable[Wire]) -> Sequence[Wire]:
+        """Return the wires ordered by drawing priority."""
+        key = lambda wire: wire.connection.attributes.drawing_priority
+        return sorted(wires, key=key)
 
-    def _ordered_terminal_boxes(self) -> Sequence[TerminalBox]:
-        """Return the terminal boxes by drawing priority."""
+    def _ordered_block_boxes(self) -> Sequence[BlockBox]:
+        """Return the block boxes by drawing priority."""
         # Use name as well for deterministic result.
-        def key(b: TerminalBox) -> Tuple[int, str]:
-            t = b.terminal
-            return t.attributes.drawing_priority, t.name
-        boxes = list(self._terminal_boxes.values())
+        def key(bb: BlockBox) -> Tuple[int, str]:
+            b = bb.block
+            return b.attributes.drawing_priority, b.name
+        boxes = list(self._block_boxes.values())
         return sorted(boxes, key=key)
 
     def _track(self, ori: Orientation, c: int) -> Track:
@@ -899,15 +898,15 @@ class Drawing:
             tracks[axis] = track
 
     def _add_lanes_to_tracks(self) -> None:
-        """Create lanes for the connectors and put them into their tracks."""
+        """Create lanes for the wires and put them into their tracks."""
         tracks = self._tracks
-        for conn in self._connectors():
-            for seg in conn.segments():
+        for wire in self._wires():
+            for seg in wire.segments():
                 axis = seg.axis
                 track = tracks[axis]
                 offset = seg.offset
                 lane = track.get_or_create_lane(offset)
-                lane.add_connector(conn)
+                lane.add_wire(wire)
         # We can now calculate the geometry of the tracks necessary
         # for the lanes at least.
         for track in tracks.values():
@@ -920,35 +919,35 @@ class Drawing:
         positions of the lanes have been calculated.
 
         """
-        terminal_boxes = self._terminal_boxes
-        terminal_boxes.clear()
+        block_boxes = self._block_boxes
+        block_boxes.clear()
         diagram = self._diagram
         for node, p in self._layout.nodes_and_points():
-            for terminal in diagram.node_terminals(node):
-                terminal_box = terminal_boxes.get(terminal)
-                if not terminal_box:
-                    terminal_box = self._create_terminal_box(terminal)
-                    terminal_boxes[terminal] = terminal_box
+            for block in diagram.node_blocks(node):
+                block_box = block_boxes.get(block)
+                if not block_box:
+                    block_box = self._create_block_box(block)
+                    block_boxes[block] = block_box
 
-    def _create_terminal_box(self, terminal: Terminal) -> TerminalBox:
-        """Create a new box for a terminal."""
+    def _create_block_box(self, block: Block) -> BlockBox:
+        """Create a new box for a block."""
         h = Orientation.HORIZONTAL
         v = Orientation.VERTICAL
         attrs = self._diagram.attributes
         layout = self._layout
         tracks: Set[Track] = set()
-        for node in terminal.nodes():
+        for node in block.nodes():
             p = layout.node_point(node)
             track = self._track(h, p.i)
             tracks.add(track)
             track = self._track(v, p.j)
             tracks.add(track)
-        box = TerminalBox(terminal, tracks, attrs)
+        box = BlockBox(block, tracks, attrs)
         return box
 
     def _update_tracks_with_boxes(self) -> None:
-        """Updates the size of the tracks using the terminal boxes."""
-        for box in self._terminal_boxes.values():
+        """Updates the size of the tracks using the block boxes."""
+        for box in self._block_boxes.values():
             box.update_tracks()
 
     def _pad_boxes(self) -> None:
@@ -960,7 +959,7 @@ class Drawing:
         tracks as well.
 
         """
-        boxes = list(self._ordered_terminal_boxes())
+        boxes = list(self._ordered_block_boxes())
         boxes.reverse()
         for i, box1 in enumerate(boxes):
             bottom = box1.track_bottom
@@ -997,13 +996,13 @@ class Drawing:
                 x += track.width
 
     def _update_box_bounds(self) -> None:
-        """Calculate the bounds of the terminal boxes.
+        """Calculate the bounds of the block boxes.
 
         This must be called after the positions of the tracks have
         been calculated.
 
         """
-        for box in self._terminal_boxes.values():
+        for box in self._block_boxes.values():
             box.update_bounds()
 
     def write_svg(self, filename: str) -> None:
@@ -1016,10 +1015,10 @@ class Drawing:
             extra['height'] = str(height)
         dwg = SvgDrawing(filename, **extra)
         self._draw_diagram_box(dwg)
-        self._draw_terminal_boxes(dwg)
+        self._draw_block_boxes(dwg)
         markers = self._add_markers(dwg)
-        self._draw_connectors(dwg, markers)
-        self._draw_terminal_labels(dwg)
+        self._draw_wires(dwg, markers)
+        self._draw_block_labels(dwg)
         self._draw_diagram_label(dwg)
         dwg.save(pretty=True)
 
@@ -1031,14 +1030,14 @@ class Drawing:
         """Draw the label (i.e. the title) of the diagram."""
         self._draw_box_label(dwg, self._diagram_box)
 
-    def _draw_terminal_boxes(self, dwg: SvgDrawing) -> None:
-        """Draw the boxes of the terminals."""
-        for box in self._ordered_terminal_boxes():
+    def _draw_block_boxes(self, dwg: SvgDrawing) -> None:
+        """Draw the boxes of the blocks."""
+        for box in self._ordered_block_boxes():
             self._draw_box(dwg, box)
 
-    def _draw_terminal_labels(self, dwg: SvgDrawing) -> None:
-        """Draw the labels of the terminals."""
-        for box in self._ordered_terminal_boxes():
+    def _draw_block_labels(self, dwg: SvgDrawing) -> None:
+        """Draw the labels of the blocks."""
+        for box in self._ordered_block_boxes():
             self._draw_box_label(dwg, box)
 
     @classmethod
@@ -1152,10 +1151,10 @@ class Drawing:
         dwg.add(text)
 
     def _add_markers(self, dwg: SvgDrawing) -> _Markers:
-        """Add markers for the arrows of the links to the drawing.
+        """Add markers for the arrows of the wires to the drawing.
 
         It returns the markers so that they can be referenced by the
-        link elements.
+        wire elements.
 
         """
         markers = {}
@@ -1163,8 +1162,8 @@ class Drawing:
             'markerUnits': 'userSpaceOnUse',
             'orient': 'auto',
         }
-        for conn in self._connectors():
-            attrs = conn.link.attributes
+        for wire in self._wires():
+            attrs = wire.connection.attributes
             arrow_width, arrow_length = _arrow_dimensions(attrs)
             insert = (arrow_length / 2.0, arrow_width / 2.0)
             points = [
@@ -1190,25 +1189,25 @@ class Drawing:
                 markers[marker_key] = marker
         return markers
 
-    def _draw_connectors(self, dwg: SvgDrawing, markers: _Markers) -> None:
-        """Draw the connectors."""
+    def _draw_wires(self, dwg: SvgDrawing, markers: _Markers) -> None:
+        """Draw the wires."""
         for net in self._ordered_networks():
             # Collect the lines necessary for the drawing.
             lines = []
-            connectors = net.connectors()
-            for conn in self._ordered_connectors(connectors):
-                line = self._connector_line(conn)
+            wires = net.wires()
+            for wire in self._ordered_wires(wires):
+                line = self._wire_line(wire)
                 lines.append(line)
             # Draw the background of the network to cover the other
             # lines drawn under it.
             for line in lines:
-                self._draw_link_buffer(dwg, line)
+                self._draw_wire_buffer(dwg, line)
             # Draw the actual lines.
             for line in lines:
                 # Draw the line.
-                self._draw_link_line(dwg, line)
+                self._draw_wire_line(dwg, line)
                 # Draw the markers.
-                attrs = line.link_attributes
+                attrs = line.connection_attributes
                 marker_line_strings = [
                     line.start_marker_line_string,
                     line.end_marker_line_string
@@ -1222,12 +1221,12 @@ class Drawing:
                             markers = markers,
                         )
 
-    def _connector_line(self, conn: Connector) -> ConnectorLine:
-        """Create a line between the two ends of the connector."""
+    def _wire_line(self, wire: Wire) -> WireLine:
+        """Create a line between the two ends of the wire."""
         hor = Orientation.HORIZONTAL
         ver = Orientation.VERTICAL
         points = []
-        for joint in conn.joints():
+        for joint in wire.joints():
             p = joint.point
             h = joint.horizontal_offset
             v = joint.vertical_offset
@@ -1235,16 +1234,16 @@ class Drawing:
             y = self._get_position(hor, p.i, v)
             points.append((x, y))
         ls = LineString(points)
-        boxes = self._terminal_boxes
-        link = conn.link
-        box1 = boxes[link.start]
-        box2 = boxes[link.end]
-        return ConnectorLine(conn, box1, box2, ls)
+        boxes = self._block_boxes
+        connection = wire.connection
+        box1 = boxes[connection.start]
+        box2 = boxes[connection.end]
+        return WireLine(wire, box1, box2, ls)
 
     @staticmethod
-    def _draw_link_buffer(dwg: SvgDrawing, line: ConnectorLine) -> None:
-        """Draw the buffer of the link."""
-        attrs = line.link_attributes
+    def _draw_wire_buffer(dwg: SvgDrawing, line: WireLine) -> None:
+        """Draw the buffer of the wire."""
+        attrs = line.connection_attributes
         stroke = attrs.buffer_fill
         if not stroke or stroke == "none":
             return
@@ -1257,14 +1256,14 @@ class Drawing:
             'stroke-width': width,
             'fill': 'none',
         }
-        ls = line.link_line_string
+        ls = line.wire_line_string
         svg_line = dwg.polyline(ls.coords, **extra)
         dwg.add(svg_line)
 
     @classmethod
-    def _draw_link_line(cls, dwg: SvgDrawing, line: ConnectorLine) -> None:
-        """Draw the line of the link."""
-        attrs = line.link_attributes
+    def _draw_wire_line(cls, dwg: SvgDrawing, line: WireLine) -> None:
+        """Draw the line of the wire."""
+        attrs = line.connection_attributes
         width = attrs.stroke_width
         extra = {
             'stroke-width': width,
@@ -1273,7 +1272,7 @@ class Drawing:
         stroke = _str_or_empty(attrs.stroke)
         _maybe_add(extra, 'stroke', stroke)
         _maybe_add(extra, 'stroke-dasharray', attrs.stroke_dasharray)
-        ls = line.link_line_string
+        ls = line.wire_line_string
         svg_line = dwg.polyline(ls.coords, **extra)
         dwg.add(svg_line)
 
@@ -1282,10 +1281,10 @@ class Drawing:
             cls,
             dwg: SvgDrawing,
             line_string: LineString,
-            attrs: LinkAttributes,
+            attrs: ConnectionAttributes,
             markers: _Markers,
     ) -> None:
-        """Draw the marker at one end of a link."""
+        """Draw the marker at one end of a wire."""
         # Draw an auxiliary line to the point of the arrow.
         svg_points = line_string.coords
         stroke = _str_or_empty(attrs.stroke)
@@ -1308,10 +1307,10 @@ class Drawing:
             print("\t{}:".format(track))
             for lane in track.lanes():
                 print("\t\t{}:".format(lane))
-                for conn in lane.connectors():
-                    print("\t\t\t{}".format(conn))
-        print("Terminal boxes:")
-        for box in self._terminal_boxes.values():
+                for wire in lane.wires():
+                    print("\t\t\t{}".format(wire))
+        print("Block boxes:")
+        for box in self._block_boxes.values():
             print("\t{}".format(box))
 
 ######################################################################
@@ -1358,10 +1357,10 @@ def _label_height(attrs: TextAttributes, label: Optional[str] = None) -> float:
         label_height = 0.0
     return label_height
 
-def _arrow_dimensions(attrs: LinkAttributes) -> Tuple[int, int]:
-    """Return the dimensions of an arrow for a link.
+def _arrow_dimensions(attrs: ConnectionAttributes) -> Tuple[int, int]:
+    """Return the dimensions of an arrow for a wire.
 
-    The calculations are based on the width of the link.  The result
+    The calculations are based on the width of the wire.  The result
     is (width, length).  The dimensions are rounded to the nearest
     integers to be better suited as marker keys.
 

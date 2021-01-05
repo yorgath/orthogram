@@ -6,7 +6,7 @@ rows:
   - [D , "", B]
   - ["", C    ]
 
-links:
+connections:
   - start: A
     end: B
     bias_start: vertical

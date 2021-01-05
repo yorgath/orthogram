@@ -6,7 +6,7 @@ rows:
   - [D , "", C]
   - ["", B    ]
 
-links:
+connections:
   - start: A
     end: B
   - start: C

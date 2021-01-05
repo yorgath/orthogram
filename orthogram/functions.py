@@ -40,6 +40,25 @@ def translate_from_command_line() -> int:
     translate(args.in_file, args.out_file)
     return 0
 
+def translate_dir(in_dir: str, out_dir: Optional[str] = None) -> None:
+    """Translate all the files in a directory.
+
+    The diagram definition files in the input directory must end in
+    ".yaml" or ".yml".
+
+    """
+    if not out_dir:
+        out_dir = in_dir
+    in_files = sorted(os.listdir(in_dir))
+    for in_file in in_files:
+        if in_file.endswith(".yaml") or in_file.endswith(".yml"):
+            in_path = os.path.join(in_dir, in_file)
+            base, _ = os.path.splitext(in_file)
+            out_file = base + ".svg"
+            out_path = os.path.join(out_dir, out_file)
+            print(in_path, "=>", out_path)
+            translate(in_path, out_path)
+
 def translate(in_file: str, out_file: Optional[str] = None) -> None:
     """Create a SVG file from a diagram definition file."""
     diagram = load_ddf(in_file)

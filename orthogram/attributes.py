@@ -80,7 +80,8 @@ class Attributes(Mapping[str, Any]):
         'bias_start',
         'buffer_fill',
         'buffer_width',
-        'collapse_links',
+        'collapse_connections',
+        'connection_distance',
         'drawing_priority',
         'fill',
         'font_family',
@@ -91,7 +92,6 @@ class Attributes(Mapping[str, Any]):
         'label',
         'label_distance',
         'label_position',
-        'link_distance',
         'margin_bottom',
         'margin_left',
         'margin_right',
@@ -364,8 +364,8 @@ class ContainerAttributes(LineAttributes, AreaAttributes, TextAttributes):
 
 ######################################################################
 
-class TerminalAttributes(ContainerAttributes):
-    """Collection of attributes relevant to link terminals."""
+class BlockAttributes(ContainerAttributes):
+    """Collection of attributes relevant to blocks."""
 
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
@@ -389,10 +389,10 @@ class TerminalAttributes(ContainerAttributes):
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
         self._set_container_attributes(attrs)
-        self._set_terminal_attributes(attrs)
+        self._set_block_attributes(attrs)
 
-    def _set_terminal_attributes(self, attrs: AttributeMap) -> None:
-        """Set the attributes of the terminal to the given values."""
+    def _set_block_attributes(self, attrs: AttributeMap) -> None:
+        """Set the attributes of the block to the given values."""
         if 'drawing_priority' in attrs:
             self._drawing_priority = cast(int, attrs['drawing_priority'])
         if 'margin_bottom' in attrs:
@@ -408,7 +408,7 @@ class TerminalAttributes(ContainerAttributes):
 
     @property
     def drawing_priority(self) -> int:
-        """Relative priority when drawing terminals."""
+        """Relative priority when drawing blocks."""
         return self._drawing_priority
 
     @property
@@ -433,13 +433,13 @@ class TerminalAttributes(ContainerAttributes):
 
     @property
     def pass_through(self) -> bool:
-        """Can a link pass through the terminal?"""
+        """Can a connection pass through the block?"""
         return self._pass_through
 
 ######################################################################
 
-class LinkAttributes(LineAttributes):
-    """Collection of attributes relevant to links."""
+class ConnectionAttributes(LineAttributes):
+    """Collection of attributes relevant to connections."""
 
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
@@ -460,10 +460,10 @@ class LinkAttributes(LineAttributes):
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
         self._set_line_attributes(attrs)
-        self._set_link_attributes(attrs)
+        self._set_connection_attributes(attrs)
 
-    def _set_link_attributes(self, attrs: AttributeMap) -> None:
-        """Set the link attributes to the given values."""
+    def _set_connection_attributes(self, attrs: AttributeMap) -> None:
+        """Set the connection attributes to the given values."""
         if 'arrow_aspect' in attrs:
             self._arrow_aspect = cast(float, attrs['arrow_aspect'])
         if 'arrow_back' in attrs:
@@ -492,7 +492,7 @@ class LinkAttributes(LineAttributes):
 
     @property
     def arrow_back(self) -> bool:
-        """Draw an arrow at the start of the link?"""
+        """Draw an arrow at the start of the connection?"""
         return self._arrow_back
 
     @property
@@ -502,7 +502,7 @@ class LinkAttributes(LineAttributes):
 
     @property
     def arrow_forward(self) -> bool:
-        """Draw an arrow at the end of the link?"""
+        """Draw an arrow at the end of the connection?"""
         return self._arrow_forward
 
     @property
@@ -517,22 +517,22 @@ class LinkAttributes(LineAttributes):
 
     @property
     def buffer_fill(self) -> Optional[str]:
-        """Color of the buffer around the link."""
+        """Color of the buffer around the connection."""
         return self._buffer_fill
 
     @property
     def buffer_width(self) -> Optional[float]:
-        """Width of the buffer around the link."""
+        """Width of the buffer around the connection."""
         return self._buffer_width
 
     @property
     def drawing_priority(self) -> int:
-        """Relative priority when drawing links."""
+        """Relative priority when drawing connections."""
         return self._drawing_priority
 
     @property
     def group(self) -> Optional[str]:
-        """Group to which the link belongs."""
+        """Group to which the connection belongs."""
         return self._group
 
 ######################################################################
@@ -543,10 +543,10 @@ class DiagramAttributes(ContainerAttributes):
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
         ContainerAttributes.__init__(self)
-        self._collapse_links = False
+        self._collapse_connections = False
+        self._connection_distance = 4.0
         self._font_size = 14.0
         self._label_distance = 6.0
-        self._link_distance = 4.0
         self._min_height = 300.0
         self._min_width = 300.0
         self._stretch = True
@@ -560,22 +560,24 @@ class DiagramAttributes(ContainerAttributes):
 
     def _set_diagram_attributes(self, attrs: AttributeMap) -> None:
         """Set the diagram attributes to the given values."""
-        if 'collapse_links' in attrs:
-            self._collapse_links = cast(bool, attrs['collapse_links'])
-        if 'link_distance' in attrs:
-            self._link_distance = cast(float, attrs['link_distance'])
+        if 'collapse_connections' in attrs:
+            self._collapse_connections = cast(
+                bool, attrs['collapse_connections'])
+        if 'connection_distance' in attrs:
+            self._connection_distance = cast(
+                float, attrs['connection_distance'])
         if 'stretch' in attrs:
             self._stretch = cast(bool, attrs['stretch'])
 
     @property
-    def collapse_links(self) -> bool:
-        """Let links that belong to the same group overlap?."""
-        return self._collapse_links
+    def collapse_connections(self) -> bool:
+        """Let connections that belong to the same group overlap?."""
+        return self._collapse_connections
 
     @property
-    def link_distance(self) -> float:
-        """Distance between links."""
-        return self._link_distance
+    def connection_distance(self) -> float:
+        """Distance between connections."""
+        return self._connection_distance
 
     @property
     def stretch(self) -> bool:

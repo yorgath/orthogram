@@ -6,10 +6,10 @@ from .diagram import Diagram, DiagramDef, Node
 from .geometry import Axis, IntPoint
 
 from .refine import (
-    Connector,
-    ConnectorSegment,
     Network,
     Refiner,
+    Wire,
+    WireSegment,
 )
 
 from .route import (
@@ -26,9 +26,9 @@ class Layout:
     def __init__(self, diagram_def: DiagramDef):
         """Initialize the layout for the given diagram definition."""
         self._diagram = diagram = Diagram(diagram_def)
-        # Calculate the coarse routes between the terminals.
+        # Calculate the coarse routes between the blocks.
         self._router = router = Router(diagram)
-        # Refine the routes to calculate the exact connectors.
+        # Refine the routes to calculate the exact wires.
         self._refiner = Refiner(router)
 
     @property

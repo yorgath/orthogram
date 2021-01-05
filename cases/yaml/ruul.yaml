@@ -6,7 +6,7 @@ rows:
   - [A    ]
   - ["", C]
 
-links:
+connections:
   - start: A
     end: B
     bias_start: horizontal

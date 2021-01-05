@@ -9,12 +9,12 @@ of YAML:
    rows:
      - [a]
      - ["", b]
-   terminals:
+   blocks:
      a:
        label: Hello
      b:
        label: world
-   links:
+   connections:
      - start: a
        end: b
 

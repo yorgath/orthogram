@@ -1,5 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env python
 
 # Translate the examples.
-python -m orthogram examples/hello.yaml
-python -m orthogram examples/powerplant.yaml
+
+from orthogram import translate_dir
+
+if __name__ == '__main__':
+    translate_dir("examples")

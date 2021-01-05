@@ -4,13 +4,13 @@ diagram:
 
   label: Combined Cycle Power Plant
   font_family: Arial
-  collapse_links: true
   fill: lightyellow
-  link_distance: 6
+  connection_distance: 6
+  collapse_connections: true
 
 styles:
 
-  default_terminal:
+  default_block:
     fill: white
     font_family: Arial
     margin_bottom: 18
@@ -22,7 +22,7 @@ styles:
     padding_right: 6
     padding_top: 6
 
-  default_link:
+  default_connection:
     bias_start: horizontal
     bias_end: horizontal
     stroke_width: 3
@@ -94,7 +94,7 @@ groups:
   gas_to_steam:
     style: low_priority
 
-terminals:
+blocks:
 
   air:
     label: Air
@@ -199,7 +199,7 @@ rows:
   - [""   , exst , ""   , sgn  , ""   , tx]
   - [""   , cool , cdn  , stb  , egn3 , tx]
 
-links:
+connections:
 
   - start: air
     end: [cmp1, cmp2]

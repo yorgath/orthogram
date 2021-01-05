@@ -45,8 +45,8 @@ class Builder:
 
         - diagram
         - rows
-        - terminals
-        - links
+        - blocks
+        - connections
         - styles
         - groups
 
@@ -65,12 +65,12 @@ class Builder:
         row_defs = defs.get('rows')
         if row_defs:
             self.add_rows(row_defs)
-        terminal_defs = defs.get('terminals')
-        if terminal_defs:
-            self.add_terminals(terminal_defs)
-        link_defs = defs.get('links')
-        if link_defs:
-            self.add_links(link_defs)
+        block_defs = defs.get('blocks')
+        if block_defs:
+            self.add_blocks(block_defs)
+        connection_defs = defs.get('connections')
+        if connection_defs:
+            self.add_connections(connection_defs)
 
     def add_styles(self, defs: _Definitions) -> None:
         """Store named styles in the builder.
@@ -96,12 +96,12 @@ class Builder:
         if name in styles:
             log_warning("Replacing style '{}'".format(name))
         attrs = self._collect_attributes(style_def)
-        if name == 'default_terminal':
-            self._diagram_def.set_auto_terminal_attributes(**attrs)
+        if name == 'default_block':
+            self._diagram_def.set_auto_block_attributes(**attrs)
         styles[name] = attrs
 
     def add_groups(self, defs: _Definitions) -> None:
-        """Define groups of links in the diagram.
+        """Define groups of connections in the diagram.
 
         The input is a mapping between group names and group
         definitions.  See add_group() for the structure of a group
@@ -112,7 +112,7 @@ class Builder:
             self.add_group(name, group_def)
 
     def add_group(self, name: str, group_def: _Definition) -> None:
-        """Define a group of links in the diagram.
+        """Define a group of connections in the diagram.
 
         The group definition may contain any attributes plus a 'style'
         reference to a named style.
@@ -145,7 +145,7 @@ class Builder:
         self._diagram_def.attributes.merge(attrs)
 
     def add_rows(self, row_defs: Sequence[Sequence[str]]) -> None:
-        """Add rows of terminal pins to the diagram.
+        """Add rows of cells to the diagram.
 
         The input is a sequence of row definitions.  See add_row() for
         the structure of a row definition.
@@ -155,7 +155,7 @@ class Builder:
             self.add_row(row_def)
 
     def add_row(self, row_def: Sequence[str]) -> None:
-        """Add a row of terminal pins to the diagram.
+        """Add a row of cells to the diagram.
 
         The input is a sequence of cell tags.  An empty string results
         in an untagged cell.
@@ -163,24 +163,24 @@ class Builder:
         """
         self._diagram_def.add_row(row_def)
 
-    def add_terminals(self, defs: _Definitions) -> None:
-        """Add terminals to the diagram.
+    def add_blocks(self, defs: _Definitions) -> None:
+        """Add blocks to the diagram.
 
-        The input is a mapping between terminal names and terminal
-        definitions.  See add_terminal() for the structure of a
-        terminal definition.
+        The input is a mapping between block names and block
+        definitions.  See add_block() for the structure of a block
+        definition.
 
         """
-        for name, terminal_def in defs.items():
-            self.add_terminal(name, terminal_def)
+        for name, block_def in defs.items():
+            self.add_block(name, block_def)
 
-    def add_terminal(
+    def add_block(
             self,
-            name: str, terminal_def: Optional[_Definition]
+            name: str, block_def: Optional[_Definition]
     ) -> None:
-        """Add a terminal to the diagram.
+        """Add a block to the diagram.
 
-        The terminal definition may contain any attributes plus the
+        The block definition may contain any attributes plus the
         following:
 
         - cover: sequence of strings (optional)
@@ -189,36 +189,36 @@ class Builder:
         """
         attrs = Attributes()
         tags = []
-        # The terminal definition may be None: an empty definition.
-        if terminal_def:
+        # The block definition may be None: an empty definition.
+        if block_def:
             # Merge default attributes.
-            def_attrs = self._get_style('default_terminal')
+            def_attrs = self._get_style('default_block')
             attrs.merge(def_attrs)
             # Merge attributes inherited from style references.
-            style_attrs = self._collect_style_attributes(terminal_def)
+            style_attrs = self._collect_style_attributes(block_def)
             attrs.merge(style_attrs)
             # Merge attributes defined here.
-            own_attrs = self._collect_attributes(terminal_def)
+            own_attrs = self._collect_attributes(block_def)
             attrs.merge(own_attrs)
             # Additional cells to cover.
-            tags = terminal_def.get('cover', ())
+            tags = block_def.get('cover', ())
         # Create the object.
-        self._diagram_def.add_terminal(name, tags, **attrs)
+        self._diagram_def.add_block(name, tags, **attrs)
 
-    def add_links(self, defs: Sequence[_Definition]) -> None:
-        """Add links to the diagram.
+    def add_connections(self, defs: Sequence[_Definition]) -> None:
+        """Add connections to the diagram.
 
-        The input is a sequence of link definitions.  See add_link()
-        for the structure of an link definition.
+        The input is a sequence of connection definitions.  See
+        add_connection() for the structure of a connection definition.
 
         """
-        for link_def in defs:
-            self.add_link(link_def)
+        for connection_def in defs:
+            self.add_connection(connection_def)
 
-    def add_link(self, link_def: _Definition) -> None:
-        """Add a link to the diagram.
+    def add_connection(self, connection_def: _Definition) -> None:
+        """Add a connection to the diagram.
 
-        The link definition may include any attributes plus the
+        The connection definition may include any attributes plus the
         following:
 
         - start: string or list of strings (required)
@@ -226,26 +226,26 @@ class Builder:
         - style: string (optional)
 
         """
-        start = self._str_or_list(link_def['start'])
-        end = self._str_or_list(link_def['end'])
+        start = self._str_or_list(connection_def['start'])
+        end = self._str_or_list(connection_def['end'])
         # Calculate the styles.
         attrs = Attributes()
         # Merge default attributes.
-        def_attrs = self._get_style('default_link')
+        def_attrs = self._get_style('default_connection')
         attrs.merge(def_attrs)
         # Merge attributes inherited from group.
-        group = link_def.get('group')
+        group = connection_def.get('group')
         if group and group in self._group_styles:
             group_attrs = self._group_styles[group]
             attrs.merge(group_attrs)
         # Merge attributes inherited from style references.
-        style_attrs = self._collect_style_attributes(link_def)
+        style_attrs = self._collect_style_attributes(connection_def)
         attrs.merge(style_attrs)
         # Merge attributes defined here.
-        own_attrs = self._collect_attributes(link_def)
+        own_attrs = self._collect_attributes(connection_def)
         attrs.merge(own_attrs)
         # Create the object(s).
-        self._diagram_def.add_links(start, end, **attrs)
+        self._diagram_def.add_connections(start, end, **attrs)
 
     def _collect_style_attributes(self, any_def: _Definition) -> Attributes:
         """Collect the attributes of the named styles in the definition."""
@@ -280,8 +280,9 @@ class Builder:
             attrs['buffer_fill'] = str(any_def['buffer_fill'])
         if 'buffer_width' in any_def:
             attrs['buffer_width'] = float(any_def['buffer_width'])
-        if 'collapse_links' in any_def:
-            attrs['collapse_links'] = bool(any_def['collapse_links'])
+        if 'collapse_connections' in any_def:
+            attrs['collapse_connections'] = bool(
+                any_def['collapse_connections'])
         if 'drawing_priority' in any_def:
             attrs['drawing_priority'] = int(any_def['drawing_priority'])
         if 'fill' in any_def:
@@ -304,8 +305,8 @@ class Builder:
             lpos = self._parse_label_position(any_def['label_position'])
             if lpos:
                 attrs['label_position'] = lpos
-        if 'link_distance' in any_def:
-            attrs['link_distance'] = float(any_def['link_distance'])
+        if 'connection_distance' in any_def:
+            attrs['connection_distance'] = float(any_def['connection_distance'])
         if 'margin_bottom' in any_def:
             attrs['margin_bottom'] = float(any_def['margin_bottom'])
         if 'margin_left' in any_def:
