@@ -16,12 +16,66 @@ Drawing object, which consists of the following steps:
    for the thickest of the wires, the thickness of a wire being
    determined by the stroke width of the underlying connection.
 
-3. The width of each track is calculated using the width of the lanes
-   and the distance between the wires as defined in the attributes of
-   the diagram.  This is, however, not the final width of the track,
-   because it does not take into account the dimensions of the blocks.
+3. The dimensions of the tracks are calculated using the width of the
+   lanes and the distance between them as defined in the attributes of
+   the diagram.
 
-TODO: Complete explanation.
+4. A BlockBox is created for each Block of the diagram and is
+   associated with the tracks connected to it.  Each box starts out
+   with minimal dimensions taken from its definition.  The initial
+   dimensions are adjusted, if necessary, so that the box is large
+   enough for the lanes connected to it.
+
+5. Boxes behind other boxes are padded so that their edges remain
+   visible.  The padding makes enough room for the label as well.
+
+6. The dimensions of the tracks are recalculated taking into account
+   the final dimensions of the boxes.
+
+7. It is now possible to calculate the dimensions of the whole
+   drawing.  A DiagramBox object is created, its bounds being the
+   bounds of the drawing.
+
+8. The absolute positions of the tracks and the bounds of the block
+   boxes are calculated.
+
+Drawing comes with its own set of challenges:
+
+1. Markers.  They are employed to draw the arrows at the ends of the
+   connections.  Arrow dimensions are rounded to integers.  A marker
+   is created for each (width, length, color) combination and stored
+   in a dictionary to be used for all the connections that match.
+
+2. Box outlines.  In order to have accurate box dimensions, the
+   outline is drawn just inside the box.  This means that both
+   dimensions of the boxes in the SVG drawing are smaller by an amount
+   equal to the width of the outline.
+
+3. Clipping of lines.  Connection lines are drawn over boxes, so they
+   must be clipped at both ends to make them look attached to the
+   sides of the boxes (and not to the center of each box.)  This
+   becomes more complicated if there is an arrow at one end.  A buffer
+   with an offset equal to the length of the arrow is created around
+   the box and the line is clipped at its bounds.  The marker is
+   placed in the middle between the end of the clipped line and the
+   outline of the box.  The actual line drawn is made longer by a
+   drawing unit, so that it does not appear disconnected from the base
+   of the arrow.
+
+4. Text.  This is the hardest problem of them all and no satisfactory
+   solution has been found.  The program has no way to calculate the
+   exact dimensions of a SVG text element.  That means that the
+   dimensions of the boxes containing the text cannot be calculated;
+   the program depends on the user providing sufficient values for the
+   min_width and min_height attributes.  Positioning of text along the
+   vertical axis is even more problematic.  The program assumes that
+   the height of a line of text is text_line_height * font_size (both
+   attributes redefinable by the user.)  The default values seem to
+   work well in Chrome and Inskape, but not in Firefox, at least with
+   the default font settings.  Unfortunately, text always seems a bit
+   off in Firefox.  In addition, redefining the label_distance
+   attribute may be necessary when text is drawn near the edges of a
+   box.
 
 """
 
