@@ -417,18 +417,10 @@ class Node:
     def __init__(self, cell: DiagramCell):
         """Initialize and place in the given cell."""
         self._cell = cell
-        # By default, connections can pass through the node.  This can
-        # be changed by connecting a block to the node.
-        self._pass_through = True
 
-    @property
-    def pass_through(self) -> bool:
-        """Can connections pass through this node?"""
-        return self._pass_through
-
-    @pass_through.setter
-    def pass_through(self, value: bool) -> None:
-        self._pass_through = value
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({})".format(self.__class__.__name__, self._cell)
 
     @property
     def point(self) -> IntPoint:
@@ -610,10 +602,6 @@ class Diagram:
         self._make_defined_blocks(ddef)
         self._make_leftover_blocks(ddef)
 
-    def _make_defined_blocks(self, ddef: DiagramDef) -> None:
-        """Create the blocks defined in the diagram definition."""
-        self._make_blocks(ddef.block_defs())
-
     def _make_leftover_blocks(self, ddef: DiagramDef) -> None:
         """Create blocks from leftover tags."""
         attrs = ddef.auto_block_attributes
@@ -625,7 +613,7 @@ class Diagram:
         self._make_blocks(bdefs)
 
     def _leftover_tags(self, ddef: DiagramDef) -> Set[str]:
-        """Cell tags that have not been used for blocks."""
+        """Cell tags that do not appear in block definitions."""
         tags = self._grid.tag_set()
         for bdef in ddef.block_defs():
             block_tags = set(bdef.tags)
@@ -634,6 +622,10 @@ class Diagram:
                 if tag in tags:
                     tags.remove(tag)
         return tags
+
+    def _make_defined_blocks(self, ddef: DiagramDef) -> None:
+        """Create the blocks defined in the diagram definition."""
+        self._make_blocks(ddef.block_defs())
 
     def _make_blocks(self, bdefs: Iterable[BlockDef]) -> None:
         """Use the block definitions to create blocks."""
@@ -644,7 +636,6 @@ class Diagram:
             name = bdef.name
             block = Block(name, **bdef.attributes)
             blocks[name] = block
-            hard = not block.attributes.pass_through
             tags = list(bdef.tags)
             # Cells tagged with the name of the block come last
             # (unless the name is already in the tags).
@@ -656,10 +647,6 @@ class Diagram:
                 if not node:
                     node = Node(cell)
                     points_to_nodes[p] = node
-                # Make node blocking if the configuration of a block
-                # says so.
-                if hard:
-                    node.pass_through = False
                 block.add_node(node)
                 if node not in nodes_to_blocks:
                     nodes_to_blocks[node] = []
@@ -743,9 +730,9 @@ class Diagram:
         """Attributes attached to the diagram."""
         return self._attributes
 
-    def connections(self) -> Iterator[Connection]:
-        """Return an iterator over the connections."""
-        yield from self._connections
+    def blocks(self) -> Iterator[Block]:
+        """Return an iterator over the blocks."""
+        yield from self._blocks.values()
 
     def node_blocks(self, node: Node) -> Iterator[Block]:
         """Iterate over the blocks connected to a node."""
@@ -755,6 +742,10 @@ class Diagram:
         """Return an iterator over the nodes and the blocks on it."""
         for node, blocks in self._nodes_to_blocks.items():
             yield node, set(blocks)
+
+    def connections(self) -> Iterator[Connection]:
+        """Return an iterator over the connections."""
+        yield from self._connections
 
     def _pretty_print(self) -> None:
         """Print the diagram for debugging purposes."""

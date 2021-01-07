@@ -7,9 +7,10 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Set,
 )
 
-from .attributes import Attributes, LabelPosition
+from .attributes import Attributes, LabelPosition, Side
 from .diagram import DiagramDef
 from .geometry import Orientation
 from .util import log_warning
@@ -188,12 +189,12 @@ class Builder:
 
         """
         attrs = Attributes()
+        # Merge default attributes.
+        def_attrs = self._get_style('default_block')
+        attrs.merge(def_attrs)
         tags = []
         # The block definition may be None: an empty definition.
         if block_def:
-            # Merge default attributes.
-            def_attrs = self._get_style('default_block')
-            attrs.merge(def_attrs)
             # Merge attributes inherited from style references.
             style_attrs = self._collect_style_attributes(block_def)
             attrs.merge(style_attrs)
@@ -268,14 +269,6 @@ class Builder:
             attrs['arrow_base'] = float(any_def['arrow_base'])
         if 'arrow_forward' in any_def:
             attrs['arrow_forward'] = bool(any_def['arrow_forward'])
-        if 'bias_end' in any_def:
-            bias_end = self._parse_orientation(any_def['bias_end'])
-            if bias_end:
-                attrs['bias_end'] = bias_end
-        if 'bias_start' in any_def:
-            bias_start = self._parse_orientation(any_def['bias_start'])
-            if bias_start:
-                attrs['bias_start'] = bias_start
         if 'buffer_fill' in any_def:
             attrs['buffer_fill'] = str(any_def['buffer_fill'])
         if 'buffer_width' in any_def:
@@ -285,6 +278,14 @@ class Builder:
                 any_def['collapse_connections'])
         if 'drawing_priority' in any_def:
             attrs['drawing_priority'] = int(any_def['drawing_priority'])
+        if 'entrances' in any_def:
+            entrances = self._parse_sides(any_def['entrances'])
+            if entrances:
+                attrs['entrances'] = entrances
+        if 'exits' in any_def:
+            exits = self._parse_sides(any_def['exits'])
+            if exits:
+                attrs['exits'] = exits
         if 'fill' in any_def:
             attrs['fill'] = str(any_def['fill'])
         if 'font_family' in any_def:
@@ -402,4 +403,16 @@ class Builder:
             if member.name == a:
                 result = member
                 break
+        return result
+
+    @staticmethod
+    def _parse_sides(ss: List[str]) -> Set[Side]:
+        """Parse the value of a sides attribute."""
+        result = set()
+        for s in ss:
+            a = s.strip().upper()
+            for member in Side:
+                if member.name == a:
+                    result.add(member)
+                    break
         return result

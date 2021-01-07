@@ -9,6 +9,7 @@ from typing import (
     Iterator,
     Mapping,
     Optional,
+    Set,
 )
 
 from .geometry import Orientation
@@ -17,6 +18,16 @@ from .geometry import Orientation
 
 # Attributes are key-value pairs, where the key is a string.
 AttributeMap = Mapping[str, Any]
+
+######################################################################
+
+class Side(Enum):
+    """Block sides."""
+
+    BOTTOM = auto()
+    LEFT = auto()
+    RIGHT = auto()
+    TOP = auto()
 
 ######################################################################
 
@@ -76,13 +87,13 @@ class Attributes(Mapping[str, Any]):
         'arrow_back',
         'arrow_base',
         'arrow_forward',
-        'bias_end',
-        'bias_start',
         'buffer_fill',
         'buffer_width',
         'collapse_connections',
         'connection_distance',
         'drawing_priority',
+        'entrances',
+        'exits',
         'fill',
         'font_family',
         'font_size',
@@ -149,6 +160,13 @@ class Attributes(Mapping[str, Any]):
         for key, value in self._attributes.items():
             attrs[key] = value
         return self.__class__(**attrs)
+
+    def _pretty_print(self) -> None:
+        """Print the attributes for debugging purposes."""
+        print("Attributes:")
+        for name in sorted(self._attribute_names):
+            if name in self:
+                print("\t{}: {}".format(name, self[name]))
 
 ######################################################################
 
@@ -379,10 +397,10 @@ class BlockAttributes(ContainerAttributes):
         self._margin_top = 24.0
         self._min_height = 48.0
         self._min_width = 96.0
-        self._padding_bottom = 4.0
-        self._padding_left = 4.0
-        self._padding_right = 4.0
-        self._padding_top = 4.0
+        self._padding_bottom = 8.0
+        self._padding_left = 8.0
+        self._padding_right = 8.0
+        self._padding_top = 8.0
         self._pass_through = False
         self.set_attributes(**attrs)
 
@@ -444,15 +462,16 @@ class ConnectionAttributes(LineAttributes):
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
         LineAttributes.__init__(self)
+        all_sides = set([Side.BOTTOM, Side.LEFT, Side.RIGHT, Side.TOP])
         self._arrow_aspect = 1.5
         self._arrow_back = False
         self._arrow_base = 3.0
         self._arrow_forward = True
-        self._bias_end: Optional[Orientation] = None
-        self._bias_start: Optional[Orientation] = None
         self._buffer_fill: Optional[str] = None
         self._buffer_width: Optional[float] = None
         self._drawing_priority = 0
+        self._entrances: Set[Side] = all_sides
+        self._exits: Set[Side] = all_sides
         self._group: Optional[str] = None
         self._stroke = "black"
         self.set_attributes(**attrs)
@@ -472,16 +491,16 @@ class ConnectionAttributes(LineAttributes):
             self._arrow_base = cast(float, attrs['arrow_base'])
         if 'arrow_forward' in attrs:
             self._arrow_forward = cast(bool, attrs['arrow_forward'])
-        if 'bias_end' in attrs:
-            self._bias_end = cast(Optional[Orientation], attrs['bias_end'])
-        if 'bias_start' in attrs:
-            self._bias_start = cast(Optional[Orientation], attrs['bias_start'])
         if 'buffer_fill' in attrs:
             self._buffer_fill = cast(Optional[str], attrs['buffer_fill'])
         if 'buffer_width' in attrs:
             self._buffer_width = cast(Optional[float], attrs['buffer_width'])
         if 'drawing_priority' in attrs:
             self._drawing_priority = cast(int, attrs['drawing_priority'])
+        if 'entrances' in attrs:
+            self._entrances = cast(Set[Side], attrs['entrances'])
+        if 'exits' in attrs:
+            self._exits = cast(Set[Side], attrs['exits'])
         if 'group' in attrs:
             self._group = cast(Optional[str], attrs['group'])
 
@@ -506,16 +525,6 @@ class ConnectionAttributes(LineAttributes):
         return self._arrow_forward
 
     @property
-    def bias_end(self) -> Optional[Orientation]:
-        """Orientation bias of the last segment."""
-        return self._bias_end
-
-    @property
-    def bias_start(self) -> Optional[Orientation]:
-        """Orientation bias of the first segment."""
-        return self._bias_start
-
-    @property
     def buffer_fill(self) -> Optional[str]:
         """Color of the buffer around the connection."""
         return self._buffer_fill
@@ -529,6 +538,16 @@ class ConnectionAttributes(LineAttributes):
     def drawing_priority(self) -> int:
         """Relative priority when drawing connections."""
         return self._drawing_priority
+
+    @property
+    def entrances(self) -> Set[Side]:
+        """Sides to enter into the destination block."""
+        return self._entrances
+
+    @property
+    def exits(self) -> Set[Side]:
+        """Sides to exit from the source block."""
+        return self._exits
 
     @property
     def group(self) -> Optional[str]:
