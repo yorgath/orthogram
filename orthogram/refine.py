@@ -543,30 +543,33 @@ class Interaction:
 
 ######################################################################
 
-# Combination of a network and one of its bundles.
-_NetworkAndBundle = Tuple[Network, Bundle]
+class _RuleCategory(Enum):
+    """Types of rules."""
+    T = auto()
+    V = auto()
+    S = auto()
 
 ######################################################################
 
-class _Rule:
+class _SegmentRule:
     """Declares that one route segment comes after another."""
 
-    def __init__(self, first: RouteSegment, second: RouteSegment):
+    def __init__(
+            self,
+            category: _RuleCategory,
+            first: RouteSegment,
+            second: RouteSegment,
+    ):
         """Initialize with the two segments."""
         assert first.orientation is second.orientation
+        self._category = category
         self._first = first
         self._second = second
 
-    def __repr__(self) -> str:
-        """Convert to string."""
-        if self._first.orientation is Orientation.HORIZONTAL:
-            adverb = "OVER"
-        else:
-            adverb = "BEFORE"
-        return "{}({} {} {})".format(
-            self.__class__.__name__,
-            self._first, adverb, self._second,
-        )
+    @property
+    def category(self) -> _RuleCategory:
+        """Category of the rule."""
+        return self._category
 
     @property
     def first(self) -> RouteSegment:
@@ -577,6 +580,76 @@ class _Rule:
     def second(self) -> RouteSegment:
         """The segment that comes after."""
         return self._second
+
+######################################################################
+
+class _SegmentRuleFactory:
+
+    def __init__(self, category: _RuleCategory):
+        """Initialize for a given category of rules."""
+        self._category = category
+
+    def __call__(
+            self,
+            first: RouteSegment,
+            second: RouteSegment,
+    ) -> _SegmentRule:
+        """Create a rule."""
+        return _SegmentRule(self._category, first, second)
+
+######################################################################
+
+class _BundleRule:
+    """Declares that one bundle comes after another."""
+
+    def __init__(
+            self,
+            category: _RuleCategory,
+            first: Bundle,
+            second: Bundle,
+    ):
+        """Initialize with the two bundles."""
+        assert first.orientation is second.orientation
+        self._category = category
+        self._first = first
+        self._second = second
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        if self._first.orientation is Orientation.HORIZONTAL:
+            adverb = "OVER"
+        else:
+            adverb = "BEFORE"
+        return "{}({}; {} {} {})".format(
+            self.__class__.__name__,
+            self._category.name,
+            self._first, adverb, self._second,
+        )
+
+    @property
+    def category(self) -> _RuleCategory:
+        """Category of the rule."""
+        return self._category
+
+    @property
+    def first(self) -> Bundle:
+        """The bundle that comes before."""
+        return self._first
+
+    @property
+    def second(self) -> Bundle:
+        """The bundle that comes after."""
+        return self._second
+
+    def bundles(self) -> Iterator[Bundle]:
+        """Return an iterator over the bundles."""
+        yield self._first
+        yield self._second
+
+######################################################################
+
+# Combination of a network and one of its bundles.
+_NetworkAndBundle = Tuple[Network, Bundle]
 
 ######################################################################
 
@@ -664,25 +737,28 @@ class Refiner:
                     if bundle not in g:
                         g.add_node(bundle)
         # Edges represent the order of two bundles.
-        tv_rules = []
-        s_rules = []
+        tv_rules: List[_BundleRule] = []
+        s_rules: List[Sequence[_BundleRule]] = []
         for inter in interactions:
             pt1, pt2 = inter.passthroughs
             # Store T and V rules one by one, because we roll them
             # back individually.
-            rule = self._t_rule(pt1, pt2)
-            if rule:
-                tv_rules.append(rule)
-            for rule in self._v_rules(pt1, pt2):
-                tv_rules.append(rule)
+            seg_rule = self._t_rule(pt1, pt2)
+            if seg_rule:
+                bundle_rule = self._segment_rule_to_bundle_rule(seg_rule)
+                tv_rules.append(bundle_rule)
+            for seg_rule in self._v_rules(pt1, pt2):
+                bundle_rule = self._segment_rule_to_bundle_rule(seg_rule)
+                tv_rules.append(bundle_rule)
             # Store S rules as lists of rules, because we must be able
             # to roll back the whole list.
-            for rules in self._s_rules(pt1, pt2):
-                s_rules.append(rules)
-        for rule in tv_rules:
-            self._try_add_rules_to_dag(g, [rule])
-        for rules in s_rules:
-            self._try_add_rules_to_dag(g, rules)
+            for seg_rules in self._s_rules(pt1, pt2):
+                bundle_rules = self._segment_rules_to_bundle_rules(seg_rules)
+                s_rules.append(bundle_rules)
+        for bundle_rule in tv_rules:
+            self._try_add_rules_to_dag(g, [bundle_rule])
+        for bundle_rules in s_rules:
+            self._try_add_rules_to_dag(g, bundle_rules)
         return g
 
     def _interactions(self) -> Iterator[Interaction]:
@@ -697,8 +773,19 @@ class Refiner:
                     pts = []
                     per_point[p] = pts
                 pts.append(pt)
-        # Create the interactions.
+        # Sort the points according to the number of passthroughs.
+        # Starting from the less busy points appears to give better
+        # results overall.
+        items = []
         for p, pts in per_point.items():
+            item = (len(pts), p)
+            items.append(item)
+        key = lambda item: item[0]
+        sorted_items = sorted(items, key=key)
+        points = [item[1] for item in sorted_items]
+        # Create the interactions.
+        for p in points:
+            pts = per_point[p]
             for pt1, pt2 in permutations(pts, 2):
                 inter = Interaction(p, pt1, pt2)
                 yield inter
@@ -727,7 +814,11 @@ class Refiner:
                 segment_out=None,
             )
 
-    def _t_rule(self, pt1: Passthrough, pt2: Passthrough) -> Optional[_Rule]:
+    def _t_rule(
+            self,
+            pt1: Passthrough,
+            pt2: Passthrough
+    ) -> Optional[_SegmentRule]:
         """Rule between segments for the T-junction interaction.
 
         The two routes interact like this:
@@ -745,23 +836,27 @@ class Refiner:
         l2 = pt2.segment_left
         r2 = pt2.segment_right
         t2 = pt2.segment_top
-        R = _Rule
+        f = _SegmentRuleFactory(_RuleCategory.T)
         if False: pass
-        elif b1 and l1 and b2 and r2: return R(b1, b2)
-        elif b1 and l1 and b2 and t2: return R(b1, b2)
-        elif b1 and l1 and l2 and r2: return R(l2, l1)
-        elif b1 and l1 and l2 and t2: return R(l2, l1)
-        elif b1 and r1 and b2 and t2: return R(b2, b1)
-        elif b1 and r1 and l2 and r2: return R(r2, r1)
-        elif b1 and r1 and r2 and t2: return R(r2, r1)
-        elif b1 and t1 and l2 and t2: return R(t2, t1)
-        elif b1 and t1 and r2 and t2: return R(t1, t2)
-        elif l1 and r1 and l2 and t2: return R(l2, l1)
-        elif l1 and r1 and r2 and t2: return R(r2, r1)
-        elif l1 and t1 and r2 and t2: return R(t1, t2)
+        elif b1 and l1 and b2 and r2: return f(b1, b2)
+        elif b1 and l1 and b2 and t2: return f(b1, b2)
+        elif b1 and l1 and l2 and r2: return f(l2, l1)
+        elif b1 and l1 and l2 and t2: return f(l2, l1)
+        elif b1 and r1 and b2 and t2: return f(b2, b1)
+        elif b1 and r1 and l2 and r2: return f(r2, r1)
+        elif b1 and r1 and r2 and t2: return f(r2, r1)
+        elif b1 and t1 and l2 and t2: return f(t2, t1)
+        elif b1 and t1 and r2 and t2: return f(t1, t2)
+        elif l1 and r1 and l2 and t2: return f(l2, l1)
+        elif l1 and r1 and r2 and t2: return f(r2, r1)
+        elif l1 and t1 and r2 and t2: return f(t1, t2)
         else: return None
 
-    def _v_rules(self, pt1: Passthrough, pt2: Passthrough) -> Sequence[_Rule]:
+    def _v_rules(
+            self,
+            pt1: Passthrough,
+            pt2: Passthrough
+    ) -> Sequence[_SegmentRule]:
         """Rules for the vertex-to-vertex interaction.
 
         The two routes interact at a single point, like this:
@@ -783,17 +878,17 @@ class Refiner:
         l2 = pt2.segment_left
         r2 = pt2.segment_right
         t2 = pt2.segment_top
-        R = _Rule
+        f = _SegmentRuleFactory(_RuleCategory.V)
         if False: pass
-        elif b1 and l1 and r2 and t2: return [R(b1, t2), R(r2, l1)]
-        elif b1 and r1 and l2 and t2: return [R(l2, r1), R(t2, b1)]
+        elif b1 and l1 and r2 and t2: return [f(b1, t2), f(r2, l1)]
+        elif b1 and r1 and l2 and t2: return [f(l2, r1), f(t2, b1)]
         else: return []
 
     def _s_rules(
             self,
             pt1: Passthrough,
             pt2: Passthrough
-    ) -> Iterable[Sequence[_Rule]]:
+    ) -> Iterable[Sequence[_SegmentRule]]:
         """Rules for the "spoon" interaction.
 
         The two routes interact like this:
@@ -815,50 +910,81 @@ class Refiner:
         l2 = pt2.segment_left
         r2 = pt2.segment_right
         t2 = pt2.segment_top
-        R = _Rule
+        f = _SegmentRuleFactory(_RuleCategory.S)
         if False:
             pass
         elif b1 and l1 and b2 and l2:
             return [
-                [R(b1, b2), R(l2, l1)],
-                [R(b2, b1), R(l1, l2)],
+                [f(b1, b2), f(l2, l1)],
+                [f(b2, b1), f(l1, l2)],
             ]
         elif b1 and r1 and b2 and r2:
             return [
-                [R(b1, b2), R(r1, r2)],
-                [R(b2, b1), R(r2, r1)],
+                [f(b1, b2), f(r1, r2)],
+                [f(b2, b1), f(r2, r1)],
             ]
         elif l1 and t1 and l2 and t2:
             return [
-                [R(l1, l2), R(t1, t2)],
-                [R(l2, l1), R(t2, t1)],
+                [f(l1, l2), f(t1, t2)],
+                [f(l2, l1), f(t2, t1)],
             ]
         elif r1 and t1 and r2 and t2:
             return [
-                [R(r2, r1), R(t1, t2)],
-                [R(r1, r2), R(t2, t1)],
+                [f(r2, r1), f(t1, t2)],
+                [f(r1, r2), f(t2, t1)],
             ]
         else:
             return []
 
+    def _bundle_rules(
+            self,
+            rules: Sequence[_SegmentRule]
+    ) -> Sequence[_BundleRule]:
+        """Convert segment rules to a bundle rules."""
+        bundle_rules = []
+        for rule in rules:
+            bundle_rule = self._segment_rule_to_bundle_rule(rule)
+            bundle_rules.append(bundle_rule)
+        return bundle_rules
+
+    def _segment_rules_to_bundle_rules(
+            self,
+            rules: Sequence[_SegmentRule],
+    ) -> Sequence[_BundleRule]:
+        """Convert a sequence of segment rules to a bundle rules."""
+        bundle_rules = []
+        for rule in rules:
+            bundle_rule = self._segment_rule_to_bundle_rule(rule)
+            bundle_rules.append(bundle_rule)
+        return bundle_rules
+
+    def _segment_rule_to_bundle_rule(self, rule: _SegmentRule) -> _BundleRule:
+        """Convert a segment rule to a bundle rule."""
+        seg_bundles = self._segment_bundles
+        bundle1 = seg_bundles[rule.first]
+        bundle2 = seg_bundles[rule.second]
+        return _BundleRule(rule.category, bundle1, bundle2)
+
     def _try_add_rules_to_dag(
             self,
             g: nx.DiGraph,
-            rules: Sequence[_Rule]
+            rules: Sequence[_BundleRule],
     ) -> None:
         """Try to add the rules as edges to the DAG.
 
         It rolls back all the edges if one of them causes a cycle.
 
         """
-        seg_bundles = self._segment_bundles
         added = []
         ok = True
         for rule in rules:
-            bundle1 = seg_bundles[rule.first]
-            bundle2 = seg_bundles[rule.second]
+            bundle1 = rule.first
+            bundle2 = rule.second
             # Do not use the bundle against itself!
             if bundle1 is bundle2:
+                continue
+            # Do not add the same rule twice.
+            if g.has_edge(bundle1, bundle2):
                 continue
             g.add_edge(bundle1, bundle2)
             added.append((bundle1, bundle2))
