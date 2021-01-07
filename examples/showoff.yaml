@@ -33,7 +33,7 @@ blocks:
     label: |-
       Block size is
       adjusted
-      to fit the lines
+      to fit the lines.
 
   B1:
     label: |-
@@ -50,8 +50,8 @@ blocks:
   B5:
     label: |-
       You can set
-      the thickness
-      of lines.
+      the size of
+      lines & arrows.
 
   B6:
     label: |-
@@ -77,7 +77,7 @@ blocks:
     drawing_priority: -1
     fill: lightyellow
     label: |-
-      This is a block used as a frame around other blocks.
+      This block is used as a frame around other blocks.
       The green line above has to go around it.
     label_distance: 4
     label_position: top
@@ -96,7 +96,7 @@ blocks:
     font_style: italic
     label: |-
       You can create blocks that span many cells,
-      and adjust the geometry of arrows.
+      and still be able to aim connections at specific cells in them.
 
   Dc:
     label: ""
@@ -132,10 +132,12 @@ connections:
     arrow_back: true
     stroke: green
     stroke_dasharray: 4 4
+    stroke_width: 3
 
-  - start: D
+  - start: {D: Dc}
     end: [A, B, C]
-    arrow_aspect: 0.3
+    arrow_aspect: 0.5
+    arrow_base: 2
     stroke: lightgray
     stroke_width: 32
 

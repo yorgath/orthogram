@@ -13,8 +13,8 @@ keys, each one containing a different category of definitions:
 * ``styles``
 * ``groups``
 
-``diagram``
------------
+diagram
+-------
 
 The ``diagram`` section contains the :ref:`Attributes` of the diagram
 itself.  It is entirely optional; you do not need one if you do not
@@ -61,8 +61,8 @@ following are of particular significance to the program:
   contains it.  Set this attribute to ``false`` to make the browser
   render the diagram in its original dimensions.
 
-``rows``
---------
+rows
+----
 
 The ``rows`` section of the diagram definition file defines the layout
 of the diagram.  It is essential; without one the program cannot
@@ -97,8 +97,8 @@ the definition.  You do not have to worry about it, though; the
 program will pad shorter rows with anonymous cells, until all rows
 have the same length.
 
-``blocks``
-----------
+blocks
+------
 
 Each block occupies a rectangular area of the diagram grid.  You must
 have at least a couple of blocks to produce a meaningful diagram.
@@ -120,7 +120,7 @@ use its name as a label instead.
 
 A block occupies the minimal rectangular area of the grid that
 contains all the cells tagged with the name of the block.  In the
-example that follows, block "b" is just one cell, whereas block "b"
+example that follows, block "a" is just one cell, whereas block "b"
 covers six cells, including the cell on which "a" stands:
 
 .. code-block:: yaml
@@ -157,17 +157,7 @@ pseudo-attribute:
        label: Covers 9 cells!
        cover: ["b", "c"]
 
-The ``cover`` pseudo-attribute has an additional function.  Block "a"
-in the example above has eight *nodes* on which connection lines can
-be attached, one for each outer cell that it occupies (the cell at the
-center cannot be used for connections.)  The program calculates routes
-for the connections using a shortest path algorithm; however when it
-has to choose among paths with the same length, it gives precedence to
-the nodes according to the sequnce in the ``cover`` attribute.  The
-name of the block itself comes last, unless you explicitly include it
-in the ``cover`` sequence.
-
-The ability to have overlapping blocks is most useful when you want to
+The ability to have overlapping blocks is very useful when you want to
 draw a frame around a bunch of other blocks.  In the example that
 follows, a block named "frame" functions as a frame around blocks "a"
 and "b":
@@ -200,14 +190,14 @@ section in it:
      - start: a
        end: b
 
-``connections``
----------------
+connections
+-----------
 
 The ``connections`` section defines the connections between the
-blocks.  It is a sequence of connection definitions.  Each connection
-must declare the names of the ``start`` and ``end`` blocks, as well as
-any :ref:`Attributes` appropriate for connections.  Here is an
-example:
+blocks.  It is a sequence of connection definitions.  Each definition
+must declare the ``start`` and the ``end`` of the connection; it may
+also include any :ref:`Attributes` appropriate for connections.  Here
+is an example:
 
 .. code-block:: yaml
 
@@ -226,17 +216,29 @@ example:
        end: c
        stroke: "#FF8844"
 
-Note that the ``start`` and ``end`` values of a connection definition
-can be *sequences* of block names as well.  This lets you make
-multiple connections in a single definition, all connections sharing
-the same attributes.  For example, the following definition creates
-six connections:
+Regarding the value of the ``start`` and ``end`` pseudo-attributes, it
+can be one of the following:
+
+* A block name.
+* A sequence of block names.
+* A mapping from block names to cell tags.
 
 .. code-block:: yaml
 
    connections:
+
+     # This will create six connections.
+
      - start: [a, b]
        end: [c, d, e]
+
+     # This will create four connections starting from cell "x" under
+     # block "f".  The second and third connections also aim at a
+     # specific tagged cell under "h" and "i".  The target of the
+     # first and last connections are just blocks "g" and "j".
+
+     - start: {f: x}
+       end: {g, h: y, i: z, j}
 
 Of particular interest is the ``drawing_priority`` attribute.  The
 program draws connections with a higher priority number *over*
@@ -264,8 +266,8 @@ priority of the connections.  All connections in the same group must
 share the same priority, which is the highest priority among all
 connections in the group.
 
-``styles``
-----------
+styles
+------
 
 You can add style definitions to the ``styles`` section to create
 named styles that the elements of the diagram (blocks, connections and
@@ -301,8 +303,8 @@ all the blocks and connections in the diagram.
 Styles themselves *cannot* reference other styles, i.e. the program
 ignores the ``style`` attribute in style definitions.
 
-``groups``
-----------
+groups
+------
 
 The ``groups`` section may be used to attach attributes to connection
 groups.  Since connections in the same group may collapse on one

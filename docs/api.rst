@@ -50,10 +50,14 @@ You create connections between blocks using the
 .. code-block:: python
 
    d.add_connection("a", "b", stroke="red")
+   d.add_connection("c", ("d", "n"), stroke="blue")
 
-Note that the :py:class:`DiagramDef` class offers an
+The start and the end of the connection can be either a block name or
+a pair of a block name and a cell tag.  Use the second form to target
+specific cells of a block.  The :py:class:`DiagramDef` class offers an
 :py:meth:`add_connections` method as well, which lets you create
-connections en masse (all having the same attributes).
+connections en masse (all having the same attributes.)  Use the Python
+:py:func:`help()` function to learn more about it.
 
 After you have finished building your diagram, use the
 :py:func:`write_svg` function to write the SVG file:

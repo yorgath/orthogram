@@ -8,6 +8,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
 )
 
 from .attributes import Attributes, LabelPosition, Side
@@ -222,13 +223,19 @@ class Builder:
         The connection definition may include any attributes plus the
         following:
 
-        - start: string or list of strings (required)
-        - end: string or list of strings (required)
+        - start: see below (required)
+        - end: see below (required)
         - style: string (optional)
 
+        The start and end of the connection can be given as:
+
+        - a block name (string)
+        - many block names (sequence of strings)
+        - block names and cell tags (mapping from string to string)
+
         """
-        start = self._str_or_list(connection_def['start'])
-        end = self._str_or_list(connection_def['end'])
+        start = connection_def['start']
+        end = connection_def['end']
         # Calculate the styles.
         attrs = Attributes()
         # Merge default attributes.

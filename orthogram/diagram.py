@@ -10,6 +10,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Union,
 )
 
 from .attributes import (
@@ -89,6 +90,13 @@ class BlockDef:
 
 ######################################################################
 
+# Connections can be made between whole blocks or nodes of blocks with
+# a specifed tag.  A "sub-block" can be defined either by a block name
+# (whole block) or a block name and a tag (partial block).
+SubBlockDef = Union[str, Tuple[str, Optional[str]]]
+
+######################################################################
+
 class ConnectionDef:
     """Definition of a connection between two blocks.
 
@@ -96,26 +104,40 @@ class ConnectionDef:
 
     """
 
-    def __init__(self, start: str, end: str, **attrs: AttributeMap):
+    def __init__(
+            self,
+            start: SubBlockDef,
+            end: SubBlockDef,
+            **attrs: AttributeMap
+    ):
         """Initialize given the names of two blocks."""
         self._start = start
         self._end = end
         self._attributes = attrs
 
     @property
-    def start(self) -> str:
-        """Name of the source block."""
+    def start(self) -> SubBlockDef:
+        """Definition of source node."""
         return self._start
 
     @property
-    def end(self) -> str:
-        """Name of the destination block."""
+    def end(self) -> SubBlockDef:
+        """Definition of destination node."""
         return self._end
 
     @property
     def attributes(self) -> AttributeMap:
         """Attributes to create the connection with."""
         return self._attributes
+
+######################################################################
+
+# Multiple connection point can be specified as:
+# - a single block name (string)
+# - a list of block names (sequence of strings)
+# - a list of block names and associated tag cells (mapping from
+#   string to string)
+MultipleNodes = Union[str, Sequence[str], Mapping[str, str]]
 
 ######################################################################
 
@@ -191,8 +213,8 @@ class DiagramDef:
 
     def add_connections(
             self,
-            start_names: Sequence[str],
-            end_names: Sequence[str],
+            starts: MultipleNodes,
+            ends: MultipleNodes,
             **attrs: AttributeMap,
     ) -> None:
         """Create many connections at once.
@@ -203,18 +225,34 @@ class DiagramDef:
         further information.
 
         """
-        for start in start_names:
-            for end in end_names:
+        for start in self._to_sub_block_defs(starts):
+            for end in self._to_sub_block_defs(ends):
                 self.add_connection(start, end, **attrs)
+
+    @staticmethod
+    def _to_sub_block_defs(m: MultipleNodes) -> Sequence[SubBlockDef]:
+        """Produce the object necessary for a connection."""
+        if isinstance(m, str):
+            return [m]
+        elif isinstance(m, Sequence):
+            return m
+        elif isinstance(m, Mapping):
+            seq = []
+            for b, t in m.items():
+                seq.append((b, t))
+            return seq
+        else:
+            assert False, "Bad connection point definition"
 
     def add_connection(
             self,
-            start: str, end: str,
+            start: SubBlockDef, end: SubBlockDef,
             **attrs: AttributeMap
     ) -> None:
         """Create a connection between two blocks.
 
-        You must supply the names of the start and end blocks.
+        You must supply the start and the end of the connection either
+        as block names or pairs of block name and cell tag.
 
         See ConnectionAttributes for a list of available attributes.
 
@@ -427,6 +465,11 @@ class Node:
         """Position of the node in the diagram grid."""
         return self._cell.point
 
+    @property
+    def tag(self) -> Optional[str]:
+        """Tag of the cell at the point."""
+        return self._cell.tag
+
 ######################################################################
 
 class Block:
@@ -495,34 +538,8 @@ class Block:
         self._bounds = IntBounds.containing(points)
 
     def nodes(self) -> Iterator[Node]:
-        """Return an iterator over the nodes.
-
-        The iterator yields the nodes in the order they are stored in
-        the object.
-
-        """
+        """Return an iterator over the nodes."""
         yield from self._nodes
-
-    def outer_nodes(self) -> Iterator[Node]:
-        """Return an iterator over the nodes at the sides of the block.
-
-        The iterator yields the nodes in the order they are stored in
-        the object.  These nodes are supposed to be used for
-        connections.
-
-        """
-        bounds = self._bounds
-        if not bounds:
-            return
-        imin, jmin, imax, jmax = bounds
-        for node in self.nodes():
-            i, j = node.point
-            if i == imin or i == imax or j == jmin or j == jmax:
-                yield node
-
-    def is_placed(self) -> bool:
-        """True if the block has at least one node."""
-        return len(self._nodes) > 0
 
     def overlaps_with(self, other: 'Block') -> bool:
         """True if the two blocks have common nodes."""
@@ -535,11 +552,58 @@ class Block:
 
 ######################################################################
 
+class SubBlock:
+    """Part of a block that consists of specific nodes."""
+
+    def __init__(self, block: Block, tag: Optional[str] = None):
+        """Initialize for a given block and optional cell tag."""
+        self._block = block
+        self._tag = tag
+        nodes: List[Node] = []
+        for node in block.nodes():
+            if not tag or node.tag == tag:
+                nodes.append(node)
+        self._nodes = nodes
+
+    def __len__(self) -> int:
+        """Return the number of nodes."""
+        return len(self._nodes)
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "{}({}:{})".format(
+            self.__class__.__name__,
+            self._block.name,
+            self._tag,
+        )
+
+    @property
+    def block(self) -> Block:
+        """The block."""
+        return self._block
+
+    @property
+    def name(self) -> str:
+        """Name of the block."""
+        return self._block.name
+
+    def outer_nodes(self) -> Iterable[Node]:
+        """Return the subset of the nodes at the sides of the block."""
+        bounds = self._block.bounds
+        if bounds:
+            for node in self._nodes:
+                i, j = node.point
+                if (i == bounds.imin or i == bounds.imax or
+                    j == bounds.jmin or j == bounds.jmax):
+                    yield node
+
+######################################################################
+
 class Connection:
     """A connection between two blocks in the diagram."""
 
-    def __init__(self, start: Block, end: Block, **attrs: AttributeMap):
-        """Initialize a connection between the given blocks."""
+    def __init__(self, start: SubBlock, end: SubBlock, **attrs: AttributeMap):
+        """Initialize a connection between the given nodes."""
         self._start = start
         self._end = end
         self._attributes = ConnectionAttributes(**attrs)
@@ -548,17 +612,17 @@ class Connection:
         """Convert to string."""
         return "{}({}->{})".format(
             self.__class__.__name__,
-            self._start.name,
-            self._end.name,
+            self._start,
+            self._end,
         )
 
     @property
-    def start(self) -> Block:
+    def start(self) -> SubBlock:
         """Source block of the connection."""
         return self._start
 
     @property
-    def end(self) -> Block:
+    def end(self) -> SubBlock:
         """Destination block of the connection."""
         return self._end
 
@@ -632,16 +696,16 @@ class Diagram:
         blocks = self._blocks
         nodes_to_blocks = self._nodes_to_blocks
         points_to_nodes = self._points_to_nodes
+        grid = self._grid
         for bdef in bdefs:
             name = bdef.name
             block = Block(name, **bdef.attributes)
             blocks[name] = block
-            tags = list(bdef.tags)
-            # Cells tagged with the name of the block come last
-            # (unless the name is already in the tags).
-            tags.append(name)
+            # Do not forget the name of the block itself!
+            tags = [name]
+            tags.extend(bdef.tags)
             # Find or create the nodes.
-            for cell in self._cells_containing(tags):
+            for cell in grid.cells_containing(tags):
                 p = cell.point
                 node = points_to_nodes.get(p)
                 if not node:
@@ -651,35 +715,6 @@ class Diagram:
                 if node not in nodes_to_blocks:
                     nodes_to_blocks[node] = []
                 nodes_to_blocks[node].append(block)
-
-    def _cells_containing(self, tags: Sequence[str]) -> Iterator[DiagramCell]:
-        """Return an iterator over the cells that contain the given tags.
-
-        This iterator yields the cells in the order specified by the
-        sequence of tags.
-
-        """
-        # Calculate the order of each tag.
-        order = 0
-        tag_orders: Dict[str, int] = {}
-        for tag in tags:
-            if tag and tag not in tag_orders:
-                tag_orders[tag] = order
-                order += 1
-        # Create groups for all the orders plus one for the rest of
-        # the cells.
-        cells_by_order: List[List[DiagramCell]] = []
-        for _ in range(len(tag_orders) + 1):
-            cells_by_order.append([])
-        for cell in self._grid.cells_containing(tags):
-            cell_tag = cell.tag
-            if cell_tag in tag_orders:
-                order = tag_orders[cell_tag]
-            else:
-                order = -1
-            cells_by_order[order].append(cell)
-        for cells in cells_by_order:
-            yield from cells
 
     def _init_connections(self, ddef: DiagramDef) -> None:
         """Create the connections from the definition."""
@@ -692,26 +727,39 @@ class Diagram:
 
     def _make_connection(self, cdef: ConnectionDef) -> Optional[Connection]:
         """Create a connection from a connection definition."""
-        # Ensure that the two blocks have been registered and placed.
-        start = self._block(cdef.start)
-        end = self._block(cdef.end)
+        start = self._sub_block(cdef.start)
+        end = self._sub_block(cdef.end)
         if not (start and end):
             return None
-        ok = True
-        for block in (start, end):
-            if not block.is_placed():
-                log_warning("Block '{}' is not placed".format(block.name))
-                ok = False
-        if not ok:
-            return None
         # Cannot create connection between overlapping blocks.
-        if start.overlaps_with(end):
-            temp = "Blocks '{}' and '{}' overlap, connection rejected"
-            log_warning(temp.format(start.name, end.name))
+        block1 = start.block
+        block2 = end.block
+        if block1.overlaps_with(block2):
+            tmpl = "Blocks '{}' and '{}' overlap, connection rejected"
+            log_warning(tmpl.format(block1.name, block2.name))
             return None
         # Everything seems OK, let's make the connection.
         connection = Connection(start, end, **cdef.attributes)
         return connection
+
+    def _sub_block(self, ndef: SubBlockDef) -> Optional[SubBlock]:
+        """Retrieve the subset of the block from the definition."""
+        if isinstance(ndef, str):
+            block_name = ndef
+            tag = None
+        else:
+            block_name, tag = ndef
+        block = self._block(block_name)
+        if block:
+            sub = SubBlock(block, tag)
+            if sub:
+                return sub
+            else:
+                msg = "Node '{}' is not placed""".format(block_name)
+                log_warning(msg)
+                return None
+        else:
+            return None
 
     def _block(self, name: str) -> Optional[Block]:
         """Retrieve a block by name."""

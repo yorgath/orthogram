@@ -170,7 +170,7 @@ blocks:
   gas_section:
     label: Gas Section
     label_position: top
-    cover: [gsec, cmb2, fuel, cmp1, cmb1, gtb1, cmp2, gtb2]
+    cover: [fuel, cmp1, cmb1, gtb1, cmp2, cmb2, gtb2, gsec]
     style: section
     margin_right: 24
 
@@ -271,14 +271,14 @@ connections:
     end: exst
     style: hot_gas
 
-  - start: gas_section
+  - start: {gas_section: cmb2}
     end: steam_section
     style: intra_section
 
-  - start: gas_section
+  - start: {gas_section: gsec}
     end: electric_section
     style: intra_section
 
-  - start: steam_section
+  - start: {steam_section: sgn}
     end: electric_section
     style: intra_section

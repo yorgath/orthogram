@@ -580,7 +580,8 @@ class BlockBox(ContainerBox):
             x = lane.relative_position - (lane.width + d) / 2.0
             for wire in lane.wires():
                 connection = wire.connection
-                if block is connection.start or block is connection.end:
+                if (block is connection.start.block or
+                    block is connection.end.block):
                     xmin = min(xmin, x)
         return xmin
 
@@ -596,7 +597,8 @@ class BlockBox(ContainerBox):
             y = lane.relative_position - (lane.width + d) / 2.0
             for wire in lane.wires():
                 connection = wire.connection
-                if block is connection.start or block is connection.end:
+                if (block is connection.start.block or
+                    block is connection.end.block):
                     ymin = min(ymin, y)
         return ymin
 
@@ -612,7 +614,8 @@ class BlockBox(ContainerBox):
             x = lane.relative_position + (lane.width + d) / 2.0
             for wire in lane.wires():
                 connection = wire.connection
-                if block is connection.start or block is connection.end:
+                if (block is connection.start.block or
+                    block is connection.end.block):
                     xmin = max(xmax, x)
         return xmax
 
@@ -628,7 +631,8 @@ class BlockBox(ContainerBox):
             y = lane.relative_position + (lane.width + d) / 2.0
             for wire in lane.wires():
                 connection = wire.connection
-                if block is connection.start or block is connection.end:
+                if (block is connection.start.block or
+                    block is connection.end.block):
                     ymax = max(ymax, y)
         return ymax
 
@@ -1290,8 +1294,8 @@ class Drawing:
         ls = LineString(points)
         boxes = self._block_boxes
         connection = wire.connection
-        box1 = boxes[connection.start]
-        box2 = boxes[connection.end]
+        box1 = boxes[connection.start.block]
+        box2 = boxes[connection.end.block]
         return WireLine(wire, box1, box2, ls)
 
     @staticmethod
