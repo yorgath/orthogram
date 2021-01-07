@@ -1,0 +1,148 @@
+diagram:
+  collapse_connections: true
+  connection_distance: 6
+  font_family: Arial
+  label: Capabilities Demonstration
+  padding_top: 12
+
+styles:
+
+  default_block:
+    fill: white
+    font_family: Arial
+    font_size: 8
+    label: ""
+    margin_left: 12
+    margin_right: 12
+    min_height: 60
+
+  default_connection:
+    arrow_base: 3.5
+
+rows:
+
+  - ["" , B1, "", B2, "", E]
+  - [A  , B3, "", B4, C , E]
+  - ["" , B5, "", B6, "", E]
+  - ["" , B7, "", B8, "", E]
+  - [D  , D , Dc, D , D ,  ]
+
+blocks:
+
+  A:
+    label: |-
+      Block size is
+      adjusted
+      to fit the lines
+
+  B1:
+    label: |-
+      Connections
+      try to avoid
+      each other.
+
+  B3:
+    label: |-
+      You can set the
+      priority of
+      lines & blocks.
+
+  B5:
+    label: |-
+      You can set
+      the thickness
+      of lines.
+
+  B6:
+    label: |-
+      You can draw
+      a buffer
+      around lines.
+
+  B7: {}
+
+  B8:
+    fill: navy
+    font_weight: bold
+    label: |-
+      The outline
+      is drawn in-
+      side the block.
+    stroke: purple
+    stroke_width: 8
+    text_fill: white
+
+  B:
+    cover: [B1, B8]
+    drawing_priority: -1
+    fill: lightyellow
+    label: |-
+      This is a block used as a frame around other blocks.
+      The green line above has to go around it.
+    label_distance: 4
+    label_position: top
+    stroke: orange
+    stroke_dasharray: 2 4
+    stroke_width: 1
+
+  C:
+    label: |-
+      Connections
+      can be grouped.
+
+  D:
+    cover: [Dc]
+    font_size: 10
+    font_style: italic
+    label: |-
+      You can create blocks that span many cells,
+      and adjust the geometry of arrows.
+
+  Dc:
+    label: ""
+    min_width: 0
+    min_height: 0
+    margin_left: 0
+    margin_right: 0
+    margin_bottom: 0
+    margin_top: 0
+
+  E:
+    font_size: 10
+    font_style: italic
+    label: You can change the orientation of text.
+    min_width: 48
+    text_orientation: vertical
+
+connections:
+
+  - start: A
+    end: [B1, B2, B3, B4, B5, B6, B7, B8]
+    exits: [right]
+    stroke: red
+
+  - start: C
+    end: [B2, B3, B4, B5, B6, B8]
+    exits: [left]
+    group: cgroup
+    stroke: blue
+
+  - start: A
+    end: C
+    arrow_back: true
+    stroke: green
+    stroke_dasharray: 4 4
+
+  - start: D
+    end: [A, B, C]
+    arrow_aspect: 0.3
+    stroke: lightgray
+    stroke_width: 32
+
+  - start: E
+    end: [B3, B5]
+    entrances: [top]
+    stroke: purple
+    stroke_width: 3
+    buffer_width: 2
+    buffer_fill: "#FDF"

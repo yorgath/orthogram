@@ -1,0 +1,165 @@
+diagram:
+  connection_distance: 8
+  fill: white
+  font_family: Arial
+  label: |-
+    Computer Architecture
+    (https://en.wikipedia.org/wiki/Computer_architecture)
+  padding_top: 24
+
+styles:
+
+  default_block:
+    font_family: Arial
+    margin_bottom: 12
+    margin_left: 12
+    margin_right: 12
+    margin_top: 12
+
+  default_connection:
+    buffer_width: 1
+    buffer_fill: "#EEE"
+    stroke_width: 2
+
+  unit:
+    fill: lightskyblue
+    min_width: 120
+    stroke_width: 1
+
+  io:
+    min_width: 72
+
+  frame:
+    label_distance: 4
+    label_position: top
+    min_width: 8
+    min_height: 0
+    padding_bottom: 16
+
+  hidden:
+    label: ""
+    min_width: 0
+    min_height: 0
+
+  control:
+    arrow_back: true
+    stroke: red
+
+blocks:
+
+  cu:
+    label: "Control\nUnit"
+    style: unit
+
+  reg:
+    label: Registers
+    style: unit
+
+  log:
+    label: "Combinational\nLogic"
+    style: unit
+
+  mem:
+    label: "Main\nMemory"
+    style: unit
+
+  in:
+    label: Input
+    style: [unit, io]
+
+  out:
+    label: Output
+    style: [unit, io]
+
+  h1:
+    style: hidden
+
+  h2:
+    style: hidden
+
+  proc:
+    label: Processor
+    style: frame
+    drawing_priority: -1
+    fill: "#FFB"
+
+  cpu:
+    label: CPU
+    style: frame
+    drawing_priority: -2
+    fill: papayawhip
+
+rows:
+  - ["", "", cpu, cpu , cu , cpu,  cpu         ]
+  - ["", "", cpu, proc, reg, proc, cpu         ]
+  - [h1, in, cpu, proc, log, proc, cpu, out, h2]
+  - ["", "", "" , ""  , mem                    ]
+
+connections:
+
+  - start: mem
+    end: log
+    exits: [left]
+    entrances: [left]
+
+  - start: log
+    end: mem
+    exits: [right]
+    entrances: [right]
+
+  - start: reg
+    end: log
+    exits: [left]
+    entrances: [left]
+
+  - start: log
+    end: reg
+    exits: [right]
+    entrances: [right]
+
+  - start: h1
+    end: in
+
+  - start: in
+    end: log
+
+  - start: log
+    end: out
+
+  - start: out
+    end: h2
+
+  - start: mem
+    end: cu
+    exits: [right]
+    entrances: [right]
+
+  - start: in
+    end: cu
+    exits: [top]
+    entrances: [left]
+    style: control
+
+  - start: mem
+    end: cu
+    exits: [left]
+    entrances: [left]
+    style: control
+
+  - start: log
+    end: cu
+    exits: [left]
+    entrances: [left]
+    style: control
+
+  - start: reg
+    end: cu
+    exits: [left]
+    entrances: [left]
+    style: control
+
+  - start: out
+    end: cu
+    exits: [top]
+    entrances: [right]
+    style: control

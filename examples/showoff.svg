@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg baseProfile="full" height="100%" version="1.1" viewBox="0 0 711.0 736.875" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <marker id="id15" markerHeight="7" markerUnits="userSpaceOnUse" markerWidth="10" orient="auto" refX="5.0" refY="3.5">
+      <polyline fill="red" points="0,0 10,3.5 0,7" stroke-width="0"/>
+    </marker>
+    <marker id="id16" markerHeight="7" markerUnits="userSpaceOnUse" markerWidth="10" orient="auto" refX="5.0" refY="3.5">
+      <polyline fill="blue" points="0,0 10,3.5 0,7" stroke-width="0"/>
+    </marker>
+    <marker id="id17" markerHeight="7" markerUnits="userSpaceOnUse" markerWidth="10" orient="auto" refX="5.0" refY="3.5">
+      <polyline fill="green" points="0,0 10,3.5 0,7" stroke-width="0"/>
+    </marker>
+    <marker id="id18" markerHeight="112" markerUnits="userSpaceOnUse" markerWidth="34" orient="auto" refX="17.0" refY="56.0">
+      <polyline fill="lightgray" points="0,0 34,56.0 0,112" stroke-width="0"/>
+    </marker>
+    <marker id="id19" markerHeight="10" markerUnits="userSpaceOnUse" markerWidth="16" orient="auto" refX="8.0" refY="5.0">
+      <polyline fill="purple" points="0,0 16,5.0 0,10" stroke-width="0"/>
+    </marker>
+  </defs>
+  <rect fill="none" height="736.875" width="711.0" x="0.0" y="0.0"/>
+  <rect fill="none" height="736.875" stroke="black" stroke-width="0.0" width="711.0" x="0.0" y="0.0"/>
+  <rect fill="lightyellow" height="527.0" width="314.0" x="170.0" y="77.875"/>
+  <rect fill="none" height="526.0" stroke="orange" stroke-dasharray="2 4" stroke-width="1.0" width="313.0" x="170.5" y="78.375"/>
+  <rect fill="white" height="64.0" width="96.0" x="12.0" y="262.875"/>
+  <rect fill="none" height="62.0" stroke="black" stroke-width="2.0" width="94.0" x="13.0" y="263.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="179.0" y="115.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="116.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="379.0" y="115.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="116.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="179.0" y="264.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="265.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="379.0" y="264.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="265.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="179.0" y="413.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="414.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="379.0" y="413.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="414.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="179.0" y="535.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="536.875"/>
+  <rect fill="navy" height="60.0" width="96.0" x="379.0" y="535.875"/>
+  <rect fill="none" height="52.0" stroke="purple" stroke-width="8.0" width="88.0" x="383.0" y="539.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="531.0" y="264.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="532.0" y="265.875"/>
+  <rect fill="white" height="60.0" width="615.0" x="12.0" y="652.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="613.0" x="13.0" y="653.875"/>
+  <rect fill="white" height="0.0" width="0.0" x="331.0" y="682.875"/>
+  <rect fill="none" height="-2.0" stroke="black" stroke-width="2.0" width="-2.0" x="332.0" y="683.875"/>
+  <rect fill="white" height="480.0" width="48.0" x="651.0" y="115.875"/>
+  <rect fill="none" height="478.0" stroke="black" stroke-width="2.0" width="46.0" x="652.0" y="116.875"/>
+  <polyline fill="none" points="108.0,266.875 135.0,266.875 135.0,145.875 170.0,145.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="169.0,145.875 174.0,145.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,274.875 143.0,274.875 143.0,206.875 302.0,206.875 302.0,145.875 370.0,145.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="369.0,145.875 374.0,145.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,290.875 170.0,290.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="169.0,290.875 174.0,290.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,282.875 151.0,282.875 151.0,214.875 302.0,214.875 302.0,290.875 370.0,290.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="369.0,290.875 374.0,290.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,314.875 135.0,314.875 135.0,382.875 222.5,382.875 222.5,404.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="222.5,403.875 222.5,408.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,298.875 151.0,298.875 151.0,366.875 302.0,366.875 302.0,447.875 370.0,447.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="369.0,447.875 374.0,447.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,322.875 127.0,322.875 127.0,504.875 231.0,504.875 231.0,526.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="231.0,525.875 231.0,530.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="108.0,306.875 143.0,306.875 143.0,374.875 294.0,374.875 294.0,565.875 370.0,565.875" stroke="red" stroke-width="2.0"/>
+  <polyline marker-end="url(#id15)" points="369.0,565.875 374.0,565.875" stroke="red" stroke-width="0"/>
+  <polyline fill="none" points="531.0,298.875 503.0,298.875 503.0,145.875 484.0,145.875" stroke="blue" stroke-width="2.0"/>
+  <polyline marker-end="url(#id16)" points="485.0,145.875 480.0,145.875" stroke="blue" stroke-width="0"/>
+  <polyline fill="none" points="531.0,298.875 503.0,298.875 503.0,231.875 360.0,231.875 360.0,298.875 284.0,298.875" stroke="blue" stroke-width="2.0"/>
+  <polyline marker-end="url(#id16)" points="285.0,298.875 280.0,298.875" stroke="blue" stroke-width="0"/>
+  <polyline fill="none" points="531.0,298.875 484.0,298.875" stroke="blue" stroke-width="2.0"/>
+  <polyline marker-end="url(#id16)" points="485.0,298.875 480.0,298.875" stroke="blue" stroke-width="0"/>
+  <polyline fill="none" points="531.0,298.875 503.0,298.875 503.0,366.875 360.0,366.875 360.0,439.375 284.0,439.375" stroke="blue" stroke-width="2.0"/>
+  <polyline marker-end="url(#id16)" points="285.0,439.375 280.0,439.375" stroke="blue" stroke-width="0"/>
+  <polyline fill="none" points="531.0,298.875 503.0,298.875 503.0,366.875 427.0,366.875 427.0,404.875" stroke="blue" stroke-width="2.0"/>
+  <polyline marker-end="url(#id16)" points="427.0,403.875 427.0,408.875" stroke="blue" stroke-width="0"/>
+  <polyline fill="none" points="531.0,298.875 503.0,298.875 503.0,504.875 427.0,504.875 427.0,526.875" stroke="blue" stroke-width="2.0"/>
+  <polyline marker-end="url(#id16)" points="427.0,525.875 427.0,530.875" stroke="blue" stroke-width="0"/>
+  <polyline fill="none" points="60.0,253.875 60.0,46.875 579.0,46.875 579.0,255.875" stroke="green" stroke-dasharray="4 4" stroke-width="2.0"/>
+  <polyline marker-end="url(#id17)" points="60.0,252.875 60.0,257.875" stroke="green" stroke-width="0"/>
+  <polyline marker-end="url(#id17)" points="579.0,254.875 579.0,259.875" stroke="green" stroke-width="0"/>
+  <polyline fill="none" points="60.0,652.875 60.0,359.875" stroke="lightgray" stroke-width="32.0"/>
+  <polyline marker-end="url(#id18)" points="60.0,360.875 60.0,343.875" stroke="lightgray" stroke-width="0"/>
+  <polyline fill="none" points="331.0,652.875 331.0,637.875" stroke="lightgray" stroke-width="32.0"/>
+  <polyline marker-end="url(#id18)" points="331.0,638.875 331.0,621.875" stroke="lightgray" stroke-width="0"/>
+  <polyline fill="none" points="579.0,652.875 579.0,357.875" stroke="lightgray" stroke-width="32.0"/>
+  <polyline marker-end="url(#id18)" points="579.0,358.875 579.0,341.875" stroke="lightgray" stroke-width="0"/>
+  <polyline fill="none" points="651.0,145.875 511.5,145.875 511.5,223.375 231.0,223.375 231.0,249.875" stroke="#FDF" stroke-width="7.0"/>
+  <polyline fill="none" points="651.0,145.875 511.5,145.875 511.5,223.375 231.0,223.375 231.0,249.875" stroke="purple" stroke-width="3.0"/>
+  <polyline marker-end="url(#id19)" points="231.0,248.875 231.0,256.875" stroke="purple" stroke-width="0"/>
+  <polyline fill="none" points="651.0,447.875 511.5,447.875 511.5,358.375 231.0,358.375 231.0,398.875" stroke="#FDF" stroke-width="7.0"/>
+  <polyline fill="none" points="651.0,447.875 511.5,447.875 511.5,358.375 231.0,358.375 231.0,398.875" stroke="purple" stroke-width="3.0"/>
+  <polyline marker-end="url(#id19)" points="231.0,397.875 231.0,405.875" stroke="purple" stroke-width="0"/>
+  <text transform="translate(327.0,95.375) translate(0,-6.25)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">This is a block used as a frame around other blocks.</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">The green line above has to go around it.</tspan>
+  </text>
+  <text transform="translate(60.0,294.875) translate(0,-12.5)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Block size is</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">adjusted</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">to fit the lines</tspan>
+  </text>
+  <text transform="translate(227.0,145.875) translate(0,-12.5)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">try to avoid</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">each other.</tspan>
+  </text>
+  <text transform="translate(227.0,294.875) translate(0,-12.5)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can set the</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">priority of</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">lines &amp; blocks.</tspan>
+  </text>
+  <text transform="translate(227.0,443.875) translate(0,-12.5)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can set</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">the thickness</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">of lines.</tspan>
+  </text>
+  <text transform="translate(427.0,443.875) translate(0,-12.5)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can draw</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">a buffer</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">around lines.</tspan>
+  </text>
+  <text transform="translate(427.0,565.875) translate(0,-12.5)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">The outline</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">is drawn in-</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">side the block.</tspan>
+  </text>
+  <text transform="translate(579.0,294.875) translate(0,-6.25)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">can be grouped.</tspan>
+  </text>
+  <text transform="translate(319.5,682.875) translate(0,-7.8125)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">You can create blocks that span many cells,</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">and adjust the geometry of arrows.</tspan>
+  </text>
+  <text transform="translate(675.0,355.875) translate(-0.0,0) rotate(-90)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">You can change the orientation of text.</tspan>
+  </text>
+  <text transform="translate(355.5,16.9375) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Capabilities Demonstration</tspan>
+  </text>
+</svg>

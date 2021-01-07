@@ -1,0 +1,144 @@
+diagram:
+  collapse_connections: true
+  connection_distance: 8
+  fill: white
+  label: Combinations of Basic Colors
+
+styles:
+
+  default_block:
+    font_family: Arial
+    font_weight: bold
+    label: ""
+    margin_bottom: 8
+    margin_top: 8
+
+  default_connection:
+    buffer_width: 1
+    buffer_fill: white
+    entrances: [left]
+    exits: [right]
+
+  basic_colors:
+    margin_right: 72
+
+  combined_colors:
+    margin_left: 72
+
+groups:
+
+  red:
+    stroke: "#F00"
+    drawing_priority: 1
+
+  green:
+    stroke: "#0F0"
+    drawing_priority: 2
+
+  blue:
+    stroke: "#00F"
+    drawing_priority: 3
+
+rows:
+
+  - [""          , black  ]
+  - [""          , blue   ]
+  - [basic_red   , red    ]
+  - [basic_green , magenta]
+  - [basic_blue  , green  ]
+  - [""          , cyan   ]
+  - [""          , yellow ]
+  - [""          , white  ]
+
+blocks:
+
+  basic_red:
+    style: basic_colors
+    fill: "#F00"
+    label: Red
+    stroke: "#F00"
+    text_fill: white
+
+  basic_green:
+    style: basic_colors
+    fill: "#0F0"
+    label: Green
+    stroke: "#0F0"
+    text_fill: black
+
+  basic_blue:
+    style: basic_colors
+    fill: "#00F"
+    label: Blue
+    stroke: "#00F"
+    text_fill: white
+
+  black:
+    style: combined_colors
+    fill: "#000"
+    label: Black
+    stroke: "#000"
+    text_fill: white
+
+  blue:
+    style: combined_colors
+    fill: "#00F"
+    label: Blue
+    stroke: "#00F"
+    text_fill: white
+
+  red:
+    style: combined_colors
+    fill: "#F00"
+    label: Red
+    stroke: "#F00"
+    text_fill: white
+
+  magenta:
+    style: combined_colors
+    fill: "#F0F"
+    label: Magenta
+    stroke: "#F0F"
+    text_fill: white
+
+  green:
+    style: combined_colors
+    fill: "#0F0"
+    label: Green
+    stroke: "#0F0"
+    text_fill: black
+
+  cyan:
+    style: combined_colors
+    fill: "#0FF"
+    label: Cyan
+    stroke: "#0FF"
+    text_fill: black
+
+  yellow:
+    style: combined_colors
+    fill: "#FF0"
+    label: Yellow
+    stroke: "#FF0"
+    text_fill: black
+
+  white:
+    style: combined_colors
+    fill: "#FFF"
+    label: White
+    stroke: "#000"
+    text_fill: black
+
+connections:
+
+  - start: basic_red
+    end: [red, magenta, yellow, white]
+    group: red
+
+  - start: basic_green
+    end: [green, cyan, yellow, white]
+    group: green
+
+  - start: basic_blue
+    end: [blue, magenta, cyan, white]
+    group: blue

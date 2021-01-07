@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg baseProfile="full" height="100%" version="1.1" viewBox="0 0 422.0 539.875" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <marker id="id1" markerHeight="6" markerUnits="userSpaceOnUse" markerWidth="9" orient="auto" refX="4.5" refY="3.0">
+      <polyline fill="#F00" points="0,0 9,3.0 0,6" stroke-width="0"/>
+    </marker>
+    <marker id="id2" markerHeight="6" markerUnits="userSpaceOnUse" markerWidth="9" orient="auto" refX="4.5" refY="3.0">
+      <polyline fill="#0F0" points="0,0 9,3.0 0,6" stroke-width="0"/>
+    </marker>
+    <marker id="id3" markerHeight="6" markerUnits="userSpaceOnUse" markerWidth="9" orient="auto" refX="4.5" refY="3.0">
+      <polyline fill="#00F" points="0,0 9,3.0 0,6" stroke-width="0"/>
+    </marker>
+  </defs>
+  <rect fill="white" height="539.875" width="422.0" x="0.0" y="0.0"/>
+  <rect fill="none" height="539.875" stroke="black" stroke-width="0.0" width="422.0" x="0.0" y="0.0"/>
+  <rect fill="#00F" height="48.0" width="96.0" x="24.0" y="291.875"/>
+  <rect fill="none" height="46.0" stroke="#00F" stroke-width="2.0" width="94.0" x="25.0" y="292.875"/>
+  <rect fill="#0F0" height="48.0" width="96.0" x="24.0" y="227.875"/>
+  <rect fill="none" height="46.0" stroke="#0F0" stroke-width="2.0" width="94.0" x="25.0" y="228.875"/>
+  <rect fill="#F00" height="48.0" width="96.0" x="24.0" y="163.875"/>
+  <rect fill="none" height="46.0" stroke="#F00" stroke-width="2.0" width="94.0" x="25.0" y="164.875"/>
+  <rect fill="#000" height="48.0" width="96.0" x="302.0" y="35.875"/>
+  <rect fill="none" height="46.0" stroke="#000" stroke-width="2.0" width="94.0" x="303.0" y="36.875"/>
+  <rect fill="#00F" height="48.0" width="96.0" x="302.0" y="99.875"/>
+  <rect fill="none" height="46.0" stroke="#00F" stroke-width="2.0" width="94.0" x="303.0" y="100.875"/>
+  <rect fill="#0FF" height="48.0" width="96.0" x="302.0" y="355.875"/>
+  <rect fill="none" height="46.0" stroke="#0FF" stroke-width="2.0" width="94.0" x="303.0" y="356.875"/>
+  <rect fill="#0F0" height="48.0" width="96.0" x="302.0" y="291.875"/>
+  <rect fill="none" height="46.0" stroke="#0F0" stroke-width="2.0" width="94.0" x="303.0" y="292.875"/>
+  <rect fill="#F0F" height="48.0" width="96.0" x="302.0" y="227.875"/>
+  <rect fill="none" height="46.0" stroke="#F0F" stroke-width="2.0" width="94.0" x="303.0" y="228.875"/>
+  <rect fill="#F00" height="48.0" width="96.0" x="302.0" y="163.875"/>
+  <rect fill="none" height="46.0" stroke="#F00" stroke-width="2.0" width="94.0" x="303.0" y="164.875"/>
+  <rect fill="#FFF" height="48.0" width="96.0" x="302.0" y="483.875"/>
+  <rect fill="none" height="46.0" stroke="#000" stroke-width="2.0" width="94.0" x="303.0" y="484.875"/>
+  <rect fill="#FF0" height="48.0" width="96.0" x="302.0" y="419.875"/>
+  <rect fill="none" height="46.0" stroke="#FF0" stroke-width="2.0" width="94.0" x="303.0" y="420.875"/>
+  <polyline fill="none" points="120.0,187.875 294.0,187.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,187.875 201.0,187.875 201.0,241.875 294.0,241.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,187.875 201.0,187.875 201.0,448.875 294.0,448.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,187.875 201.0,187.875 201.0,517.875 294.0,517.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,187.875 294.0,187.875" stroke="#F00" stroke-width="2.0"/>
+  <polyline marker-end="url(#id1)" points="293.0,187.875 297.5,187.875" stroke="#F00" stroke-width="0"/>
+  <polyline fill="none" points="120.0,187.875 201.0,187.875 201.0,241.875 294.0,241.875" stroke="#F00" stroke-width="2.0"/>
+  <polyline marker-end="url(#id1)" points="293.0,241.875 297.5,241.875" stroke="#F00" stroke-width="0"/>
+  <polyline fill="none" points="120.0,187.875 201.0,187.875 201.0,448.875 294.0,448.875" stroke="#F00" stroke-width="2.0"/>
+  <polyline marker-end="url(#id1)" points="293.0,448.875 297.5,448.875" stroke="#F00" stroke-width="0"/>
+  <polyline fill="none" points="120.0,187.875 201.0,187.875 201.0,517.875 294.0,517.875" stroke="#F00" stroke-width="2.0"/>
+  <polyline marker-end="url(#id1)" points="293.0,517.875 297.5,517.875" stroke="#F00" stroke-width="0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,315.875 294.0,315.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,374.875 294.0,374.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,438.875 294.0,438.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,497.875 294.0,497.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,315.875 294.0,315.875" stroke="#0F0" stroke-width="2.0"/>
+  <polyline marker-end="url(#id2)" points="293.0,315.875 297.5,315.875" stroke="#0F0" stroke-width="0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,374.875 294.0,374.875" stroke="#0F0" stroke-width="2.0"/>
+  <polyline marker-end="url(#id2)" points="293.0,374.875 297.5,374.875" stroke="#0F0" stroke-width="0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,438.875 294.0,438.875" stroke="#0F0" stroke-width="2.0"/>
+  <polyline marker-end="url(#id2)" points="293.0,438.875 297.5,438.875" stroke="#0F0" stroke-width="0"/>
+  <polyline fill="none" points="120.0,261.875 221.0,261.875 221.0,497.875 294.0,497.875" stroke="#0F0" stroke-width="2.0"/>
+  <polyline marker-end="url(#id2)" points="293.0,497.875 297.5,497.875" stroke="#0F0" stroke-width="0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,123.875 294.0,123.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,251.875 294.0,251.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,384.875 294.0,384.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,507.875 294.0,507.875" stroke="white" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,123.875 294.0,123.875" stroke="#00F" stroke-width="2.0"/>
+  <polyline marker-end="url(#id3)" points="293.0,123.875 297.5,123.875" stroke="#00F" stroke-width="0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,251.875 294.0,251.875" stroke="#00F" stroke-width="2.0"/>
+  <polyline marker-end="url(#id3)" points="293.0,251.875 297.5,251.875" stroke="#00F" stroke-width="0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,384.875 294.0,384.875" stroke="#00F" stroke-width="2.0"/>
+  <polyline marker-end="url(#id3)" points="293.0,384.875 297.5,384.875" stroke="#00F" stroke-width="0"/>
+  <polyline fill="none" points="120.0,315.875 211.0,315.875 211.0,507.875 294.0,507.875" stroke="#00F" stroke-width="2.0"/>
+  <polyline marker-end="url(#id3)" points="293.0,507.875 297.5,507.875" stroke="#00F" stroke-width="0"/>
+  <text transform="translate(72.0,315.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
+  </text>
+  <text transform="translate(72.0,251.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
+  </text>
+  <text transform="translate(72.0,187.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
+  </text>
+  <text transform="translate(350.0,59.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Black</tspan>
+  </text>
+  <text transform="translate(350.0,123.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
+  </text>
+  <text transform="translate(350.0,379.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Cyan</tspan>
+  </text>
+  <text transform="translate(350.0,315.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
+  </text>
+  <text transform="translate(350.0,251.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Magenta</tspan>
+  </text>
+  <text transform="translate(350.0,187.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
+  </text>
+  <text transform="translate(350.0,507.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">White</tspan>
+  </text>
+  <text transform="translate(350.0,443.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Yellow</tspan>
+  </text>
+  <text transform="translate(211.0,16.9375) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-size="14.0pt" text-anchor="middle" x="0">Combinations of Basic Colors</tspan>
+  </text>
+</svg>

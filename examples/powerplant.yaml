@@ -23,8 +23,6 @@ styles:
     padding_top: 6
 
   default_connection:
-    bias_start: horizontal
-    bias_end: horizontal
     stroke_width: 3
 
   cold_gas:
@@ -203,6 +201,8 @@ connections:
 
   - start: air
     end: [cmp1, cmp2]
+    entrances: [left]
+    exits: [right]
     style: cold_gas
     group: air
 
@@ -216,8 +216,8 @@ connections:
 
   - start: fuel
     end: [cmb1, cmb2]
+    entrances: [top]
     style: low_priority
-    bias_end: vertical
     stroke: olive
 
   - start: cmb1
@@ -238,8 +238,7 @@ connections:
 
   - start: [gtb1, gtb2]
     end: sgn
-    bias_start: vertical
-    bias_end: vertical
+    exits: [bottom]
     style: hot_gas
     group: gas_to_steam
 
@@ -257,7 +256,7 @@ connections:
 
   - start: cdn
     end: sgn
-    bias_start: vertical
+    exits: [top]
     style: water
 
   - start: cdn
