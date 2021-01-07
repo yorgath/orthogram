@@ -60,22 +60,28 @@ Release history
 
 * Significant breaking changes all around.
 
-* Adopted the mainstream terminology of block diagrams.  "Terminals"
-  renamed to "blocks", "links" renamed to "connections".
+* Adopted more mainstream terminology of block diagrams.  "Blocks"
+  instead of "terminals", "connections" instead of "links".
 
 * Introduced the ability to define overlapping blocks.
   
+* Replaced ``start_bias`` and ``end_bias`` link attributes with
+  ``entrances`` and ``exits`` attributes.
+
 * Removed ``column_margin`` and ``row_margin`` diagram attributes.
-  Added ``margin_*`` terminal attributes.
+  Added ``margin_*`` block attributes.
 
 * Replaced ``padding`` diagram attribute with ``padding_*``
   attributes.
 
-* Renamed ``start_bias`` to ``bias_start`` and ``end_bias`` to
-  ``bias_end``.
-
 * Got rid of the ``pins`` key in row definitions.
 
-* Added autogeneration of terminals.
+* Added autogeneration of blocks.
 
 * Made diagram center in the drawing area.
+
+* Improved the refinement engine.
+
+* Updated the documentation.  Added the Gallery section.
+
+* More examples.

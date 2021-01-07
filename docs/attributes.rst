@@ -12,13 +12,13 @@ Attribute                 Diagram          Block         Connection
 ``arrow_back``                                           False
 ``arrow_base``                                           3.0
 ``arrow_forward``                                        True
-``bias_end``                                             None
-``bias_start``                                           None
 ``buffer_fill``                                          "none"
 ``buffer_width``                                         0.0
 ``collapse_connections``  False
 ``connection_distance``   4.0
 ``drawing_priority``                       0             0
+``entrances``                                            [<all>]
+``exits``                                                [<all>]
 ``fill``                  "none"           "none"
 ``font_family``           None             None
 ``font_size``             14.0             10.0
@@ -34,10 +34,10 @@ Attribute                 Diagram          Block         Connection
 ``margin_top``                             12.0
 ``min_height``            300.0            48.0
 ``min_width``             300.0            96.0
-``padding_bottom``        0.0              4.0
-``padding_left``          0.0              4.0
-``padding_right``         0.0              4.0
-``padding_top``           0.0              4.0
+``padding_bottom``        0.0              8.0
+``padding_left``          0.0              8.0
+``padding_right``         0.0              8.0
+``padding_top``           0.0              8.0
 ``pass_through``                           False
 ``stretch``               True
 ``stroke_dasharray``      None             None          None
@@ -50,10 +50,12 @@ Attribute                 Diagram          Block         Connection
 
 The options for the enumerated attributes are:
 
-* ``bias_start`` and ``bias_end``:
+* ``entrances`` and ``exits`` (set of):
 
-  * ``horizontal``
-  * ``vertical``
+  * ``bottom``
+  * ``left``
+  * ``right``
+  * ``top``
 
 * ``label_position``:
 

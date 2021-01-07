@@ -5,9 +5,9 @@ Orthogram is a command line program and Python library that lets you
 draw block diagrams.  It reads the definition of a diagram from a YAML
 file and produces a SVG file like this one:
 
-.. image:: examples/powerplant.svg
+.. image:: examples/showoff.svg
    :width: 100%
-   :alt: (Diagram of a combined cycle power plant)
+   :alt: (Showing off the capabilities)
 
 Target audience
 ---------------

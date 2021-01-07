@@ -1,5 +1,5 @@
-Hello world
-===========
+Hello, world
+============
 
 Start the text editor of your choice and type in the following lines
 of YAML:
