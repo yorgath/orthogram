@@ -30,6 +30,10 @@ When used as a command line tool, Orthogram reads a *diagram
 definition file* and produces a Scalable Vector Graphics file.  The
 definition file is written in YAML.
 
+The source code is hosted on `Github`_.
+
+.. _Github: https://github.com/yorgath/orthogram
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
