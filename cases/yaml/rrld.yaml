@@ -10,5 +10,4 @@ connections:
     end: B
   - start: B
     end: C
-    bias_start: horizontal
-    bias_end: vertical
+    exits: [left]

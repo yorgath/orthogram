@@ -8,7 +8,6 @@ rows:
 connections:
   - start: A
     end: B
-    bias_start: vertical
-    bias_end: horizontal
+    exits: [bottom]
   - start: C
     end: B
