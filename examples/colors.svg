@@ -13,28 +13,28 @@
   </defs>
   <rect fill="white" height="539.875" width="444.0" x="0.0" y="0.0"/>
   <rect fill="none" height="539.875" stroke="black" stroke-width="0.0" width="444.0" x="0.0" y="0.0"/>
-  <rect fill="#00F" height="48.0" width="96.0" x="24.0" y="291.875"/>
-  <rect fill="none" height="46.0" stroke="#00F" stroke-width="2.0" width="94.0" x="25.0" y="292.875"/>
-  <rect fill="#0F0" height="48.0" width="96.0" x="24.0" y="227.875"/>
-  <rect fill="none" height="46.0" stroke="#0F0" stroke-width="2.0" width="94.0" x="25.0" y="228.875"/>
   <rect fill="#F00" height="48.0" width="96.0" x="24.0" y="163.875"/>
   <rect fill="none" height="46.0" stroke="#F00" stroke-width="2.0" width="94.0" x="25.0" y="164.875"/>
+  <rect fill="#0F0" height="48.0" width="96.0" x="24.0" y="227.875"/>
+  <rect fill="none" height="46.0" stroke="#0F0" stroke-width="2.0" width="94.0" x="25.0" y="228.875"/>
+  <rect fill="#00F" height="48.0" width="96.0" x="24.0" y="291.875"/>
+  <rect fill="none" height="46.0" stroke="#00F" stroke-width="2.0" width="94.0" x="25.0" y="292.875"/>
   <rect fill="#000" height="48.0" width="96.0" x="324.0" y="35.875"/>
   <rect fill="none" height="46.0" stroke="#000" stroke-width="2.0" width="94.0" x="325.0" y="36.875"/>
   <rect fill="#00F" height="48.0" width="96.0" x="324.0" y="99.875"/>
   <rect fill="none" height="46.0" stroke="#00F" stroke-width="2.0" width="94.0" x="325.0" y="100.875"/>
-  <rect fill="#0FF" height="48.0" width="96.0" x="324.0" y="355.875"/>
-  <rect fill="none" height="46.0" stroke="#0FF" stroke-width="2.0" width="94.0" x="325.0" y="356.875"/>
-  <rect fill="#0F0" height="48.0" width="96.0" x="324.0" y="291.875"/>
-  <rect fill="none" height="46.0" stroke="#0F0" stroke-width="2.0" width="94.0" x="325.0" y="292.875"/>
-  <rect fill="#F0F" height="48.0" width="96.0" x="324.0" y="227.875"/>
-  <rect fill="none" height="46.0" stroke="#F0F" stroke-width="2.0" width="94.0" x="325.0" y="228.875"/>
   <rect fill="#F00" height="48.0" width="96.0" x="324.0" y="163.875"/>
   <rect fill="none" height="46.0" stroke="#F00" stroke-width="2.0" width="94.0" x="325.0" y="164.875"/>
-  <rect fill="#FFF" height="48.0" width="96.0" x="324.0" y="483.875"/>
-  <rect fill="none" height="46.0" stroke="#000" stroke-width="2.0" width="94.0" x="325.0" y="484.875"/>
+  <rect fill="#F0F" height="48.0" width="96.0" x="324.0" y="227.875"/>
+  <rect fill="none" height="46.0" stroke="#F0F" stroke-width="2.0" width="94.0" x="325.0" y="228.875"/>
+  <rect fill="#0F0" height="48.0" width="96.0" x="324.0" y="291.875"/>
+  <rect fill="none" height="46.0" stroke="#0F0" stroke-width="2.0" width="94.0" x="325.0" y="292.875"/>
+  <rect fill="#0FF" height="48.0" width="96.0" x="324.0" y="355.875"/>
+  <rect fill="none" height="46.0" stroke="#0FF" stroke-width="2.0" width="94.0" x="325.0" y="356.875"/>
   <rect fill="#FF0" height="48.0" width="96.0" x="324.0" y="419.875"/>
   <rect fill="none" height="46.0" stroke="#FF0" stroke-width="2.0" width="94.0" x="325.0" y="420.875"/>
+  <rect fill="#FFF" height="48.0" width="96.0" x="324.0" y="483.875"/>
+  <rect fill="none" height="46.0" stroke="#000" stroke-width="2.0" width="94.0" x="325.0" y="484.875"/>
   <polyline fill="none" points="120.0,187.875 307.0,187.875" stroke="white" stroke-width="6.0"/>
   <polyline fill="none" points="120.0,187.875 206.0,187.875 206.0,235.875 307.0,235.875" stroke="white" stroke-width="6.0"/>
   <polyline fill="none" points="120.0,187.875 206.0,187.875 206.0,451.875 307.0,451.875" stroke="white" stroke-width="6.0"/>
@@ -71,14 +71,14 @@
   <polyline marker-end="url(#id3)" points="306.0,387.875 315.0,387.875" stroke="#00F" stroke-width="0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,507.875 307.0,507.875" stroke="#00F" stroke-width="4.0"/>
   <polyline marker-end="url(#id3)" points="306.0,507.875 315.0,507.875" stroke="#00F" stroke-width="0"/>
-  <text transform="translate(72.0,315.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
+  <text transform="translate(72.0,187.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
   </text>
   <text transform="translate(72.0,251.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
   </text>
-  <text transform="translate(72.0,187.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
+  <text transform="translate(72.0,315.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
   </text>
   <text transform="translate(372.0,59.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Black</tspan>
@@ -86,23 +86,23 @@
   <text transform="translate(372.0,123.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
   </text>
-  <text transform="translate(372.0,379.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Cyan</tspan>
-  </text>
-  <text transform="translate(372.0,315.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
+  <text transform="translate(372.0,187.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
   </text>
   <text transform="translate(372.0,251.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Magenta</tspan>
   </text>
-  <text transform="translate(372.0,187.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
+  <text transform="translate(372.0,315.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
   </text>
-  <text transform="translate(372.0,507.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">White</tspan>
+  <text transform="translate(372.0,379.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Cyan</tspan>
   </text>
   <text transform="translate(372.0,443.875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Yellow</tspan>
+  </text>
+  <text transform="translate(372.0,507.875) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">White</tspan>
   </text>
   <text transform="translate(222.0,16.9375) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-size="14.0pt" text-anchor="middle" x="0">Combinations of Basic Colors</tspan>

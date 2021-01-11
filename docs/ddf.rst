@@ -103,16 +103,18 @@ blocks
 Each block occupies a rectangular area of the diagram grid.  You must
 have at least a couple of blocks to produce a meaningful diagram.
 
-The ``blocks`` section contains mappings between block names and block
-definitions.  Here is an example:
+The ``blocks`` section contains a sequence of block definitions.  Here
+is an example:
 
 .. code-block:: yaml
 
    blocks:
-     a:
-       label: A block
-     b:
-       label: Another block
+
+     - name: a
+       label: A block named 'a'
+
+     - label: An anonymous block
+       cover: [b1, b2]
        stroke: blue
 
 Note that if you do not define a label for a block, the program will
@@ -126,21 +128,26 @@ covers six cells, including the cell on which "a" stands:
 .. code-block:: yaml
 
    rows:
-     - ["b", "a"     ]
-     - ["" , "" , "b"]
+     - [b , a    ]
+     - ["", "", b]
+
    blocks:
-     a:
-       label: A single-cell block
-       drawing_priority: 1
-     b:
+
+     - name: b
        label: A block of 6 cells
 
-Blocks can overlap with each other.  In the example above, block "b"
-contains block "a" in its entirety.  The ``drawing_priority``
-attribute ensures that the program draws "a" *over* "b"; otherwise it
-will be completely hidden by it.  The program draws blocks with higher
-priority over blocks with lower priority.  The default priority is
-zero.
+     - name: a
+       label: A single-cell block
+       drawing_priority: 1
+
+Note that, in the example above, the definition of block "b" comes
+*before* the definition of block "a".  This is important, because the
+program draws the blocks in the order they appear in the definition
+file.  We do not want block "b" to hide block "a" under it!  What is
+more, the program will apply *padding* around block "a" (the amount of
+padding depends on the values of the ``padding_*`` attributes of block
+"b").  The final image will be of block "a" lying *inside* block "b",
+which is what one actually wants in situations like this.
 
 If you want to expand a block beyond the cells tagged with its own
 name, you can add more tags to it using the ``cover``
@@ -149,43 +156,26 @@ pseudo-attribute:
 .. code-block:: yaml
 
    rows:
-     - ["a", "", "b"]
-     - ["a", "", "c"]
-     - ["a", "", "" ]
+     - [a, "", b  ]
+     - [a, "", c  ]
+     - [a, "", "" ]
    blocks:
-     a:
+     - name: a
        label: Covers 9 cells!
        cover: ["b", "c"]
-
-The ability to have overlapping blocks is very useful when you want to
-draw a frame around a bunch of other blocks.  In the example that
-follows, a block named "frame" functions as a frame around blocks "a"
-and "b":
-
-.. code-block:: yaml
-
-   rows:
-     - ["a", "b"]
-   blocks:
-     frame:
-       cover: ["a", "b"]
-       label: Frame around a and b
-       label_position: top
-       drawing_priority: -1
 
 Tags that are neither names of blocks nor mentioned in a ``cover``
 sequence are "leftover" tags.  The program does not throw them away.
 Instead, it uses them to *autogenerate* blocks, one block for each
 unique tag.  These automatically generated blocks come with default
-attributes and are labelled with their name.  This is can be
-convenient when constructing simple diagrams.  The example below is a
-complete, self-contained diagram definition, without a ``blocks``
-section in it:
+attributes and are labelled with their name.  This can be convenient
+when constructing simple diagrams.  The example below is a complete,
+self-contained diagram definition, without a ``blocks`` section in it:
 
 .. code-block:: yaml
 
    rows:
-     - ["a", "b"]
+     - [a, b]
    connections:
      - start: a
        end: b
@@ -201,17 +191,16 @@ is an example:
 
 .. code-block:: yaml
 
-   blocks:
-     a: {label: First block}
-     b: {label: Second block}
-     c: {label: Third block}
    rows:
      - [a,  b]
      - ["", c]
+
    connections:
+
      - start: a
        end: b
        stroke: blue
+
      - start: b
        end: c
        stroke: "#FF8844"
@@ -233,22 +222,21 @@ can be one of the following:
        end: [c, d, e]
 
      # This will create four connections starting from cell "x" under
-     # block "f".  The second and third connections also aim at a
-     # specific tagged cell under "h" and "i".  The target of the
+     # block "f".  The second and third connections also aim at
+     # specific tagged cells under "h" and "i".  The target of the
      # first and last connections are just blocks "g" and "j".
 
      - start: {f: x}
        end: {g, h: y, i: z, j}
 
-Of particular interest is the ``drawing_priority`` attribute.  The
-program draws connections with a higher priority number *over*
-connections with a lower priority.  Since it is not easy to avoid the
-intersection of connection lines in complex diagrams, it is better
-that you draw intersecting connections with a different ``stroke``
-color to make obvious that the connection lines are not connected at
-the intersection points.  The ``drawing_priority`` lets you draw sets
-of connections as layers on top of each other, giving a more
-consistent look to your diagram.
+The order of the connection definitions is important, because the
+program draws the connections in the order that they appear in the
+definition file.
+
+Since it is not easy to avoid the intersection of connection lines in
+complex diagrams, it is better that you draw intersecting connections
+with a different ``stroke`` color to make obvious that the connection
+lines are not connected at the intersection points.
 
 Another way to avoid intersecting connection lines appearing as if
 they were connected at the intersections is to draw a *buffer* around
@@ -262,9 +250,12 @@ together with the ``collapse_connections`` diagram attribute.  If
 that run along the same axis can be drawn on top of each other, thus
 reducing the clutter and size of the diagram.  The ``group`` value is
 just a string.  Note that setting this attribute affects the drawing
-priority of the connections.  All connections in the same group must
-share the same priority, which is the highest priority among all
-connections in the group.
+order of the connections.  When the program encounters a connection
+marked with a group name, it draws all other connections that belong
+to the same group immediately after first one.  The order of groups
+thus becomes more significant compared to the order of the connections
+themselves.  It is probably good practice to keep connection
+definitions referring to the same group close together in the file.
 
 styles
 ------
@@ -278,13 +269,18 @@ the same color:
 .. code-block:: yaml
 
    blocks:
-     a:
+
+     - name: a
        style: reddish
-     b:
+
+     - name: b
        style: reddish
+
    rows:
      - [a, b]
+
    styles:
+
      reddish:
        stroke: "#880000"
        stroke_width: 3.0
@@ -315,13 +311,17 @@ connections are drawn in blue:
 .. code-block:: yaml
 
    groups:
+
      water:
        stroke: blue
        stroke_width: 4.0
+
    connections:
+
      - start: a
        end: b
        group: water
+
      - start: c
        end: d
        group: water

@@ -53,35 +53,27 @@ class BlockDef:
 
     def __init__(
             self,
-            name: str,
-            tags: Sequence[str] = (),
+            name: Optional[str] = None,
+            tags: Iterable[str] = (),
             **attrs: AttributeMap,
     ):
-        """Initialize for a block with the given name."""
+        """Initialize for a block with the given properties."""
         self._name = name
-        # Ensure each tag is used once.  Remove empty tags.  Preserve
-        # order.
-        uniseq = []
-        for tag in tags:
-            if tag not in uniseq:
-                uniseq.append(tag)
-        self._tags = uniseq
+        tag_set: Set[str] = set()
+        if tags:
+            tag_set.update(tags)
+        self._tags = tag_set
         self._attributes = attrs
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Name of the block."""
         return self._name
 
     @property
-    def tags(self) -> Sequence[str]:
-        """Tags used to look up cells.
-
-        Ensures that each tag is unique.  Preservers the original
-        order of the tags.
-
-        """
-        return list(self._tags)
+    def tags(self) -> Set[str]:
+        """Tags used to look up cells."""
+        return set(self._tags)
 
     @property
     def attributes(self) -> AttributeMap:
@@ -157,7 +149,8 @@ class DiagramDef:
         self._attributes = Attributes(**attrs)
         self._auto_block_attributes = Attributes()
         self._row_defs: List[RowDef] = []
-        self._block_defs: Dict[str, BlockDef] = {}
+        self._block_defs: List[BlockDef] = []
+        self._block_defs_by_name: Dict[str, BlockDef] = {}
         self._connection_defs: List[ConnectionDef] = []
 
     @property
@@ -188,13 +181,13 @@ class DiagramDef:
 
     def add_block(
             self,
-            name: str,
-            tags: Sequence[str] = (),
+            name: Optional[str],
+            tags: Iterable[str] = (),
             **attrs: AttributeMap,
     ) -> None:
         """Add a new block to the diagram.
 
-        The 'tags' argument is a list of cell tags.  The block will
+        The 'tags' argument is a set of cell tags.  The block will
         cover the cells matching the tags in addition to the cells
         tagged with the name of the block itself.
 
@@ -204,12 +197,14 @@ class DiagramDef:
         registered with the same name.
 
         """
-        bdefs = self._block_defs
-        if name in bdefs:
+        by_name = self._block_defs_by_name
+        if name and name in by_name:
             log_warning("Block '{}' already exists".format(name))
             return
         bdef = BlockDef(name, tags, **attrs)
-        bdefs[name] = bdef
+        self._block_defs.append(bdef)
+        if name:
+            by_name[name] = bdef
 
     def add_connections(
             self,
@@ -221,7 +216,7 @@ class DiagramDef:
 
         If the number of start blocks is n and the number of end
         blocks in m, then the number of connections created will be
-        n*m (assuming all blocks exist.)  See add_connection() for
+        n*m (assuming all blocks exist).  See add_connection() for
         further information.
 
         """
@@ -266,7 +261,7 @@ class DiagramDef:
 
     def block_defs(self) -> Iterator[BlockDef]:
         """Return an iterator over the block definitions."""
-        yield from self._block_defs.values()
+        yield from self._block_defs
 
     def connection_defs(self) -> Iterator[ConnectionDef]:
         """Return an iterator over the connection definitions."""
@@ -389,7 +384,7 @@ class DiagramGrid:
         It calculates the minimum rectangular area that contains all
         the cells with the given tags.  The iterator iterates over all
         the cells in the rectangular area (i.e. not only the cells
-        with the given tags.)  It yields the cells in the order that
+        with the given tags).  It yields the cells in the order that
         they are stored in the grid, i.e. the order of the tags is
         irrelevant.
 
@@ -438,8 +433,13 @@ class DiagramGrid:
         for row in self._rows:
             yield from row
 
-    def tag_set(self) -> Set[str]:
-        """Return all the tags from the cells in no particular order."""
+    def tags(self) -> Iterable[str]:
+        """Return all the tags from the cells.
+
+        This method ensures that the result contains each tag only
+        once.  It returns the tags in no particular order.
+
+        """
         tags = set()
         for cell in self._cells():
             tag = cell.tag
@@ -475,7 +475,7 @@ class Node:
 class Block:
     """Represents a block of the diagram."""
 
-    def __init__(self, name: str, **attrs: AttributeMap):
+    def __init__(self, name: Optional[str] = None, **attrs: AttributeMap):
         """Initialize the block (with optional attributes)."""
         self._name = name
         self._attributes = BlockAttributes(**attrs)
@@ -490,7 +490,7 @@ class Block:
         )
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """A name that identifies the block."""
         return self._name
 
@@ -508,10 +508,13 @@ class Block:
         else:
             return None
 
-    def label(self) -> str:
+    def label(self) -> Optional[str]:
         """Return a label to draw on the block in the diagram."""
         label = self._attributes.label
-        # Compare against None - the empty string is a valid label.
+        # If the label is not defined, use the name of the block.  If
+        # we want a named block with an empty label, we have to use an
+        # empty string for the label.  Thus, the empty string is valid
+        # as a label.  Be specific here and compare with None.
         if label is None:
             return self._name
         else:
@@ -583,7 +586,7 @@ class SubBlock:
         return self._block
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Name of the block."""
         return self._block.name
 
@@ -640,7 +643,8 @@ class Diagram:
         """Initialize from the definition."""
         self._attributes = DiagramAttributes(**ddef.attributes)
         self._grid = self._make_grid(ddef)
-        self._blocks: Dict[str, Block] = {}
+        self._blocks: List[Block] = []
+        self._blocks_by_name: Dict[str, Block] = {}
         self._nodes_to_blocks: Dict[Node, List[Block]] = {}
         self._points_to_nodes: Dict[IntPoint, Node] = {}
         self._init_blocks(ddef)
@@ -666,6 +670,10 @@ class Diagram:
         self._make_defined_blocks(ddef)
         self._make_leftover_blocks(ddef)
 
+    def _make_defined_blocks(self, ddef: DiagramDef) -> None:
+        """Create the blocks defined in the diagram definition."""
+        self._make_blocks(ddef.block_defs())
+
     def _make_leftover_blocks(self, ddef: DiagramDef) -> None:
         """Create blocks from leftover tags."""
         attrs = ddef.auto_block_attributes
@@ -678,32 +686,34 @@ class Diagram:
 
     def _leftover_tags(self, ddef: DiagramDef) -> Set[str]:
         """Cell tags that do not appear in block definitions."""
-        tags = self._grid.tag_set()
+        tags = set(self._grid.tags())
         for bdef in ddef.block_defs():
             block_tags = set(bdef.tags)
-            block_tags.add(bdef.name)
+            name = bdef.name
+            if name:
+                block_tags.add(name)
             for tag in block_tags:
                 if tag in tags:
                     tags.remove(tag)
         return tags
 
-    def _make_defined_blocks(self, ddef: DiagramDef) -> None:
-        """Create the blocks defined in the diagram definition."""
-        self._make_blocks(ddef.block_defs())
-
     def _make_blocks(self, bdefs: Iterable[BlockDef]) -> None:
         """Use the block definitions to create blocks."""
         blocks = self._blocks
+        by_name = self._blocks_by_name
         nodes_to_blocks = self._nodes_to_blocks
         points_to_nodes = self._points_to_nodes
         grid = self._grid
         for bdef in bdefs:
             name = bdef.name
             block = Block(name, **bdef.attributes)
-            blocks[name] = block
-            # Do not forget the name of the block itself!
-            tags = [name]
-            tags.extend(bdef.tags)
+            blocks.append(block)
+            tags = set()
+            if name:
+                by_name[name] = block
+                # The name of the block is a tag itself!
+                tags.add(name)
+            tags.update(bdef.tags)
             # Find or create the nodes.
             for cell in grid.cells_containing(tags):
                 p = cell.point
@@ -763,7 +773,7 @@ class Diagram:
 
     def _block(self, name: str) -> Optional[Block]:
         """Retrieve a block by name."""
-        block = self._blocks.get(name)
+        block = self._blocks_by_name.get(name)
         if not block:
             log_warning("Block '{}' does not exist".format(name))
         return block
@@ -779,8 +789,13 @@ class Diagram:
         return self._attributes
 
     def blocks(self) -> Iterator[Block]:
-        """Return an iterator over the blocks."""
-        yield from self._blocks.values()
+        """Return an iterator over the blocks.
+
+        The iterator yields the blocks in the order they were added to
+        the diagram.
+
+        """
+        yield from self._blocks
 
     def node_blocks(self, node: Node) -> Iterator[Block]:
         """Iterate over the blocks connected to a node."""
@@ -798,7 +813,7 @@ class Diagram:
     def _pretty_print(self) -> None:
         """Print the diagram for debugging purposes."""
         print("Blocks:")
-        for block in self._blocks.values():
+        for block in self._blocks:
             print("\t{}".format(block))
         print("Connections:")
         for connection in self._connections:

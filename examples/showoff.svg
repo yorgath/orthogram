@@ -19,24 +19,18 @@
   </defs>
   <rect fill="none" height="737.875" width="711.0" x="0.0" y="0.0"/>
   <rect fill="none" height="737.875" stroke="black" stroke-width="0.0" width="711.0" x="0.0" y="0.0"/>
-  <rect fill="lightyellow" height="527.0" width="314.0" x="170.0" y="78.875"/>
-  <rect fill="none" height="526.0" stroke="orange" stroke-dasharray="2 4" stroke-width="1.0" width="313.0" x="170.5" y="79.375"/>
   <rect fill="white" height="64.0" width="96.0" x="12.0" y="263.875"/>
   <rect fill="none" height="62.0" stroke="black" stroke-width="2.0" width="94.0" x="13.0" y="264.875"/>
+  <rect fill="lightyellow" height="527.0" width="314.0" x="170.0" y="78.875"/>
+  <rect fill="none" height="526.0" stroke="orange" stroke-dasharray="2 4" stroke-width="1.0" width="313.0" x="170.5" y="79.375"/>
   <rect fill="white" height="60.0" width="96.0" x="179.0" y="116.875"/>
   <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="117.875"/>
-  <rect fill="white" height="60.0" width="96.0" x="379.0" y="116.875"/>
-  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="117.875"/>
   <rect fill="white" height="60.0" width="96.0" x="179.0" y="265.875"/>
   <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="266.875"/>
-  <rect fill="white" height="60.0" width="96.0" x="379.0" y="265.875"/>
-  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="266.875"/>
   <rect fill="white" height="60.0" width="96.0" x="179.0" y="414.875"/>
   <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="415.875"/>
   <rect fill="white" height="60.0" width="96.0" x="379.0" y="414.875"/>
   <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="415.875"/>
-  <rect fill="white" height="60.0" width="96.0" x="179.0" y="536.875"/>
-  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="537.875"/>
   <rect fill="navy" height="60.0" width="96.0" x="379.0" y="536.875"/>
   <rect fill="none" height="52.0" stroke="purple" stroke-width="8.0" width="88.0" x="383.0" y="540.875"/>
   <rect fill="white" height="60.0" width="96.0" x="531.0" y="265.875"/>
@@ -47,6 +41,12 @@
   <rect fill="none" height="-2.0" stroke="black" stroke-width="2.0" width="-2.0" x="332.0" y="684.875"/>
   <rect fill="white" height="480.0" width="48.0" x="651.0" y="116.875"/>
   <rect fill="none" height="478.0" stroke="black" stroke-width="2.0" width="46.0" x="652.0" y="117.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="379.0" y="116.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="117.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="379.0" y="265.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="380.0" y="266.875"/>
+  <rect fill="white" height="60.0" width="96.0" x="179.0" y="536.875"/>
+  <rect fill="none" height="58.0" stroke="black" stroke-width="2.0" width="94.0" x="180.0" y="537.875"/>
   <polyline fill="none" points="108.0,267.875 135.0,267.875 135.0,146.875 170.0,146.875" stroke="red" stroke-width="2.0"/>
   <polyline marker-end="url(#id15)" points="169.0,146.875 174.0,146.875" stroke="red" stroke-width="0"/>
   <polyline fill="none" points="108.0,275.875 143.0,275.875 143.0,207.875 302.0,207.875 302.0,146.875 370.0,146.875" stroke="red" stroke-width="2.0"/>
@@ -90,14 +90,14 @@
   <polyline fill="none" points="651.0,448.875 511.5,448.875 511.5,359.375 231.0,359.375 231.0,399.875" stroke="#FDF" stroke-width="7.0"/>
   <polyline fill="none" points="651.0,448.875 511.5,448.875 511.5,359.375 231.0,359.375 231.0,399.875" stroke="purple" stroke-width="3.0"/>
   <polyline marker-end="url(#id19)" points="231.0,398.875 231.0,406.875" stroke="purple" stroke-width="0"/>
-  <text transform="translate(327.0,96.375) translate(0,-6.25)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">This block is used as a frame around other blocks.</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">The green line above has to go around it.</tspan>
-  </text>
   <text transform="translate(60.0,295.875) translate(0,-12.5)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Block size is</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">adjusted</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">to fit the lines.</tspan>
+  </text>
+  <text transform="translate(327.0,96.375) translate(0,-6.25)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">This block is used as a frame around other blocks.</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">The green line above has to go around it.</tspan>
   </text>
   <text transform="translate(227.0,146.875) translate(0,-12.5)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>

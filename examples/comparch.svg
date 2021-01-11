@@ -16,20 +16,20 @@
   <rect fill="none" height="165.625" stroke="black" stroke-width="2.0" width="196.0" x="167.0" y="188.375"/>
   <rect fill="lightskyblue" height="48.0" width="120.0" x="210.0" y="115.375"/>
   <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="119.0" x="210.5" y="115.875"/>
-  <rect fill="none" height="10.0" width="0.0" x="12.0" y="313.0"/>
-  <rect fill="none" height="8.0" stroke="black" stroke-width="2.0" width="-2.0" x="13.0" y="314.0"/>
-  <rect fill="none" height="10.0" width="0.0" x="518.0" y="313.0"/>
-  <rect fill="none" height="8.0" stroke="black" stroke-width="2.0" width="-2.0" x="519.0" y="314.0"/>
-  <rect fill="lightskyblue" height="48.0" width="72.0" x="36.0" y="289.0"/>
-  <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="71.0" x="36.5" y="289.5"/>
+  <rect fill="lightskyblue" height="48.0" width="120.0" x="210.0" y="217.0"/>
+  <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="119.0" x="210.5" y="217.5"/>
   <rect fill="lightskyblue" height="48.0" width="120.0" x="210.0" y="289.0"/>
   <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="119.0" x="210.5" y="289.5"/>
   <rect fill="lightskyblue" height="48.0" width="120.0" x="210.0" y="397.0"/>
   <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="119.0" x="210.5" y="397.5"/>
+  <rect fill="lightskyblue" height="48.0" width="72.0" x="36.0" y="289.0"/>
+  <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="71.0" x="36.5" y="289.5"/>
   <rect fill="lightskyblue" height="48.0" width="72.0" x="422.0" y="289.0"/>
   <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="71.0" x="422.5" y="289.5"/>
-  <rect fill="lightskyblue" height="48.0" width="120.0" x="210.0" y="217.0"/>
-  <rect fill="none" height="47.0" stroke="black" stroke-width="1.0" width="119.0" x="210.5" y="217.5"/>
+  <rect fill="none" height="10.0" width="0.0" x="12.0" y="313.0"/>
+  <rect fill="none" height="8.0" stroke="black" stroke-width="2.0" width="-2.0" x="13.0" y="314.0"/>
+  <rect fill="none" height="10.0" width="0.0" x="518.0" y="313.0"/>
+  <rect fill="none" height="8.0" stroke="black" stroke-width="2.0" width="-2.0" x="519.0" y="314.0"/>
   <polyline fill="none" points="210.0,416.0 189.0,416.0 189.0,328.0 202.0,328.0" stroke="#EEE" stroke-width="4.0"/>
   <polyline fill="none" points="210.0,416.0 189.0,416.0 189.0,328.0 202.0,328.0" stroke="black" stroke-width="2.0"/>
   <polyline marker-end="url(#id4)" points="201.0,328.0 205.5,328.0" stroke="black" stroke-width="0"/>
@@ -87,8 +87,8 @@
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Control</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Unit</tspan>
   </text>
-  <text transform="translate(72.0,313.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Input</tspan>
+  <text transform="translate(270.0,241.0) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Registers</tspan>
   </text>
   <text transform="translate(270.0,313.0) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combinational</tspan>
@@ -98,11 +98,11 @@
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Main</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Memory</tspan>
   </text>
+  <text transform="translate(72.0,313.0) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Input</tspan>
+  </text>
   <text transform="translate(458.0,313.0) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Output</tspan>
-  </text>
-  <text transform="translate(270.0,241.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Registers</tspan>
   </text>
   <text transform="translate(265.0,27.875) translate(0,-10.9375)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Computer Architecture</tspan>

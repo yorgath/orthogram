@@ -271,13 +271,11 @@ class Router:
 
     def __init__(self, diagram: Diagram):
         """Initialize the router for the given diagram."""
-        #
         self._diagram = diagram
         self._grid = LayoutGrid(diagram)
         self._grid_graph: nx.Graph
-        self._routes: List[Route]
-        #
         self._init_grid_graph()
+        self._routes: List[Route]
         self._init_routes()
 
     def _init_grid_graph(self) -> None:

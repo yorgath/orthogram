@@ -56,7 +56,7 @@ The start and the end of the connection can be either a block name or
 a pair of a block name and a cell tag.  Use the second form to target
 specific cells of a block.  The :py:class:`DiagramDef` class offers an
 :py:meth:`add_connections` method as well, which lets you create
-connections en masse (all having the same attributes.)  Use the Python
+connections en masse (all having the same attributes).  Use the Python
 :py:func:`help()` function to learn more about it.
 
 After you have finished building your diagram, use the

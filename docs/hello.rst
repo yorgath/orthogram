@@ -10,9 +10,9 @@ of YAML:
      - [a]
      - ["", b]
    blocks:
-     a:
+     - name: a
        label: Hello
-     b:
+     - name: b
        label: world
    connections:
      - start: a

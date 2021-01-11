@@ -26,20 +26,6 @@ styles:
   combined_colors:
     margin_left: 72
 
-groups:
-
-  red:
-    stroke: "#F00"
-    drawing_priority: 1
-
-  green:
-    stroke: "#0F0"
-    drawing_priority: 2
-
-  blue:
-    stroke: "#00F"
-    drawing_priority: 3
-
 rows:
 
   - [""          , black  ]
@@ -53,77 +39,77 @@ rows:
 
 blocks:
 
-  basic_red:
+  - name: basic_red
     style: basic_colors
     fill: "#F00"
     label: Red
     stroke: "#F00"
     text_fill: white
 
-  basic_green:
+  - name: basic_green
     style: basic_colors
     fill: "#0F0"
     label: Green
     stroke: "#0F0"
     text_fill: black
 
-  basic_blue:
+  - name: basic_blue
     style: basic_colors
     fill: "#00F"
     label: Blue
     stroke: "#00F"
     text_fill: white
 
-  black:
+  - name: black
     style: combined_colors
     fill: "#000"
     label: Black
     stroke: "#000"
     text_fill: white
 
-  blue:
+  - name: blue
     style: combined_colors
     fill: "#00F"
     label: Blue
     stroke: "#00F"
     text_fill: white
 
-  red:
+  - name: red
     style: combined_colors
     fill: "#F00"
     label: Red
     stroke: "#F00"
     text_fill: white
 
-  magenta:
+  - name: magenta
     style: combined_colors
     fill: "#F0F"
     label: Magenta
     stroke: "#F0F"
     text_fill: white
 
-  green:
+  - name: green
     style: combined_colors
     fill: "#0F0"
     label: Green
     stroke: "#0F0"
     text_fill: black
 
-  cyan:
+  - name: cyan
     style: combined_colors
     fill: "#0FF"
     label: Cyan
     stroke: "#0FF"
     text_fill: black
 
-  yellow:
+  - name: yellow
     style: combined_colors
     fill: "#FF0"
     label: Yellow
     stroke: "#FF0"
     text_fill: black
 
-  white:
+  - name: white
     style: combined_colors
     fill: "#FFF"
     label: White
@@ -134,12 +120,15 @@ connections:
 
   - start: basic_red
     end: [red, magenta, yellow, white]
+    stroke: "#F00"
     group: red
 
   - start: basic_green
     end: [green, cyan, yellow, white]
+    stroke: "#0F0"
     group: green
 
   - start: basic_blue
     end: [blue, magenta, cyan, white]
+    stroke: "#00F"
     group: blue

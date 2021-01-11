@@ -47,47 +47,45 @@ styles:
 
 blocks:
 
-  cu:
+  - name: cpu
+    label: CPU
+    style: frame
+    fill: papayawhip
+
+  - name: proc
+    label: Processor
+    style: frame
+    fill: "#FFB"
+
+  - name: cu
     label: "Control\nUnit"
     style: unit
 
-  reg:
+  - name: reg
     label: Registers
     style: unit
 
-  log:
+  - name: log
     label: "Combinational\nLogic"
     style: unit
 
-  mem:
+  - name: mem
     label: "Main\nMemory"
     style: unit
 
-  in:
+  - name: in
     label: Input
     style: [unit, io]
 
-  out:
+  - name: out
     label: Output
     style: [unit, io]
 
-  h1:
+  - name: h1
     style: hidden
 
-  h2:
+  - name: h2
     style: hidden
-
-  proc:
-    label: Processor
-    style: frame
-    drawing_priority: -1
-    fill: "#FFB"
-
-  cpu:
-    label: CPU
-    style: frame
-    drawing_priority: -2
-    fill: papayawhip
 
 rows:
   - ["", "", cpu, cpu , cu , cpu,  cpu         ]

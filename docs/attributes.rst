@@ -19,7 +19,6 @@ Attribute                 Diagram          Block         Connection
 ``buffer_width``                                         0.0
 ``collapse_connections``  False
 ``connection_distance``   4.0
-``drawing_priority``                       0             0
 ``entrances``                                            [<all>]
 ``exits``                                                [<all>]
 ``fill``                  "none"           "none"
@@ -297,27 +296,6 @@ buffer_fill
 The ``buffer_fill`` attribute defines the color of the buffer around a
 connection line.  By default, the color is "none", i.e. no buffer is
 visible.
-
-Drawing order
--------------
-
-drawing_priority
-~~~~~~~~~~~~~~~~
-
-* Applies to: Blocks and Connections
-* Type: Integer
-* Default: 0
-
-The ``drawing_priority`` attribute is used to define the order in
-which elements of each kind are drawn.  Elements with a high priority
-are drawn *after* elements with a lower priority.  Note that this is
-only true among elements of the same kind; connections are always
-drawn on top of blocks, even if their drawing priority is lower.
-
-Drawing priority is particularly important when blocks overlap each
-other.  Blocks with lower priority are padded (see ``padding_*``
-attributes), so that they appear as if surrounding blocks with higher
-priority.  This is how drawing nested blocks is achieved in Orthogram.
 
 Maintaining distances
 ---------------------

@@ -4,10 +4,10 @@ rows:
   - [a]
   - ["", b]
 blocks:
-  a:
-    label: Hello
-  b:
-    label: world
+  - label: Hello
+    name: a
+  - label: world
+    name: b
 connections:
   - start: a
     end: b

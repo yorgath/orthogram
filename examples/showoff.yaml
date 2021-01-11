@@ -29,52 +29,14 @@ rows:
 
 blocks:
 
-  A:
+  - name: A
     label: |-
       Block size is
       adjusted
       to fit the lines.
 
-  B1:
-    label: |-
-      Connections
-      try to avoid
-      each other.
-
-  B3:
-    label: |-
-      You can set the
-      priority of
-      lines & blocks.
-
-  B5:
-    label: |-
-      You can set
-      the size of
-      lines & arrows.
-
-  B6:
-    label: |-
-      You can draw
-      a buffer
-      around lines.
-
-  B7: {}
-
-  B8:
-    fill: navy
-    font_weight: bold
-    label: |-
-      The outline
-      is drawn in-
-      side the block.
-    stroke: purple
-    stroke_width: 8
-    text_fill: white
-
-  B:
+  - name: B
     cover: [B1, B8]
-    drawing_priority: -1
     fill: lightyellow
     label: |-
       This block is used as a frame around other blocks.
@@ -85,12 +47,47 @@ blocks:
     stroke_dasharray: 2 4
     stroke_width: 1
 
-  C:
+  - name: B1
+    label: |-
+      Connections
+      try to avoid
+      each other.
+
+  - name: B3
+    label: |-
+      You can set the
+      priority of
+      lines & blocks.
+
+  - name: B5
+    label: |-
+      You can set
+      the size of
+      lines & arrows.
+
+  - name: B6
+    label: |-
+      You can draw
+      a buffer
+      around lines.
+
+  - name: B8
+    fill: navy
+    font_weight: bold
+    label: |-
+      The outline
+      is drawn in-
+      side the block.
+    stroke: purple
+    stroke_width: 8
+    text_fill: white
+
+  - name: C
     label: |-
       Connections
       can be grouped.
 
-  D:
+  - name: D
     cover: [Dc]
     font_size: 10
     font_style: italic
@@ -98,7 +95,7 @@ blocks:
       You can create blocks that span many cells,
       and still be able to aim connections at specific cells in them.
 
-  Dc:
+  - name: Dc
     label: ""
     min_width: 0
     min_height: 0
@@ -107,7 +104,7 @@ blocks:
     margin_bottom: 0
     margin_top: 0
 
-  E:
+  - name: E
     font_size: 10
     font_style: italic
     label: You can change the orientation of text.

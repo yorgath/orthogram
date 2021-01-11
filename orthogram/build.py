@@ -165,21 +165,17 @@ class Builder:
         """
         self._diagram_def.add_row(row_def)
 
-    def add_blocks(self, defs: _Definitions) -> None:
+    def add_blocks(self, defs: List[_Definition]) -> None:
         """Add blocks to the diagram.
 
-        The input is a mapping between block names and block
-        definitions.  See add_block() for the structure of a block
-        definition.
+        The input is a sequence of block definitions.  See add_block()
+        for the structure of a block definition.
 
         """
-        for name, block_def in defs.items():
-            self.add_block(name, block_def)
+        for block_def in defs:
+            self.add_block(block_def)
 
-    def add_block(
-            self,
-            name: str, block_def: Optional[_Definition]
-    ) -> None:
+    def add_block(self, block_def: Optional[_Definition]) -> None:
         """Add a block to the diagram.
 
         The block definition may contain any attributes plus the
@@ -189,6 +185,7 @@ class Builder:
         - style: string (optional)
 
         """
+        name: Optional[str] = None
         attrs = Attributes()
         # Merge default attributes.
         def_attrs = self._get_style('default_block')
@@ -196,6 +193,7 @@ class Builder:
         tags = []
         # The block definition may be None: an empty definition.
         if block_def:
+            name = block_def.get('name')
             # Merge attributes inherited from style references.
             style_attrs = self._collect_style_attributes(block_def)
             attrs.merge(style_attrs)
@@ -283,8 +281,6 @@ class Builder:
         if 'collapse_connections' in any_def:
             attrs['collapse_connections'] = bool(
                 any_def['collapse_connections'])
-        if 'drawing_priority' in any_def:
-            attrs['drawing_priority'] = int(any_def['drawing_priority'])
         if 'entrances' in any_def:
             entrances = self._parse_sides(any_def['entrances'])
             if entrances:

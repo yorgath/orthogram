@@ -8,8 +8,14 @@ Orthogram
 
 .. warning::
    
-   This is work in progress.  There is no guarantee as to the
-   stability and reliability of this program.
+   This is work in progress.  There are frequent breaking changes.
+   Pin the minor version while major is zero (i.e. version 0.4.1 would
+   be compatible with 0.4.0; version 0.5.0 is not guaranteed to be
+   compatible with 0.4.1).  In case you use `Poetry`_ for package
+   management, this is the default behavior when upgrading
+   requirements.
+
+   .. _Poetry: https://python-poetry.org/
 
 Orthogram is a command line program and Python library that lets you
 draw block diagrams.  It reads a YAML file and produces a SVG file

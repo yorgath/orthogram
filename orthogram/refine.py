@@ -268,16 +268,14 @@ class Network:
             routes: Iterable[Route]
     ):
         """Initialize with the given routes."""
-        #
         self._origin = origin
         self._group = group
         self._routes = list(routes)
         self._bundles: List[Bundle] = []
-        self._joints: Dict[IntPoint, Joint] = {}
-        self._wires: List[Wire] = []
-        #
         self._init_bundles()
+        self._joints: Dict[IntPoint, Joint] = {}
         self._init_joints()
+        self._wires: List[Wire] = []
         self._init_wires()
 
     def _init_bundles(self) -> None:
@@ -417,24 +415,6 @@ class Network:
         x = p.j + f * (h + dh)
         y = p.i + f * (v + dv)
         return FloatPoint(x, y)
-
-    def drawing_priority(self) -> int:
-        """Return a drawing priority for all the connections.
-
-        It returns the highest priority of all the connections in the
-        network.
-
-        """
-        net_pri = None
-        for wire in self._wires:
-            connection_pri = wire.connection.attributes.drawing_priority
-            if net_pri is None:
-                net_pri = connection_pri
-            else:
-                net_pri = max(net_pri, connection_pri)
-        if net_pri is None:
-            net_pri = 0
-        return net_pri
 
     def __repr__(self) -> str:
         """Convert to string."""
@@ -660,9 +640,8 @@ class Refiner:
         """Initialize the refiner for the given router."""
         self._router = router
         self._networks: List[Network] = []
-        self._segment_bundles: Dict[RouteSegment, Bundle] = {}
-        #
         self._init_networks()
+        self._segment_bundles: Dict[RouteSegment, Bundle] = {}
         self._init_segment_bundles()
         self._update_offsets()
 

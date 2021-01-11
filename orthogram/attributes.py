@@ -91,7 +91,6 @@ class Attributes(Mapping[str, Any]):
         'buffer_width',
         'collapse_connections',
         'connection_distance',
-        'drawing_priority',
         'entrances',
         'exits',
         'fill',
@@ -191,17 +190,17 @@ class LineAttributes:
 
     @property
     def stroke(self) -> Optional[str]:
-        """Color of the line (e.g. "black".)"""
+        """Color of the line (e.g. "black")."""
         return self._stroke
 
     @property
     def stroke_dasharray(self) -> Optional[str]:
-        """Dash pattern of the line (e.g. "4 4".)"""
+        """Dash pattern of the line (e.g. "4 4")."""
         return self._stroke_dasharray
 
     @property
     def stroke_width(self) -> float:
-        """Width of the line (in pt.)"""
+        """Width of the line (in pt)."""
         return self._stroke_width
 
 ######################################################################
@@ -226,7 +225,7 @@ class AreaAttributes:
 
     @property
     def fill(self) -> Optional[str]:
-        """Color of the interior (e.g. "white".)"""
+        """Color of the interior (e.g. "white")."""
         return self._fill
 
     @property
@@ -277,22 +276,22 @@ class TextAttributes:
 
     @property
     def font_family(self) -> Optional[str]:
-        """Font family of text (e.g. "sans".)"""
+        """Font family of text (e.g. "sans")."""
         return self._font_family
 
     @property
     def font_size(self) -> float:
-        """Font size of text (in pt.)"""
+        """Font size of text (in pt)."""
         return self._font_size
 
     @property
     def font_style(self) -> Optional[str]:
-        """Font style of text (e.g. "italic".)"""
+        """Font style of text (e.g. "italic")."""
         return self._font_style
 
     @property
     def font_weight(self) -> Optional[str]:
-        """Font weight of text (e.g. "bold".)"""
+        """Font weight of text (e.g. "bold")."""
         return self._font_weight
 
     @property
@@ -302,12 +301,12 @@ class TextAttributes:
 
     @property
     def text_fill(self) -> Optional[str]:
-        """Color of text (e.g. "black".)"""
+        """Color of text (e.g. "black")."""
         return self._text_fill
 
     @property
     def text_line_height(self) -> float:
-        """Height of text line (in em.)"""
+        """Height of text line (in em)."""
         return self._text_line_height
 
     @property
@@ -388,7 +387,6 @@ class BlockAttributes(ContainerAttributes):
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
         ContainerAttributes.__init__(self)
-        self._drawing_priority = 0
         self._label_distance = 2.0
         self._label_position = LabelPosition.CENTER
         self._margin_bottom = 24.0
@@ -397,6 +395,7 @@ class BlockAttributes(ContainerAttributes):
         self._margin_top = 24.0
         self._min_height = 48.0
         self._min_width = 96.0
+        self._name: Optional[str] = None
         self._padding_bottom = 8.0
         self._padding_left = 8.0
         self._padding_right = 8.0
@@ -411,8 +410,6 @@ class BlockAttributes(ContainerAttributes):
 
     def _set_block_attributes(self, attrs: AttributeMap) -> None:
         """Set the attributes of the block to the given values."""
-        if 'drawing_priority' in attrs:
-            self._drawing_priority = cast(int, attrs['drawing_priority'])
         if 'margin_bottom' in attrs:
             self._margin_bottom = cast(float, attrs['margin_bottom'])
         if 'margin_left' in attrs:
@@ -421,13 +418,10 @@ class BlockAttributes(ContainerAttributes):
             self._margin_right = cast(float, attrs['margin_right'])
         if 'margin_top' in attrs:
             self._margin_top = cast(float, attrs['margin_top'])
+        if 'name' in attrs:
+            self._name = cast(str, attrs['name'])
         if 'pass_through' in attrs:
             self._pass_through = cast(bool, attrs['pass_through'])
-
-    @property
-    def drawing_priority(self) -> int:
-        """Relative priority when drawing blocks."""
-        return self._drawing_priority
 
     @property
     def margin_bottom(self) -> float:
@@ -450,6 +444,11 @@ class BlockAttributes(ContainerAttributes):
         return self._margin_top
 
     @property
+    def name(self) -> Optional[str]:
+        """Name of the block."""
+        return self._name
+
+    @property
     def pass_through(self) -> bool:
         """Can a connection pass through the block?"""
         return self._pass_through
@@ -469,7 +468,6 @@ class ConnectionAttributes(LineAttributes):
         self._arrow_forward = True
         self._buffer_fill: Optional[str] = None
         self._buffer_width: Optional[float] = None
-        self._drawing_priority = 0
         self._entrances: Set[Side] = all_sides
         self._exits: Set[Side] = all_sides
         self._group: Optional[str] = None
@@ -495,8 +493,6 @@ class ConnectionAttributes(LineAttributes):
             self._buffer_fill = cast(Optional[str], attrs['buffer_fill'])
         if 'buffer_width' in attrs:
             self._buffer_width = cast(Optional[float], attrs['buffer_width'])
-        if 'drawing_priority' in attrs:
-            self._drawing_priority = cast(int, attrs['drawing_priority'])
         if 'entrances' in attrs:
             self._entrances = cast(Set[Side], attrs['entrances'])
         if 'exits' in attrs:
@@ -533,11 +529,6 @@ class ConnectionAttributes(LineAttributes):
     def buffer_width(self) -> Optional[float]:
         """Width of the buffer around the connection."""
         return self._buffer_width
-
-    @property
-    def drawing_priority(self) -> int:
-        """Relative priority when drawing connections."""
-        return self._drawing_priority
 
     @property
     def entrances(self) -> Set[Side]:

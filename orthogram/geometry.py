@@ -319,7 +319,7 @@ class Axis(OrientedObject):
 
     @property
     def name(self) -> str:
-        """Name of the axis (unique in the diagram.)"""
+        """Name of the axis (unique in the diagram)."""
         return self._name
 
     def __eq__(self, other: object) -> bool:

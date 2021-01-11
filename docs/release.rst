@@ -55,7 +55,7 @@ Release history
 * Replaced igraph with NetworkX to ease installation.
 * Moved documentation to Read the Docs.
 
-0.4.0 (????-??-??)
+0.4.0 (2021-01-13)
 ------------------
 
 * Significant breaking changes all around.
@@ -64,8 +64,14 @@ Release history
   instead of "terminals", "connections" instead of "links".
 
 * Introduced the ability to define overlapping blocks.
+
+* Eliminated the ``drawing_priority`` attribute.  Drawing order is now
+  definition order.
+
+* Content of the ``blocks`` section in the definition file is now a
+  sequence instead of a mapping.  Program relies on definition order.
   
-* Replaced ``start_bias`` and ``end_bias`` link attributes with
+* Replaced ``start_bias`` and ``end_bias`` attributes with
   ``entrances`` and ``exits`` attributes.
 
 * Removed ``column_margin`` and ``row_margin`` diagram attributes.
@@ -84,4 +90,4 @@ Release history
 
 * Updated the documentation.  Added the Gallery section.
 
-* More examples.
+* Added a few more examples.

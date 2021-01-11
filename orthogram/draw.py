@@ -53,7 +53,7 @@ Drawing comes with its own set of challenges:
 
 3. Clipping of lines.  Connection lines are drawn over boxes, so they
    must be clipped at both ends to make them look attached to the
-   sides of the boxes (and not to the center of each box.)  This
+   sides of the boxes (and not to the center of each box).  This
    becomes more complicated if there is an arrow at one end.  A buffer
    with an offset equal to the length of the arrow is created around
    the box and the line is clipped at its bounds.  The marker is
@@ -70,7 +70,7 @@ Drawing comes with its own set of challenges:
    min_width and min_height attributes.  Positioning of text along the
    vertical axis is even more problematic.  The program assumes that
    the height of a line of text is text_line_height * font_size (both
-   attributes redefinable by the user.)  The default values seem to
+   attributes redefinable by the user).  The default values seem to
    work well in Chrome and Inskape, but not in Firefox, at least with
    the default font settings.  Unfortunately, text always seems a bit
    off in Firefox.  In addition, redefining the label_distance
@@ -558,7 +558,7 @@ class BlockBox(ContainerBox):
         """Return the tracks with the given orientation.
 
         The result is sorted by coordinate, so that it is easy to
-        select the track at both ends (top, bottom etc.)
+        select the track at both ends (top, bottom etc).
 
         """
         def key(track: Track) -> int: return track.axis.coordinate
@@ -908,24 +908,20 @@ class Drawing:
         for net in self._layout.networks():
             yield from net.wires()
 
-    def _ordered_networks(self) -> Sequence[Network]:
-        """Return the networks ordered by drawing priority."""
-        key = lambda net: net.drawing_priority()
-        return sorted(self._layout.networks(), key=key)
-
-    def _ordered_wires(self, wires: Iterable[Wire]) -> Sequence[Wire]:
-        """Return the wires ordered by drawing priority."""
-        key = lambda wire: wire.connection.attributes.drawing_priority
-        return sorted(wires, key=key)
-
     def _ordered_block_boxes(self) -> Sequence[BlockBox]:
-        """Return the block boxes by drawing priority."""
-        # Use name as well for deterministic result.
-        def key(bb: BlockBox) -> Tuple[int, str]:
-            b = bb.block
-            return b.attributes.drawing_priority, b.name
-        boxes = list(self._block_boxes.values())
-        return sorted(boxes, key=key)
+        """Return the boxes of the blocks.
+
+        This method guarantees that the order of the boxes in the
+        sequence corresponds to the order of the blocks in the
+        diagram.
+
+        """
+        by_block = self._block_boxes
+        boxes = []
+        for block in self._diagram.blocks():
+            box = by_block[block]
+            boxes.append(box)
+        return boxes
 
     def _track(self, ori: Orientation, c: int) -> Track:
         """Return the track on the axis with the given values."""
@@ -1249,11 +1245,10 @@ class Drawing:
 
     def _draw_wires(self, dwg: SvgDrawing, markers: _Markers) -> None:
         """Draw the wires."""
-        for net in self._ordered_networks():
+        for net in self._layout.networks():
             # Collect the lines necessary for the drawing.
             lines = []
-            wires = net.wires()
-            for wire in self._ordered_wires(wires):
+            for wire in net.wires():
                 line = self._wire_line(wire)
                 lines.append(line)
             # Draw the background of the network to cover the other

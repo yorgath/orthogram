@@ -28,56 +28,54 @@
   </defs>
   <rect fill="lightyellow" height="686.375" width="803.0" x="0.0" y="0.0"/>
   <rect fill="none" height="686.375" stroke="black" stroke-width="0.0" width="803.0" x="0.0" y="0.0"/>
-  <rect fill="moccasin" height="483.25" width="216.0" x="569.0" y="163.5"/>
-  <rect fill="none" height="483.25" stroke="black" stroke-width="0.0" width="216.0" x="569.0" y="163.5"/>
-  <rect fill="moccasin" height="387.875" width="428.0" x="93.0" y="45.875"/>
-  <rect fill="none" height="387.875" stroke="black" stroke-width="0.0" width="428.0" x="93.0" y="45.875"/>
-  <rect fill="moccasin" height="177.625" width="414.0" x="100.0" y="490.75"/>
-  <rect fill="none" height="177.625" stroke="black" stroke-width="0.0" width="414.0" x="100.0" y="490.75"/>
-  <rect fill="palegreen" height="79.625" width="404.0" x="105.0" y="172.5"/>
-  <rect fill="none" height="78.625" stroke="black" stroke-dasharray="4 4" stroke-width="1.0" width="403.0" x="105.5" y="173.0"/>
-  <rect fill="palegreen" height="79.625" width="404.0" x="105.0" y="342.125"/>
-  <rect fill="none" height="78.625" stroke="black" stroke-dasharray="4 4" stroke-width="1.0" width="403.0" x="105.5" y="342.625"/>
   <rect fill="white" height="18.0" width="24.0" x="18.0" y="288.125"/>
   <rect fill="none" height="16.0" stroke="none" stroke-width="2.0" width="22.0" x="19.0" y="289.125"/>
-  <rect fill="white" height="48.0" width="96.0" x="259.0" y="586.75"/>
-  <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="260.0" y="587.75"/>
-  <rect fill="gold" height="48.0" width="96.0" x="259.0" y="197.125"/>
-  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="260.0" y="198.125"/>
-  <rect fill="gold" height="48.0" width="96.0" x="259.0" y="366.75"/>
-  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="260.0" y="367.75"/>
+  <rect fill="moccasin" height="387.875" width="428.0" x="93.0" y="45.875"/>
+  <rect fill="none" height="387.875" stroke="black" stroke-width="0.0" width="428.0" x="93.0" y="45.875"/>
+  <rect fill="white" height="48.0" width="96.0" x="259.0" y="79.5"/>
+  <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="260.0" y="80.5"/>
+  <rect fill="palegreen" height="79.625" width="404.0" x="105.0" y="172.5"/>
+  <rect fill="none" height="78.625" stroke="black" stroke-dasharray="4 4" stroke-width="1.0" width="403.0" x="105.5" y="173.0"/>
   <rect fill="white" height="48.0" width="96.0" x="112.0" y="197.125"/>
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="113.0" y="198.125"/>
+  <rect fill="gold" height="48.0" width="96.0" x="259.0" y="197.125"/>
+  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="260.0" y="198.125"/>
+  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="197.125"/>
+  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="198.125"/>
+  <rect fill="palegreen" height="79.625" width="404.0" x="105.0" y="342.125"/>
+  <rect fill="none" height="78.625" stroke="black" stroke-dasharray="4 4" stroke-width="1.0" width="403.0" x="105.5" y="342.625"/>
   <rect fill="white" height="48.0" width="96.0" x="112.0" y="366.75"/>
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="113.0" y="367.75"/>
+  <rect fill="gold" height="48.0" width="96.0" x="259.0" y="366.75"/>
+  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="260.0" y="367.75"/>
+  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="366.75"/>
+  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="367.75"/>
+  <rect fill="moccasin" height="177.625" width="414.0" x="100.0" y="490.75"/>
+  <rect fill="none" height="177.625" stroke="black" stroke-width="0.0" width="414.0" x="100.0" y="490.75"/>
+  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="502.75"/>
+  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="503.75"/>
+  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="586.75"/>
+  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="587.75"/>
+  <rect fill="white" height="48.0" width="96.0" x="259.0" y="586.75"/>
+  <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="260.0" y="587.75"/>
   <rect fill="white" height="48.0" width="96.0" x="112.0" y="586.75"/>
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="113.0" y="587.75"/>
+  <rect fill="white" height="48.0" width="96.0" x="112.0" y="502.75"/>
+  <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="113.0" y="503.75"/>
+  <rect fill="moccasin" height="483.25" width="216.0" x="569.0" y="163.5"/>
+  <rect fill="none" height="483.25" stroke="black" stroke-width="0.0" width="216.0" x="569.0" y="163.5"/>
   <rect fill="white" height="48.0" width="96.0" x="581.0" y="197.125"/>
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="582.0" y="198.125"/>
   <rect fill="white" height="48.0" width="96.0" x="581.0" y="366.75"/>
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="582.0" y="367.75"/>
   <rect fill="white" height="48.0" width="96.0" x="581.0" y="586.75"/>
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="582.0" y="587.75"/>
-  <rect fill="white" height="48.0" width="96.0" x="112.0" y="502.75"/>
-  <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="113.0" y="503.75"/>
-  <rect fill="white" height="48.0" width="96.0" x="259.0" y="79.5"/>
-  <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="260.0" y="80.5"/>
-  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="197.125"/>
-  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="198.125"/>
-  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="366.75"/>
-  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="367.75"/>
-  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="502.75"/>
-  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="503.75"/>
-  <rect fill="gold" height="48.0" width="96.0" x="406.0" y="586.75"/>
-  <rect fill="none" height="46.0" stroke="orangered" stroke-width="2.0" width="94.0" x="407.0" y="587.75"/>
   <rect fill="white" height="437.625" width="48.0" x="713.0" y="197.125"/>
   <rect fill="none" height="435.625" stroke="black" stroke-width="2.0" width="46.0" x="714.0" y="198.125"/>
-  <polyline fill="none" points="307.0,433.75 307.0,464.75" stroke="lightgrey" stroke-width="12.0"/>
-  <polyline marker-end="url(#id14)" points="307.0,463.75 307.0,477.25" stroke="lightgrey" stroke-width="0"/>
-  <polyline fill="none" points="521.0,297.125 543.0,297.125" stroke="lightgrey" stroke-width="12.0"/>
-  <polyline marker-end="url(#id14)" points="542.0,297.125 555.5,297.125" stroke="lightgrey" stroke-width="0"/>
-  <polyline fill="none" points="514.0,531.25 543.0,531.25" stroke="lightgrey" stroke-width="12.0"/>
-  <polyline marker-end="url(#id14)" points="542.0,531.25 555.5,531.25" stroke="lightgrey" stroke-width="0"/>
+  <polyline fill="none" points="42.0,297.125 67.5,297.125 67.5,221.125 99.0,221.125" stroke="turquoise" stroke-width="3.0"/>
+  <polyline marker-end="url(#id7)" points="98.0,221.125 105.0,221.125" stroke="turquoise" stroke-width="0"/>
+  <polyline fill="none" points="42.0,297.125 67.5,297.125 67.5,390.75 99.0,390.75" stroke="turquoise" stroke-width="3.0"/>
+  <polyline marker-end="url(#id7)" points="98.0,390.75 105.0,390.75" stroke="turquoise" stroke-width="0"/>
   <polyline fill="none" points="307.0,127.5 307.0,184.125" stroke="olive" stroke-width="3.0"/>
   <polyline marker-end="url(#id8)" points="307.0,183.125 307.0,190.125" stroke="olive" stroke-width="0"/>
   <polyline fill="none" points="259.0,103.5 233.5,103.5 233.5,277.625 307.0,277.625 307.0,353.75" stroke="olive" stroke-width="3.0"/>
@@ -86,10 +84,6 @@
   <polyline marker-end="url(#id9)" points="454.0,488.75 454.0,495.75" stroke="orangered" stroke-width="0"/>
   <polyline fill="none" points="454.0,414.75 454.0,489.75" stroke="orangered" stroke-width="3.0"/>
   <polyline marker-end="url(#id9)" points="454.0,488.75 454.0,495.75" stroke="orangered" stroke-width="0"/>
-  <polyline fill="none" points="42.0,297.125 67.5,297.125 67.5,221.125 99.0,221.125" stroke="turquoise" stroke-width="3.0"/>
-  <polyline marker-end="url(#id7)" points="98.0,221.125 105.0,221.125" stroke="turquoise" stroke-width="0"/>
-  <polyline fill="none" points="42.0,297.125 67.5,297.125 67.5,390.75 99.0,390.75" stroke="turquoise" stroke-width="3.0"/>
-  <polyline marker-end="url(#id7)" points="98.0,390.75 105.0,390.75" stroke="turquoise" stroke-width="0"/>
   <polyline fill="none" points="208.0,221.125 246.0,221.125" stroke="palegreen" stroke-width="7.0"/>
   <polyline fill="none" points="208.0,221.125 246.0,221.125" stroke="turquoise" stroke-width="3.0"/>
   <polyline marker-end="url(#id7)" points="245.0,221.125 252.0,221.125" stroke="turquoise" stroke-width="0"/>
@@ -120,44 +114,70 @@
   <polyline marker-end="url(#id13)" points="699.0,610.75 706.0,610.75" stroke="black" stroke-width="0"/>
   <polyline fill="none" points="406.0,517.75 221.0,517.75" stroke="orangered" stroke-width="3.0"/>
   <polyline marker-end="url(#id9)" points="222.0,517.75 215.0,517.75" stroke="orangered" stroke-width="0"/>
-  <text transform="translate(677.0,177.3125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical Section</tspan>
+  <polyline fill="none" points="307.0,433.75 307.0,464.75" stroke="lightgrey" stroke-width="12.0"/>
+  <polyline marker-end="url(#id14)" points="307.0,463.75 307.0,477.25" stroke="lightgrey" stroke-width="0"/>
+  <polyline fill="none" points="521.0,297.125 543.0,297.125" stroke="lightgrey" stroke-width="12.0"/>
+  <polyline marker-end="url(#id14)" points="542.0,297.125 555.5,297.125" stroke="lightgrey" stroke-width="0"/>
+  <polyline fill="none" points="514.0,531.25 543.0,531.25" stroke="lightgrey" stroke-width="12.0"/>
+  <polyline marker-end="url(#id14)" points="542.0,531.25 555.5,531.25" stroke="lightgrey" stroke-width="0"/>
+  <text transform="translate(30.0,297.125) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Air</tspan>
   </text>
   <text transform="translate(307.0,59.6875) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Section</tspan>
   </text>
-  <text transform="translate(307.0,654.5625) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam Section</tspan>
+  <text transform="translate(307.0,103.5) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Fuel</tspan>
   </text>
   <text transform="translate(108.0,183.3125) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 1</tspan>
   </text>
-  <text transform="translate(108.0,352.9375) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 2</tspan>
-  </text>
-  <text transform="translate(30.0,297.125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Air</tspan>
-  </text>
-  <text transform="translate(307.0,610.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Condenser</tspan>
+  <text transform="translate(160.0,221.125) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
   </text>
   <text transform="translate(307.0,221.125) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
   </text>
-  <text transform="translate(307.0,390.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
+  <text transform="translate(454.0,221.125) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
   </text>
-  <text transform="translate(160.0,221.125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
+  <text transform="translate(108.0,352.9375) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 2</tspan>
   </text>
   <text transform="translate(160.0,390.75) translate(0,-0.0)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
   </text>
+  <text transform="translate(307.0,390.75) translate(0,-7.8125)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
+  </text>
+  <text transform="translate(454.0,390.75) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
+  </text>
+  <text transform="translate(307.0,654.5625) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam Section</tspan>
+  </text>
+  <text transform="translate(454.0,526.75) translate(0,-7.8125)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
+  </text>
+  <text transform="translate(454.0,610.75) translate(0,-7.8125)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
+    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Turbine</tspan>
+  </text>
+  <text transform="translate(307.0,610.75) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Condenser</tspan>
+  </text>
   <text transform="translate(160.0,610.75) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Cooling</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Tower</tspan>
+  </text>
+  <text transform="translate(160.0,526.75) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Exhaust</tspan>
+  </text>
+  <text transform="translate(677.0,177.3125) translate(0,-0.0)">
+    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical Section</tspan>
   </text>
   <text transform="translate(629.0,221.125) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
@@ -170,26 +190,6 @@
   <text transform="translate(629.0,610.75) translate(0,-7.8125)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
     <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
-  </text>
-  <text transform="translate(160.0,526.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Exhaust</tspan>
-  </text>
-  <text transform="translate(307.0,103.5) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Fuel</tspan>
-  </text>
-  <text transform="translate(454.0,221.125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
-  </text>
-  <text transform="translate(454.0,390.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
-  </text>
-  <text transform="translate(454.0,526.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
-  </text>
-  <text transform="translate(454.0,610.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Turbine</tspan>
   </text>
   <text transform="translate(737.0,415.9375) translate(-0.0,0) rotate(-90)">
     <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">To Electrical Transformers</tspan>
