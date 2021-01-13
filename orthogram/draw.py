@@ -919,8 +919,10 @@ class Drawing:
         by_block = self._block_boxes
         boxes = []
         for block in self._diagram.blocks():
-            box = by_block[block]
-            boxes.append(box)
+            # Blocks are not necessarily placed!
+            box = by_block.get(block)
+            if box:
+                boxes.append(box)
         return boxes
 
     def _track(self, ori: Orientation, c: int) -> Track:
