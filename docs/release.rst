@@ -55,7 +55,7 @@ Release history
 * Replaced igraph with NetworkX to ease installation.
 * Moved documentation to Read the Docs.
 
-0.4.0 (2021-01-13)
+0.4.0 (2021-01-14)
 ------------------
 
 * Significant breaking changes all around.
