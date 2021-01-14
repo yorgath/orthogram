@@ -94,7 +94,7 @@ blocks:
   - name: gas_section
     label: Gas Section
     label_position: top
-    cover: [fuel, cmp1, cmb1, gtb1, cmp2, cmb2, gtb2, gsec]
+    tags: [fuel, cmp1, cmb1, gtb1, cmp2, cmb2, gtb2, gsec]
     style: section
     margin_right: 24
 
@@ -103,7 +103,7 @@ blocks:
 
   - label: Gas Engine 1
     label_position: top_left
-    cover: [cmp1, cmb1, gtb1]
+    tags: [cmp1, cmb1, gtb1]
     style: gas_engine
 
   - name: cmp1
@@ -117,7 +117,7 @@ blocks:
 
   - label: Gas Engine 2
     label_position: top_left
-    cover: [cmp2, cmb2, gtb2]
+    tags: [cmp2, cmb2, gtb2]
     style: gas_engine
 
   - name: cmp2
@@ -132,7 +132,7 @@ blocks:
   - name: steam_section
     label: Steam Section
     label_position: bottom
-    cover: [sgn, stb, cdn, exst, cool]
+    tags: [sgn, stb, cdn, exst, cool]
     style: section
     margin_top: 24
 
@@ -156,7 +156,7 @@ blocks:
   - name: electric_section
     label: Electrical Section
     label_position: top
-    cover: [egn1, egn2, egn3, tx]
+    tags: [egn1, egn2, egn3, tx]
     style: section
     margin_left: 24
 

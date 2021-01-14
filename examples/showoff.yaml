@@ -36,7 +36,7 @@ blocks:
       to fit the lines.
 
   - name: B
-    cover: [B1, B8]
+    tags: [B1, B8]
     fill: lightyellow
     label: |-
       This block is used as a frame around other blocks.
@@ -88,7 +88,7 @@ blocks:
       can be grouped.
 
   - name: D
-    cover: [Dc]
+    tags: [Dc]
     font_size: 10
     font_style: italic
     label: |-

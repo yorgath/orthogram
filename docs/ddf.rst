@@ -114,7 +114,7 @@ is an example:
        label: A block named 'a'
 
      - label: An anonymous block
-       cover: [b1, b2]
+       tags: [b1, b2]
        stroke: blue
 
 Note that if you do not define a label for a block, the program will
@@ -138,7 +138,6 @@ covers six cells, including the cell on which "a" stands:
 
      - name: a
        label: A single-cell block
-       drawing_priority: 1
 
 Note that, in the example above, the definition of block "b" comes
 *before* the definition of block "a".  This is important, because the
@@ -150,21 +149,20 @@ padding depends on the values of the ``padding_*`` attributes of block
 which is what one actually wants in situations like this.
 
 If you want to expand a block beyond the cells tagged with its own
-name, you can add more tags to it using the ``cover``
-pseudo-attribute:
+name, you can add more tags to it using the ``tags`` pseudo-attribute:
 
 .. code-block:: yaml
 
    rows:
-     - [a, "", b  ]
-     - [a, "", c  ]
-     - [a, "", "" ]
+     - [a, "", b ]
+     - [a, "", c ]
+     - [a, "", ""]
    blocks:
      - name: a
+       tags: ["b", "c"]
        label: Covers 9 cells!
-       cover: ["b", "c"]
 
-Tags that are neither names of blocks nor mentioned in a ``cover``
+Tags that are neither names of blocks nor mentioned in a ``tags``
 sequence are "leftover" tags.  The program does not throw them away.
 Instead, it uses them to *autogenerate* blocks, one block for each
 unique tag.  These automatically generated blocks come with default

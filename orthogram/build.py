@@ -181,7 +181,7 @@ class Builder:
         The block definition may contain any attributes plus the
         following:
 
-        - cover: sequence of strings (optional)
+        - tags: sequence of strings (optional)
         - style: string (optional)
 
         """
@@ -201,7 +201,7 @@ class Builder:
             own_attrs = self._collect_attributes(block_def)
             attrs.merge(own_attrs)
             # Additional cells to cover.
-            tags = block_def.get('cover', ())
+            tags = block_def.get('tags', ())
         # Create the object.
         self._diagram_def.add_block(name, tags, **attrs)
 
