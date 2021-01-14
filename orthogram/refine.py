@@ -655,7 +655,7 @@ class Refiner:
         K = Tuple[NetworkOrigin, str]
         per_group: Dict[K, List[Route]] = {}
         for route in self._router.routes():
-            group = route.connection.attributes.group
+            group = route.connection.group
             # Use an extra key to avoid name collisions.
             if group and collapse_connections:
                 origin = NetworkOrigin.GROUP

@@ -242,18 +242,19 @@ the lines.  Attributes ``buffer_fill`` and ``buffer_width`` control
 the appearance of the buffer.  By default, the program draws the
 connections without a buffer.
 
-Connections may have an additional ``group`` attribute, which works
-together with the ``collapse_connections`` diagram attribute.  If
-``collapse_connections`` is set to true, connections of the same group
-that run along the same axis can be drawn on top of each other, thus
-reducing the clutter and size of the diagram.  The ``group`` value is
-just a string.  Note that setting this attribute affects the drawing
-order of the connections.  When the program encounters a connection
-marked with a group name, it draws all other connections that belong
-to the same group immediately after first one.  The order of groups
-thus becomes more significant compared to the order of the connections
-themselves.  It is probably good practice to keep connection
-definitions referring to the same group close together in the file.
+Connections may have an additional ``group`` pseudo-attribute, which
+works together with the ``collapse_connections`` diagram attribute.
+If ``collapse_connections`` is set to true, connections of the same
+group that run along the same axis can be drawn on top of each other,
+thus reducing the clutter and size of the diagram.  The ``group``
+value is just a string.  Note that setting this attribute affects the
+drawing order of the connections.  When the program encounters a
+connection marked with a group name, it draws all other connections
+that belong to the same group immediately after first one.  The order
+of groups thus becomes more significant compared to the order of the
+connections themselves.  It is probably good practice to keep
+connection definitions referring to the same group close together in
+the file.
 
 styles
 ------

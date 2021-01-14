@@ -100,11 +100,13 @@ class ConnectionDef:
             self,
             start: SubBlockDef,
             end: SubBlockDef,
+            group: Optional[str] = None,
             **attrs: AttributeMap
     ):
         """Initialize given the names of two blocks."""
         self._start = start
         self._end = end
+        self._group = group
         self._attributes = attrs
 
     @property
@@ -116,6 +118,11 @@ class ConnectionDef:
     def end(self) -> SubBlockDef:
         """Definition of destination node."""
         return self._end
+
+    @property
+    def group(self) -> Optional[str]:
+        """Group to which the connection belongs."""
+        return self._group
 
     @property
     def attributes(self) -> AttributeMap:
@@ -210,6 +217,7 @@ class DiagramDef:
             self,
             starts: MultipleNodes,
             ends: MultipleNodes,
+            group: Optional[str] = None,
             **attrs: AttributeMap,
     ) -> None:
         """Create many connections at once.
@@ -222,7 +230,7 @@ class DiagramDef:
         """
         for start in self._to_sub_block_defs(starts):
             for end in self._to_sub_block_defs(ends):
-                self.add_connection(start, end, **attrs)
+                self.add_connection(start, end, group, **attrs)
 
     @staticmethod
     def _to_sub_block_defs(m: MultipleNodes) -> Sequence[SubBlockDef]:
@@ -242,6 +250,7 @@ class DiagramDef:
     def add_connection(
             self,
             start: SubBlockDef, end: SubBlockDef,
+            group: Optional[str] = None,
             **attrs: AttributeMap
     ) -> None:
         """Create a connection between two blocks.
@@ -249,10 +258,13 @@ class DiagramDef:
         You must supply the start and the end of the connection either
         as block names or pairs of block name and cell tag.
 
+        Provide the name of a group if you want the connection to
+        belong to a group.
+
         See ConnectionAttributes for a list of available attributes.
 
         """
-        cdef = ConnectionDef(start, end, **attrs)
+        cdef = ConnectionDef(start, end, group, **attrs)
         self._connection_defs.append(cdef)
 
     def row_defs(self) -> Iterator[RowDef]:
@@ -605,10 +617,16 @@ class SubBlock:
 class Connection:
     """A connection between two blocks in the diagram."""
 
-    def __init__(self, start: SubBlock, end: SubBlock, **attrs: AttributeMap):
+    def __init__(
+            self,
+            start: SubBlock, end: SubBlock,
+            group: Optional[str] = None,
+            **attrs: AttributeMap
+    ):
         """Initialize a connection between the given nodes."""
         self._start = start
         self._end = end
+        self._group = group
         self._attributes = ConnectionAttributes(**attrs)
 
     def __repr__(self) -> str:
@@ -628,6 +646,11 @@ class Connection:
     def end(self) -> SubBlock:
         """Destination block of the connection."""
         return self._end
+
+    @property
+    def group(self) -> Optional[str]:
+        """Group to which the connection belongs."""
+        return self._group
 
     @property
     def attributes(self) -> ConnectionAttributes:
@@ -749,7 +772,7 @@ class Diagram:
             log_warning(tmpl.format(block1.name, block2.name))
             return None
         # Everything seems OK, let's make the connection.
-        connection = Connection(start, end, **cdef.attributes)
+        connection = Connection(start, end, cdef.group, **cdef.attributes)
         return connection
 
     def _sub_block(self, ndef: SubBlockDef) -> Optional[SubBlock]:

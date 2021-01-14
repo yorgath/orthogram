@@ -234,13 +234,13 @@ class Builder:
         """
         start = connection_def['start']
         end = connection_def['end']
+        group = connection_def.get('group')
         # Calculate the styles.
         attrs = Attributes()
         # Merge default attributes.
         def_attrs = self._get_style('default_connection')
         attrs.merge(def_attrs)
         # Merge attributes inherited from group.
-        group = connection_def.get('group')
         if group and group in self._group_styles:
             group_attrs = self._group_styles[group]
             attrs.merge(group_attrs)
@@ -251,7 +251,7 @@ class Builder:
         own_attrs = self._collect_attributes(connection_def)
         attrs.merge(own_attrs)
         # Create the object(s).
-        self._diagram_def.add_connections(start, end, **attrs)
+        self._diagram_def.add_connections(start, end, group=group, **attrs)
 
     def _collect_style_attributes(self, any_def: _Definition) -> Attributes:
         """Collect the attributes of the named styles in the definition."""
@@ -299,8 +299,6 @@ class Builder:
             attrs['font_style'] = str(any_def['font_style'])
         if 'font_weight' in any_def:
             attrs['font_weight'] = str(any_def['font_weight'])
-        if 'group' in any_def:
-            attrs['group'] = str(any_def['group'])
         if 'label' in any_def:
             attrs['label'] = str(any_def['label'])
         if 'label_distance' in any_def:

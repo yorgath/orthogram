@@ -98,7 +98,6 @@ class Attributes(Mapping[str, Any]):
         'font_size',
         'font_style',
         'font_weight',
-        'group',
         'label',
         'label_distance',
         'label_position',
@@ -470,7 +469,6 @@ class ConnectionAttributes(LineAttributes):
         self._buffer_width: Optional[float] = None
         self._entrances: Set[Side] = all_sides
         self._exits: Set[Side] = all_sides
-        self._group: Optional[str] = None
         self._stroke = "black"
         self.set_attributes(**attrs)
 
@@ -497,8 +495,6 @@ class ConnectionAttributes(LineAttributes):
             self._entrances = cast(Set[Side], attrs['entrances'])
         if 'exits' in attrs:
             self._exits = cast(Set[Side], attrs['exits'])
-        if 'group' in attrs:
-            self._group = cast(Optional[str], attrs['group'])
 
     @property
     def arrow_aspect(self) -> float:
@@ -539,11 +535,6 @@ class ConnectionAttributes(LineAttributes):
     def exits(self) -> Set[Side]:
         """Sides to exit from the source block."""
         return self._exits
-
-    @property
-    def group(self) -> Optional[str]:
-        """Group to which the connection belongs."""
-        return self._group
 
 ######################################################################
 

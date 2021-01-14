@@ -26,7 +26,6 @@ Attribute                 Diagram          Block         Connection
 ``font_size``             14.0             10.0
 ``font_style``            None             None
 ``font_weight``           None             None
-``group``                                                None
 ``label``                 None             None
 ``label_distance``        6.0              2.0
 ``label_position``        TOP              CENTER
@@ -458,18 +457,6 @@ unless they start or end within the block itself.  Setting
 
 Grouping
 --------
-
-group
-~~~~~
-
-* Applies to: Connections
-* Type: String
-* Default: None
-
-The ``group`` attribute adds a connection to a named group.  It is
-used in conjuction with the ``collapse_connections`` attribute of the
-diagram.  If the last one is true, connections that belong to the same
-group are drawn on top of each other.
 
 collapse_connections
 ~~~~~~~~~~~~~~~~~~~~

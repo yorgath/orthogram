@@ -49,7 +49,7 @@ You create connections between blocks using the
 
 .. code-block:: python
 
-   d.add_connection("a", "b", stroke="red")
+   d.add_connection("a", "b", group="fire", stroke="red")
    d.add_connection("c", ("d", "n"), stroke="blue")
 
 The start and the end of the connection can be either a block name or
