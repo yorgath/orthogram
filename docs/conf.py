@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'orthogram'
-copyright = '2021, Georgios Athanasiou'
+copyright = '2020-2021, Georgios Athanasiou'
 author = 'Georgios Athanasiou'
 
 # The full version, including alpha/beta/rc tags
