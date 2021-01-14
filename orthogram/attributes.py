@@ -6,6 +6,7 @@ from typing import (
     cast,
     Any,
     Dict,
+    Iterable,
     Iterator,
     Mapping,
     Optional,
@@ -492,9 +493,9 @@ class ConnectionAttributes(LineAttributes):
         if 'buffer_width' in attrs:
             self._buffer_width = cast(Optional[float], attrs['buffer_width'])
         if 'entrances' in attrs:
-            self._entrances = cast(Set[Side], attrs['entrances'])
+            self._entrances = set(cast(Iterable[Side], attrs['entrances']))
         if 'exits' in attrs:
-            self._exits = cast(Set[Side], attrs['exits'])
+            self._exits = set(cast(Iterable[Side], attrs['exits']))
 
     @property
     def arrow_aspect(self) -> float:
