@@ -98,3 +98,9 @@ Release history
 * No code changes.
 * Updated depedencies.
 * Documentation fixes.
+
+0.4.2 (2021-01-23)
+------------------
+
+* No code changes.
+* Corrected command line usage documentation.
