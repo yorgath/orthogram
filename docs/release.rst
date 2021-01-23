@@ -70,7 +70,7 @@ Release history
 
 * Content of the ``blocks`` section in the definition file is now a
   sequence instead of a mapping.  Program relies on definition order.
-  
+
 * Replaced ``start_bias`` and ``end_bias`` attributes with
   ``entrances`` and ``exits`` attributes.
 
@@ -91,3 +91,10 @@ Release history
 * Updated the documentation.  Added the Gallery section.
 
 * Added a few more examples.
+
+0.4.1 (2021-01-23)
+------------------
+
+* No code changes.
+* Updated depedencies.
+* Documentation fixes.
