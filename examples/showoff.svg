@@ -90,52 +90,52 @@
   <polyline fill="none" points="651.0,448.875 511.5,448.875 511.5,359.375 231.0,359.375 231.0,399.875" stroke="#FDF" stroke-width="7.0"/>
   <polyline fill="none" points="651.0,448.875 511.5,448.875 511.5,359.375 231.0,359.375 231.0,399.875" stroke="purple" stroke-width="3.0"/>
   <polyline marker-end="url(#id19)" points="231.0,398.875 231.0,406.875" stroke="purple" stroke-width="0"/>
-  <text transform="translate(60.0,295.875) translate(0,-12.5)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Block size is</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">adjusted</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">to fit the lines.</tspan>
+  <text transform="translate(60.0,295.875) translate(0,-9.375)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Block size is</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">adjusted</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">to fit the lines.</tspan>
   </text>
-  <text transform="translate(327.0,96.375) translate(0,-6.25)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">This block is used as a frame around other blocks.</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">The green line above has to go around it.</tspan>
+  <text transform="translate(327.0,96.375) translate(0,-3.125)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">This block is used as a frame around other blocks.</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">The green line above has to go around it.</tspan>
   </text>
-  <text transform="translate(227.0,146.875) translate(0,-12.5)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">try to avoid</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">each other.</tspan>
+  <text transform="translate(227.0,146.875) translate(0,-9.375)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">try to avoid</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">each other.</tspan>
   </text>
-  <text transform="translate(227.0,295.875) translate(0,-12.5)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can set the</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">priority of</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">lines &amp; blocks.</tspan>
+  <text transform="translate(227.0,295.875) translate(0,-9.375)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can set the</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">priority of</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">lines &amp; blocks.</tspan>
   </text>
-  <text transform="translate(227.0,444.875) translate(0,-12.5)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can set</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">the size of</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">lines &amp; arrows.</tspan>
+  <text transform="translate(227.0,444.875) translate(0,-9.375)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can set</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">the size of</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">lines &amp; arrows.</tspan>
   </text>
-  <text transform="translate(427.0,444.875) translate(0,-12.5)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can draw</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">a buffer</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">around lines.</tspan>
+  <text transform="translate(427.0,444.875) translate(0,-9.375)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">You can draw</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">a buffer</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">around lines.</tspan>
   </text>
-  <text transform="translate(427.0,566.875) translate(0,-12.5)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">The outline</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">is drawn in-</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">side the block.</tspan>
+  <text transform="translate(427.0,566.875) translate(0,-9.375)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">The outline</tspan>
+    <tspan dx="0" dy="1.25em" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">is drawn in-</tspan>
+    <tspan dx="0" dy="1.25em" fill="white" font-family="Arial" font-size="8.0pt" font-weight="bold" text-anchor="middle" x="0">side the block.</tspan>
   </text>
-  <text transform="translate(579.0,295.875) translate(0,-6.25)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">can be grouped.</tspan>
+  <text transform="translate(579.0,295.875) translate(0,-3.125)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">Connections</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="8.0pt" text-anchor="middle" x="0">can be grouped.</tspan>
   </text>
-  <text transform="translate(319.5,683.875) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">You can create blocks that span many cells,</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">and still be able to aim connections at specific cells in them.</tspan>
+  <text transform="translate(319.5,683.875) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">You can create blocks that span many cells,</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">and still be able to aim connections at specific cells in them.</tspan>
   </text>
-  <text transform="translate(675.0,356.875) translate(-0.0,0) rotate(-90)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">You can change the orientation of text.</tspan>
+  <text transform="translate(675.0,356.875) translate(3.90625,0) rotate(-90)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">You can change the orientation of text.</tspan>
   </text>
-  <text transform="translate(355.5,16.9375) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Capabilities Demonstration</tspan>
+  <text transform="translate(355.5,16.9375) translate(0,5.46875)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Capabilities Demonstration</tspan>
   </text>
 </svg>

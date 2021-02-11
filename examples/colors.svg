@@ -47,64 +47,64 @@
   <polyline marker-end="url(#id1)" points="306.0,451.875 315.0,451.875" stroke="#F00" stroke-width="0"/>
   <polyline fill="none" points="120.0,187.875 206.0,187.875 206.0,523.875 307.0,523.875" stroke="#F00" stroke-width="4.0"/>
   <polyline marker-end="url(#id1)" points="306.0,523.875 315.0,523.875" stroke="#F00" stroke-width="0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,315.875 307.0,315.875" stroke="white" stroke-width="6.0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,371.875 307.0,371.875" stroke="white" stroke-width="6.0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,435.875 307.0,435.875" stroke="white" stroke-width="6.0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,491.875 307.0,491.875" stroke="white" stroke-width="6.0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,315.875 307.0,315.875" stroke="#0F0" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,315.875 307.0,315.875" stroke="white" stroke-width="6.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,371.875 307.0,371.875" stroke="white" stroke-width="6.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,435.875 307.0,435.875" stroke="white" stroke-width="6.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,491.875 307.0,491.875" stroke="white" stroke-width="6.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,315.875 307.0,315.875" stroke="#0F0" stroke-width="4.0"/>
   <polyline marker-end="url(#id2)" points="306.0,315.875 315.0,315.875" stroke="#0F0" stroke-width="0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,371.875 307.0,371.875" stroke="#0F0" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,371.875 307.0,371.875" stroke="#0F0" stroke-width="4.0"/>
   <polyline marker-end="url(#id2)" points="306.0,371.875 315.0,371.875" stroke="#0F0" stroke-width="0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,435.875 307.0,435.875" stroke="#0F0" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,435.875 307.0,435.875" stroke="#0F0" stroke-width="4.0"/>
   <polyline marker-end="url(#id2)" points="306.0,435.875 315.0,435.875" stroke="#0F0" stroke-width="0"/>
-  <polyline fill="none" points="120.0,251.875 238.0,251.875 238.0,491.875 307.0,491.875" stroke="#0F0" stroke-width="4.0"/>
+  <polyline fill="none" points="120.0,267.875 238.0,267.875 238.0,491.875 307.0,491.875" stroke="#0F0" stroke-width="4.0"/>
   <polyline marker-end="url(#id2)" points="306.0,491.875 315.0,491.875" stroke="#0F0" stroke-width="0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,123.875 307.0,123.875" stroke="white" stroke-width="6.0"/>
-  <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,267.875 307.0,267.875" stroke="white" stroke-width="6.0"/>
+  <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,251.875 307.0,251.875" stroke="white" stroke-width="6.0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,387.875 307.0,387.875" stroke="white" stroke-width="6.0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,507.875 307.0,507.875" stroke="white" stroke-width="6.0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,123.875 307.0,123.875" stroke="#00F" stroke-width="4.0"/>
   <polyline marker-end="url(#id3)" points="306.0,123.875 315.0,123.875" stroke="#00F" stroke-width="0"/>
-  <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,267.875 307.0,267.875" stroke="#00F" stroke-width="4.0"/>
-  <polyline marker-end="url(#id3)" points="306.0,267.875 315.0,267.875" stroke="#00F" stroke-width="0"/>
+  <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,251.875 307.0,251.875" stroke="#00F" stroke-width="4.0"/>
+  <polyline marker-end="url(#id3)" points="306.0,251.875 315.0,251.875" stroke="#00F" stroke-width="0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,387.875 307.0,387.875" stroke="#00F" stroke-width="4.0"/>
   <polyline marker-end="url(#id3)" points="306.0,387.875 315.0,387.875" stroke="#00F" stroke-width="0"/>
   <polyline fill="none" points="120.0,315.875 222.0,315.875 222.0,507.875 307.0,507.875" stroke="#00F" stroke-width="4.0"/>
   <polyline marker-end="url(#id3)" points="306.0,507.875 315.0,507.875" stroke="#00F" stroke-width="0"/>
-  <text transform="translate(72.0,187.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
+  <text transform="translate(72.0,187.875) translate(0,3.90625)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
   </text>
-  <text transform="translate(72.0,251.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
+  <text transform="translate(72.0,251.875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
   </text>
-  <text transform="translate(72.0,315.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
+  <text transform="translate(72.0,315.875) translate(0,3.90625)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
   </text>
-  <text transform="translate(372.0,59.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Black</tspan>
+  <text transform="translate(372.0,59.875) translate(0,3.90625)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Black</tspan>
   </text>
-  <text transform="translate(372.0,123.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
+  <text transform="translate(372.0,123.875) translate(0,3.90625)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Blue</tspan>
   </text>
-  <text transform="translate(372.0,187.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
+  <text transform="translate(372.0,187.875) translate(0,3.90625)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Red</tspan>
   </text>
-  <text transform="translate(372.0,251.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Magenta</tspan>
+  <text transform="translate(372.0,251.875) translate(0,3.90625)">
+    <tspan dx="0" fill="white" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Magenta</tspan>
   </text>
-  <text transform="translate(372.0,315.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
+  <text transform="translate(372.0,315.875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Green</tspan>
   </text>
-  <text transform="translate(372.0,379.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Cyan</tspan>
+  <text transform="translate(372.0,379.875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Cyan</tspan>
   </text>
-  <text transform="translate(372.0,443.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Yellow</tspan>
+  <text transform="translate(372.0,443.875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">Yellow</tspan>
   </text>
-  <text transform="translate(372.0,507.875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">White</tspan>
+  <text transform="translate(372.0,507.875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-weight="bold" text-anchor="middle" x="0">White</tspan>
   </text>
-  <text transform="translate(222.0,16.9375) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-size="14.0pt" text-anchor="middle" x="0">Combinations of Basic Colors</tspan>
+  <text transform="translate(222.0,16.9375) translate(0,5.46875)">
+    <tspan dx="0" fill="black" font-size="14.0pt" text-anchor="middle" x="0">Combinations of Basic Colors</tspan>
   </text>
 </svg>

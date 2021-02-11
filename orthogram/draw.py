@@ -1180,7 +1180,7 @@ class Drawing:
         font_size = attrs.font_size
         line_height = attrs.text_line_height
         n_lines = len(lines)
-        d = _pt_to_px(font_size) * 0.5 * line_height * (n_lines - 1)
+        d = _pt_to_px(font_size) * 0.5 * line_height * (n_lines - 1.5)
         # Adjust for orientation.
         if attrs.text_orientation is Orientation.HORIZONTAL:
             text.translate(0, -d)
@@ -1195,7 +1195,6 @@ class Drawing:
                 'font-family': attrs.font_family,
                 'font-size': str(font_size) + "pt",
                 'text-anchor': anchor,
-                'dominant-baseline': 'middle',
             }
             _maybe_add(kwargs, 'fill', attrs.text_fill)
             _maybe_add(kwargs, 'font-style', attrs.font_style)

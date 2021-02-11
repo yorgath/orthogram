@@ -120,81 +120,81 @@
   <polyline marker-end="url(#id14)" points="542.0,297.125 555.5,297.125" stroke="lightgrey" stroke-width="0"/>
   <polyline fill="none" points="514.0,531.25 543.0,531.25" stroke="lightgrey" stroke-width="12.0"/>
   <polyline marker-end="url(#id14)" points="542.0,531.25 555.5,531.25" stroke="lightgrey" stroke-width="0"/>
-  <text transform="translate(30.0,297.125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Air</tspan>
+  <text transform="translate(30.0,297.125) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Air</tspan>
   </text>
-  <text transform="translate(307.0,59.6875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Section</tspan>
+  <text transform="translate(307.0,59.6875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Section</tspan>
   </text>
-  <text transform="translate(307.0,103.5) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Fuel</tspan>
+  <text transform="translate(307.0,103.5) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Fuel</tspan>
   </text>
-  <text transform="translate(108.0,183.3125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 1</tspan>
+  <text transform="translate(108.0,183.3125) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 1</tspan>
   </text>
-  <text transform="translate(160.0,221.125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
+  <text transform="translate(160.0,221.125) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
   </text>
-  <text transform="translate(307.0,221.125) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
+  <text transform="translate(307.0,221.125) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
   </text>
-  <text transform="translate(454.0,221.125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
+  <text transform="translate(454.0,221.125) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
   </text>
-  <text transform="translate(108.0,352.9375) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 2</tspan>
+  <text transform="translate(108.0,352.9375) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="start" x="0">Gas Engine 2</tspan>
   </text>
-  <text transform="translate(160.0,390.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
+  <text transform="translate(160.0,390.75) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Compressor</tspan>
   </text>
-  <text transform="translate(307.0,390.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
+  <text transform="translate(307.0,390.75) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combustion</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Chamber</tspan>
   </text>
-  <text transform="translate(454.0,390.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
+  <text transform="translate(454.0,390.75) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Gas Turbine</tspan>
   </text>
-  <text transform="translate(307.0,654.5625) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam Section</tspan>
+  <text transform="translate(307.0,654.5625) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam Section</tspan>
   </text>
-  <text transform="translate(454.0,526.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
+  <text transform="translate(454.0,526.75) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <text transform="translate(454.0,610.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Turbine</tspan>
+  <text transform="translate(454.0,610.75) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Steam</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Turbine</tspan>
   </text>
-  <text transform="translate(307.0,610.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Condenser</tspan>
+  <text transform="translate(307.0,610.75) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Condenser</tspan>
   </text>
-  <text transform="translate(160.0,610.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Cooling</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Tower</tspan>
+  <text transform="translate(160.0,610.75) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Cooling</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Tower</tspan>
   </text>
-  <text transform="translate(160.0,526.75) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Exhaust</tspan>
+  <text transform="translate(160.0,526.75) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Exhaust</tspan>
   </text>
-  <text transform="translate(677.0,177.3125) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical Section</tspan>
+  <text transform="translate(677.0,177.3125) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical Section</tspan>
   </text>
-  <text transform="translate(629.0,221.125) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
+  <text transform="translate(629.0,221.125) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <text transform="translate(629.0,390.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
+  <text transform="translate(629.0,390.75) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <text transform="translate(629.0,610.75) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
+  <text transform="translate(629.0,610.75) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Electrical</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Generator</tspan>
   </text>
-  <text transform="translate(737.0,415.9375) translate(-0.0,0) rotate(-90)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">To Electrical Transformers</tspan>
+  <text transform="translate(737.0,415.9375) translate(3.90625,0) rotate(-90)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" font-style="italic" text-anchor="middle" x="0">To Electrical Transformers</tspan>
   </text>
-  <text transform="translate(401.5,16.9375) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Combined Cycle Power Plant</tspan>
+  <text transform="translate(401.5,16.9375) translate(0,5.46875)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Combined Cycle Power Plant</tspan>
   </text>
 </svg>

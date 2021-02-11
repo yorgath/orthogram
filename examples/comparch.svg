@@ -77,35 +77,35 @@
   <polyline fill="none" points="458.0,281.0 458.0,134.375 338.0,134.375" stroke="red" stroke-width="2.0"/>
   <polyline marker-end="url(#id5)" points="458.0,280.0 458.0,284.5" stroke="red" stroke-width="0"/>
   <polyline marker-end="url(#id5)" points="339.0,134.375 334.5,134.375" stroke="red" stroke-width="0"/>
-  <text transform="translate(265.0,99.5625) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">CPU</tspan>
+  <text transform="translate(265.0,99.5625) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">CPU</tspan>
   </text>
-  <text transform="translate(265.0,201.1875) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Processor</tspan>
+  <text transform="translate(265.0,201.1875) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Processor</tspan>
   </text>
-  <text transform="translate(270.0,139.375) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Control</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Unit</tspan>
+  <text transform="translate(270.0,139.375) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Control</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Unit</tspan>
   </text>
-  <text transform="translate(270.0,241.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Registers</tspan>
+  <text transform="translate(270.0,241.0) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Registers</tspan>
   </text>
-  <text transform="translate(270.0,313.0) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combinational</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Logic</tspan>
+  <text transform="translate(270.0,313.0) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Combinational</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Logic</tspan>
   </text>
-  <text transform="translate(270.0,421.0) translate(0,-7.8125)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Main</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Memory</tspan>
+  <text transform="translate(270.0,421.0) translate(0,-3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Main</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Memory</tspan>
   </text>
-  <text transform="translate(72.0,313.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Input</tspan>
+  <text transform="translate(72.0,313.0) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Input</tspan>
   </text>
-  <text transform="translate(458.0,313.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Output</tspan>
+  <text transform="translate(458.0,313.0) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="10.0pt" text-anchor="middle" x="0">Output</tspan>
   </text>
-  <text transform="translate(265.0,27.875) translate(0,-10.9375)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Computer Architecture</tspan>
-    <tspan dominant-baseline="middle" dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">(https://en.wikipedia.org/wiki/Computer_architecture)</tspan>
+  <text transform="translate(265.0,27.875) translate(0,-5.46875)">
+    <tspan dx="0" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">Computer Architecture</tspan>
+    <tspan dx="0" dy="1.25em" fill="black" font-family="Arial" font-size="14.0pt" text-anchor="middle" x="0">(https://en.wikipedia.org/wiki/Computer_architecture)</tspan>
   </text>
 </svg>

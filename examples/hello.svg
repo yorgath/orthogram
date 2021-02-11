@@ -13,10 +13,10 @@
   <rect fill="none" height="46.0" stroke="black" stroke-width="2.0" width="94.0" x="175.0" y="127.0"/>
   <polyline fill="none" points="126.0,54.0 222.0,54.0 222.0,118.0" stroke="black" stroke-width="2.0"/>
   <polyline marker-end="url(#id6)" points="222.0,117.0 222.0,121.5" stroke="black" stroke-width="0"/>
-  <text transform="translate(78.0,54.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Hello</tspan>
+  <text transform="translate(78.0,54.0) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">Hello</tspan>
   </text>
-  <text transform="translate(222.0,150.0) translate(0,-0.0)">
-    <tspan dominant-baseline="middle" dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">world</tspan>
+  <text transform="translate(222.0,150.0) translate(0,3.90625)">
+    <tspan dx="0" fill="black" font-size="10.0pt" text-anchor="middle" x="0">world</tspan>
   </text>
 </svg>
