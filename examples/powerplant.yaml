@@ -177,12 +177,12 @@ blocks:
 
 rows:
 
-  - [""   , ""   , fuel                   ]
-  - [""   , cmp1 , cmb1 , gtb1 , egn1 , tx]
-  - [air  , ""   , ""   , gsec , ""   , tx]
-  - [""   , cmp2 , cmb2 , gtb2 , egn2 , tx]
-  - [""   , exst , ""   , sgn  , ""   , tx]
-  - [""   , cool , cdn  , stb  , egn3 , tx]
+  - [~   , ~    , fuel                   ]
+  - [~   , cmp1 , cmb1 , gtb1 , egn1 , tx]
+  - [air , ~    , ~    , gsec , ~    , tx]
+  - [~   , cmp2 , cmb2 , gtb2 , egn2 , tx]
+  - [~   , exst , ~    , sgn  , ~    , tx]
+  - [~   , cool , cdn  , stb  , egn3 , tx]
 
 connections:
 

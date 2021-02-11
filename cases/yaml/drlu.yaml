@@ -2,8 +2,8 @@ diagram:
   label: Down-Right vs Left-Up
 
 rows:
-  - [A    ]
-  - ["", B]
+  - [A   ]
+  - [~, B]
 
 connections:
   - start: A

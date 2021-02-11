@@ -2,7 +2,7 @@ diagram:
   min_height: 0
 rows:
   - [a]
-  - ["", b]
+  - [~, b]
 blocks:
   - label: Hello
     name: a

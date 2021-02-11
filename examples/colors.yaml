@@ -28,14 +28,14 @@ styles:
 
 rows:
 
-  - [""          , black  ]
-  - [""          , blue   ]
+  - [~           , black  ]
+  - [~           , blue   ]
   - [basic_red   , red    ]
   - [basic_green , magenta]
   - [basic_blue  , green  ]
-  - [""          , cyan   ]
-  - [""          , yellow ]
-  - [""          , white  ]
+  - [~           , cyan   ]
+  - [~           , yellow ]
+  - [~           , white  ]
 
 blocks:
 

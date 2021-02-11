@@ -2,9 +2,9 @@ diagram:
   label: Right-Down vs Left-Up
 
 rows:
-  - ["", D    ]
-  - [A , "", C]
-  - ["", B    ]
+  - [~, D   ]
+  - [A, ~, C]
+  - [~, B   ]
 
 connections:
   - start: A

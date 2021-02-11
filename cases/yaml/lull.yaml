@@ -2,8 +2,8 @@ diagram:
   label: Left-Up vs Left-Left
 
 rows:
-  - ["", B    ]
-  - [C , "", A]
+  - [~, B   ]
+  - [C, ~, A]
 
 connections:
   - start: A

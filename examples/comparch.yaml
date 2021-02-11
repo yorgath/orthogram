@@ -88,10 +88,10 @@ blocks:
     style: hidden
 
 rows:
-  - ["", "", cpu, cpu , cu , cpu,  cpu         ]
-  - ["", "", cpu, proc, reg, proc, cpu         ]
+  - [~ , ~ , cpu, cpu , cu , cpu,  cpu         ]
+  - [~ , ~ , cpu, proc, reg, proc, cpu         ]
   - [h1, in, cpu, proc, log, proc, cpu, out, h2]
-  - ["", "", "" , ""  , mem                    ]
+  - [~ , ~ , ~  , ~   , mem                    ]
 
 connections:
 
