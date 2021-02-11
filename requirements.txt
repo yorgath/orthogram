@@ -1,5 +1,4 @@
-decorator==4.4.2; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.2.0" and python_version >= "3.6"
-networkx==2.5; python_version >= "3.6"
-pyyaml==5.3.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")
-shapely==1.7.1
-svgwrite==1.4; python_version >= "3.6"
+networkx==2.5
+PyYAML==5.4.1
+Shapely==1.7.1
+svgwrite==1.4.1
