@@ -8,7 +8,7 @@ of YAML:
 
    rows:
      - [a]
-     - ["", b]
+     - [~, b]
    blocks:
      - name: a
        label: Hello

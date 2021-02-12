@@ -124,7 +124,7 @@ label_position
 * Default: TOP (D), CENTER (B)
 
 The ``label_position`` attribute defines the position of the label
-relative to a box.  The positions available for labels are:
+inside a box.  The positions available for labels are:
 
 * BOTTOM
 * BOTTOM_LEFT

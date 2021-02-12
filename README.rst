@@ -43,4 +43,4 @@ file:
 
 Please read the full online `documentation`_ for more.
 
-.. _documentation: https://readthedocs.org/projects/orthogram/
+.. _documentation: https://orthogram.readthedocs.org

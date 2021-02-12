@@ -35,7 +35,7 @@ character in the string:
 .. code-block:: yaml
 
    diagram:
-     label: Two lines separated by\na newline character
+     label: "Two lines separated by\na newline character"
 
 For longer texts, the YAML literal style may be more convenient:
 
@@ -65,7 +65,7 @@ rows
 ----
 
 The ``rows`` section of the diagram definition file defines the layout
-of the diagram.  It is essential; without one the program cannot
+of the diagram.  It is essential; without one, the program cannot
 determine the position of any element to draw!
 
 The program lays out the elements of the diagram in a rectangular
@@ -74,14 +74,14 @@ columns.  You define the grid one row at a time.
 
 The ``rows`` structure is a sequence of row definitions.  Each row
 definition is a sequence of strings.  Each string corresponds to one
-cell in the row.  If the string is *not* empty the cell is *tagged*
-with the string; otherwise it is an anonymous cell.  Here is an
-example:
+cell in the row.  If the string is neither null nor empty the cell is
+*tagged* with the string; otherwise it is an anonymous cell.  Here is
+an example:
 
 .. code-block:: yaml
 
    rows:
-     - [a, "", c, c]
+     - [a, ~ , c, c]
      - [b, "", c, c]
 
 The grid above contains a cell tagged with "a", another one tagged
@@ -128,8 +128,8 @@ covers six cells, including the cell on which "a" stands:
 .. code-block:: yaml
 
    rows:
-     - [b , a    ]
-     - ["", "", b]
+     - [b, a   ]
+     - [~, ~, b]
 
    blocks:
 
@@ -154,12 +154,12 @@ name, you can add more tags to it using the ``tags`` pseudo-attribute:
 .. code-block:: yaml
 
    rows:
-     - [a, "", b ]
-     - [a, "", c ]
-     - [a, "", ""]
+     - [a, ~, b]
+     - [a, ~, c]
+     - [a      ]
    blocks:
      - name: a
-       tags: ["b", "c"]
+       tags: [b, c]
        label: Covers 9 cells!
 
 Tags that are neither names of blocks nor mentioned in a ``tags``
@@ -190,8 +190,8 @@ is an example:
 .. code-block:: yaml
 
    rows:
-     - [a,  b]
-     - ["", c]
+     - [a, b]
+     - [~, c]
 
    connections:
 
@@ -301,7 +301,7 @@ ignores the ``style`` attribute in style definitions.
 groups
 ------
 
-The ``groups`` section may be used to attach attributes to connection
+You can use the ``groups`` section to attach attributes to connection
 groups.  Since connections in the same group may collapse on one
 another, it is usually desirable for all the connections in one group
 to share the same attributes.  In the example that follows, all

@@ -17,7 +17,7 @@ This program depends on the following excellent pieces of software:
 * `svgwrite`_: Orthogram uses this library to write the SVG files.
   Much better than having to use straight XML!
 
-* `pyyaml`_: Simple to use, efficient YAML parser.
+* `PyYAML`_: Simple to use, efficient YAML parser.
 
 * `Sphinx`_: The Python documentation generator.
 
@@ -34,7 +34,7 @@ author a lot:
 .. _Shapely: https://github.com/Toblerity/Shapely
 .. _GEOS: https://trac.osgeo.org/geos
 .. _svgwrite: https://github.com/mozman/svgwrite
-.. _pyyaml: https://github.com/yaml/pyyaml
+.. _PyYAML: https://github.com/yaml/pyyaml
 .. _Sphinx: https://www.sphinx-doc.org/
 .. _Poetry: https://python-poetry.org/
 .. _mypy: http://mypy-lang.org/
