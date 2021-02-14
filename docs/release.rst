@@ -1,6 +1,13 @@
 Release history
 ===============
 
+0.4.4 (2021-02-14)
+------------------
+
+* Some enumerators needed for attributes were not exposed -- fixed.
+
+* Removed Poetry lock file from version control.
+
 0.4.3 (2021-02-12)
 ------------------
 
