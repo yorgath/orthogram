@@ -2,6 +2,7 @@
 *.html
 *.pyc
 *~
+poetry.lock
 cases/svg/*.svg
 dist
 docs/_build
