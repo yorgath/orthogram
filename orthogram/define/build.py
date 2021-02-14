@@ -8,13 +8,22 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
 )
 
-from .attributes import Attributes, LabelPosition, Side
+from ..geometry import Orientation
+from ..util import log_warning
+
+from .attributes import (
+    Attributes,
+    Color,
+    FontStyle,
+    FontWeight,
+    LabelPosition,
+    Side,
+    TextOrientation,
+)
+
 from .diagram import DiagramDef
-from .geometry import Orientation
-from .util import log_warning
 
 ######################################################################
 
@@ -40,7 +49,7 @@ class Builder:
         """The definition of the diagram being built."""
         return self._diagram_def
 
-    def add(self, defs: _Definitions) -> None:
+    def add(self, defs: Optional[_Definitions]) -> None:
         """Add the definitions to the diagram.
 
         Valid keys are:
@@ -55,6 +64,9 @@ class Builder:
         See add_* methods for details.
 
         """
+        if not defs:
+            # This happens when the DDF is empty.
+            return
         style_defs = defs.get('styles')
         if style_defs:
             self.add_styles(style_defs)
@@ -165,7 +177,7 @@ class Builder:
         """
         self._diagram_def.add_row(row_def)
 
-    def add_blocks(self, defs: List[_Definition]) -> None:
+    def add_blocks(self, defs: Sequence[_Definition]) -> None:
         """Add blocks to the diagram.
 
         The input is a sequence of block definitions.  See add_block()
@@ -266,6 +278,115 @@ class Builder:
     def _collect_attributes(self, any_def: _Definition) -> Attributes:
         """Collect the attributes from a definition."""
         attrs = Attributes()
+        self._collect_line_attributes(attrs, any_def)
+        self._collect_area_attributes(attrs, any_def)
+        self._collect_text_attributes(attrs, any_def)
+        self._collect_container_attributes(attrs, any_def)
+        self._collect_block_attributes(attrs, any_def)
+        self._collect_connection_attributes(attrs, any_def)
+        self._collect_diagram_attributes(attrs, any_def)
+        return attrs
+
+    def _collect_line_attributes(
+            self,
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to lines."""
+        if 'stroke' in any_def:
+            attrs['stroke'] = self._parse_color(any_def['stroke'])
+        if 'stroke_dasharray' in any_def:
+            attrs['stroke_dasharray'] = list(any_def['stroke_dasharray'])
+        if 'stroke_width' in any_def:
+            attrs['stroke_width'] = float(any_def['stroke_width'])
+
+    def _collect_area_attributes(
+            self,
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to areas."""
+        if 'fill' in any_def:
+            attrs['fill'] = self._parse_color(any_def['fill'])
+        if 'min_height' in any_def:
+            attrs['min_height'] = float(any_def['min_height'])
+        if 'min_width' in any_def:
+            attrs['min_width'] = float(any_def['min_width'])
+
+    def _collect_text_attributes(
+            self,
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to text."""
+        if 'font_family' in any_def:
+            attrs['font_family'] = str(any_def['font_family'])
+        if 'font_size' in any_def:
+            attrs['font_size'] = float(any_def['font_size'])
+        if 'font_style' in any_def:
+            style = self._parse_font_style(any_def['font_style'])
+            if style:
+                attrs['font_style'] = style
+        if 'font_weight' in any_def:
+            weight = self._parse_font_weight(any_def['font_weight'])
+            if weight:
+                attrs['font_weight'] = weight
+        if 'label' in any_def:
+            attrs['label'] = str(any_def['label'])
+        if 'label_distance' in any_def:
+            attrs['label_distance'] = float(any_def['label_distance'])
+        if 'text_fill' in any_def:
+            attrs['text_fill'] = self._parse_color(any_def['text_fill'])
+        if 'text_line_height' in any_def:
+            attrs['text_line_height'] = float(any_def['text_line_height'])
+        if 'text_orientation' in any_def:
+            text_orientation = self._parse_text_orientation(
+                any_def['text_orientation'])
+            if text_orientation:
+                attrs['text_orientation'] = text_orientation
+
+    def _collect_container_attributes(
+            self,
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to containers."""
+        if 'label_position' in any_def:
+            lpos = self._parse_label_position(any_def['label_position'])
+            if lpos:
+                attrs['label_position'] = lpos
+        if 'padding_bottom' in any_def:
+            attrs['padding_bottom'] = float(any_def['padding_bottom'])
+        if 'padding_left' in any_def:
+            attrs['padding_left'] = float(any_def['padding_left'])
+        if 'padding_right' in any_def:
+            attrs['padding_right'] = float(any_def['padding_right'])
+        if 'padding_top' in any_def:
+            attrs['padding_top'] = float(any_def['padding_top'])
+
+    @staticmethod
+    def _collect_block_attributes(
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to blocks."""
+        if 'margin_bottom' in any_def:
+            attrs['margin_bottom'] = float(any_def['margin_bottom'])
+        if 'margin_left' in any_def:
+            attrs['margin_left'] = float(any_def['margin_left'])
+        if 'margin_right' in any_def:
+            attrs['margin_right'] = float(any_def['margin_right'])
+        if 'margin_top' in any_def:
+            attrs['margin_top'] = float(any_def['margin_top'])
+        if 'pass_through' in any_def:
+            attrs['pass_through'] = bool(any_def['pass_through'])
+
+    def _collect_connection_attributes(
+            self,
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to connections."""
         if 'arrow_aspect' in any_def:
             attrs['arrow_aspect'] = float(any_def['arrow_aspect'])
         if 'arrow_back' in any_def:
@@ -275,12 +396,9 @@ class Builder:
         if 'arrow_forward' in any_def:
             attrs['arrow_forward'] = bool(any_def['arrow_forward'])
         if 'buffer_fill' in any_def:
-            attrs['buffer_fill'] = str(any_def['buffer_fill'])
+            attrs['buffer_fill'] = self._parse_color(any_def['buffer_fill'])
         if 'buffer_width' in any_def:
             attrs['buffer_width'] = float(any_def['buffer_width'])
-        if 'collapse_connections' in any_def:
-            attrs['collapse_connections'] = bool(
-                any_def['collapse_connections'])
         if 'entrances' in any_def:
             entrances = self._parse_sides(any_def['entrances'])
             if entrances:
@@ -289,66 +407,20 @@ class Builder:
             exits = self._parse_sides(any_def['exits'])
             if exits:
                 attrs['exits'] = exits
-        if 'fill' in any_def:
-            attrs['fill'] = str(any_def['fill'])
-        if 'font_family' in any_def:
-            attrs['font_family'] = str(any_def['font_family'])
-        if 'font_size' in any_def:
-            attrs['font_size'] = float(any_def['font_size'])
-        if 'font_style' in any_def:
-            attrs['font_style'] = str(any_def['font_style'])
-        if 'font_weight' in any_def:
-            attrs['font_weight'] = str(any_def['font_weight'])
-        if 'label' in any_def:
-            attrs['label'] = str(any_def['label'])
-        if 'label_distance' in any_def:
-            attrs['label_distance'] = float(any_def['label_distance'])
-        if 'label_position' in any_def:
-            lpos = self._parse_label_position(any_def['label_position'])
-            if lpos:
-                attrs['label_position'] = lpos
+
+    @staticmethod
+    def _collect_diagram_attributes(
+            attrs: Attributes,
+            any_def: _Definition
+    ) -> None:
+        """Collect the attributes that are relevant to the diagram."""
+        if 'collapse_connections' in any_def:
+            attrs['collapse_connections'] = bool(
+                any_def['collapse_connections'])
         if 'connection_distance' in any_def:
             attrs['connection_distance'] = float(any_def['connection_distance'])
-        if 'margin_bottom' in any_def:
-            attrs['margin_bottom'] = float(any_def['margin_bottom'])
-        if 'margin_left' in any_def:
-            attrs['margin_left'] = float(any_def['margin_left'])
-        if 'margin_right' in any_def:
-            attrs['margin_right'] = float(any_def['margin_right'])
-        if 'margin_top' in any_def:
-            attrs['margin_top'] = float(any_def['margin_top'])
-        if 'min_height' in any_def:
-            attrs['min_height'] = float(any_def['min_height'])
-        if 'min_width' in any_def:
-            attrs['min_width'] = float(any_def['min_width'])
-        if 'padding_bottom' in any_def:
-            attrs['padding_bottom'] = float(any_def['padding_bottom'])
-        if 'padding_left' in any_def:
-            attrs['padding_left'] = float(any_def['padding_left'])
-        if 'padding_right' in any_def:
-            attrs['padding_right'] = float(any_def['padding_right'])
-        if 'padding_top' in any_def:
-            attrs['padding_top'] = float(any_def['padding_top'])
-        if 'pass_through' in any_def:
-            attrs['pass_through'] = bool(any_def['pass_through'])
-        if 'stretch' in any_def:
-            attrs['stretch'] = bool(any_def['stretch'])
-        if 'stroke' in any_def:
-            attrs['stroke'] = str(any_def['stroke'])
-        if 'stroke_dasharray' in any_def:
-            attrs['stroke_dasharray'] = str(any_def['stroke_dasharray'])
-        if 'stroke_width' in any_def:
-            attrs['stroke_width'] = float(any_def['stroke_width'])
-        if 'text_fill' in any_def:
-            attrs['text_fill'] = str(any_def['text_fill'])
-        if 'text_line_height' in any_def:
-            attrs['text_line_height'] = float(any_def['text_line_height'])
-        if 'text_orientation' in any_def:
-            text_orientation = self._parse_orientation(
-                any_def['text_orientation'])
-            if text_orientation:
-                attrs['text_orientation'] = text_orientation
-        return attrs
+        if 'scale' in any_def:
+            attrs['scale'] = float(any_def['scale'])
 
     def _get_style(
             self,
@@ -367,13 +439,12 @@ class Builder:
         attrs = self._named_styles.get(name)
         if attrs:
             return attrs
-        else:
-            if warn:
-                log_warning("Style '{}' not found".format(name))
-            return empty
+        if warn:
+            log_warning("Style '{}' not found".format(name))
+        return empty
 
     @staticmethod
-    def _str_or_list(text: Any) -> List[str]:
+    def _str_or_list(text: Any) -> Sequence[str]:
         """Take a string or list of strings and return a list of strings."""
         result: List[str] = []
         if not text:
@@ -385,35 +456,80 @@ class Builder:
         return result
 
     @staticmethod
-    def _parse_label_position(s: str) -> Optional[LabelPosition]:
+    def _parse_color(numbers: Optional[Sequence[float]]) -> Optional[Color]:
+        """Parse the value of a color attribute.
+
+        The sequence must contain either 3 or 4 numbers.
+
+        """
+        result = None
+        if numbers and len(numbers) > 2:
+            result = Color(*numbers)
+        return result
+
+    @staticmethod
+    def _parse_font_style(string: str) -> Optional[FontStyle]:
+        """Parse the value of a font style attribute."""
+        result = None
+        norm = string.strip().upper()
+        for member in FontStyle:
+            if member.name == norm:
+                result = member
+                break
+        return result
+
+    @staticmethod
+    def _parse_font_weight(string: str) -> Optional[FontWeight]:
+        """Parse the value of a font weight attribute."""
+        result = None
+        norm = string.strip().upper()
+        for member in FontWeight:
+            if member.name == norm:
+                result = member
+                break
+        return result
+
+    @staticmethod
+    def _parse_label_position(string: str) -> Optional[LabelPosition]:
         """Parse the value of a label position attribute."""
         result = None
-        a = s.strip().upper()
+        norm = string.strip().upper()
         for member in LabelPosition:
-            if member.name == a:
+            if member.name == norm:
                 result = member
                 break
         return result
 
     @staticmethod
-    def _parse_orientation(s: str) -> Optional[Orientation]:
+    def _parse_orientation(string: str) -> Optional[Orientation]:
         """Parse the value of an orientation attribute."""
         result = None
-        a = s.strip().upper()
+        norm = string.strip().upper()
         for member in Orientation:
-            if member.name == a:
+            if member.name == norm:
                 result = member
                 break
         return result
 
     @staticmethod
-    def _parse_sides(ss: List[str]) -> Set[Side]:
+    def _parse_text_orientation(string: str) -> Optional[TextOrientation]:
+        """Parse the value of a text orientation attribute."""
+        result = None
+        norm = string.strip().upper()
+        for member in TextOrientation:
+            if member.name == norm:
+                result = member
+                break
+        return result
+
+    @staticmethod
+    def _parse_sides(strings: Sequence[str]) -> Set[Side]:
         """Parse the value of a sides attribute."""
         result = set()
-        for s in ss:
-            a = s.strip().upper()
+        for string in strings:
+            norm = string.strip().upper()
             for member in Side:
-                if member.name == a:
+                if member.name == norm:
                     result.add(member)
                     break
         return result

@@ -1,19 +1,20 @@
 """Provides means to collect and merge attributes."""
 
-from enum import Enum, auto
+from collections import OrderedDict
+from enum import Enum, IntEnum, auto
 
 from typing import (
-    cast,
     Any,
-    Dict,
+    Collection,
     Iterable,
     Iterator,
     Mapping,
+    MutableMapping,
     Optional,
-    Set,
+    Sequence,
+    Tuple,
+    cast,
 )
-
-from .geometry import Orientation
 
 ######################################################################
 
@@ -22,9 +23,8 @@ AttributeMap = Mapping[str, Any]
 
 ######################################################################
 
-class Side(Enum):
+class Side(IntEnum):
     """Block sides."""
-
     BOTTOM = auto()
     LEFT = auto()
     RIGHT = auto()
@@ -32,9 +32,29 @@ class Side(Enum):
 
 ######################################################################
 
+class TextOrientation(Enum):
+    """Orientation of labels."""
+    HORIZONTAL = auto()
+    VERTICAL = auto()
+    FOLLOW = auto()
+
+######################################################################
+
+class FontStyle(Enum):
+    """Font styles."""
+    NORMAL = auto()
+    ITALIC = auto()
+    OBLIQUE = auto()
+
+class FontWeight(Enum):
+    """Font weights."""
+    NORMAL = auto()
+    BOLD = auto()
+
+######################################################################
+
 class LabelPosition(Enum):
     """Position of the label of an element relative to its shape."""
-
     BOTTOM = auto()
     BOTTOM_LEFT = auto()
     BOTTOM_RIGHT = auto()
@@ -79,11 +99,63 @@ class LabelPosition(Enum):
 
 ######################################################################
 
+class Color:
+    """Color to draw shapes with."""
+
+    def __init__(self, r: float, g: float, b: float, a: float = 1.0):
+        """Initialize with the given values for the components."""
+        self._red = r
+        self._green = g
+        self._blue = b
+        self._alpha = a
+
+    @property
+    def red(self) -> float:
+        """Red component."""
+        return self._red
+
+    @property
+    def green(self) -> float:
+        """Green component."""
+        return self._green
+
+    @property
+    def blue(self) -> float:
+        """Blue component."""
+        return self._blue
+
+    @property
+    def alpha(self) -> float:
+        """Alpha (opacity) component."""
+        return self._alpha
+
+    @property
+    def rgba(self) -> Tuple[float, float, float, float]:
+        """RGBA components in order."""
+        return (self._red, self._green, self._blue, self._alpha)
+
+    @classmethod
+    def black(cls) -> 'Color':
+        """Color object corresponding to black."""
+        return cls(0.0, 0.0, 0.0)
+
+    @classmethod
+    def white(cls) -> 'Color':
+        """Color object corresponding to white."""
+        return cls(1.0, 1.0, 1.0)
+
+######################################################################
+
+# Type of stroke dash array values.
+_DashArray = Sequence[float]
+
+######################################################################
+
 class Attributes(Mapping[str, Any]):
     """Collection of attributes."""
 
     # Catalog of valid attribute names.
-    _attribute_names = set([
+    _attribute_names = [
         'arrow_aspect',
         'arrow_back',
         'arrow_base',
@@ -113,20 +185,21 @@ class Attributes(Mapping[str, Any]):
         'padding_right',
         'padding_top',
         'pass_through',
-        'stretch',
+        'scale',
         'stroke_dasharray',
         'stroke_width',
         'stroke',
         'text_fill',
         'text_line_height',
         'text_orientation',
-    ])
+    ]
 
     def __init__(self, **attrs: AttributeMap):
-        """Initialize the collection."""
-        attributes: Dict[str, Any] = {}
-        for key, value in attrs.items():
-            attributes[key] = value
+        """Initialize the collection with the given values."""
+        attributes: MutableMapping[str, Any] = OrderedDict()
+        for name in self._attribute_names:
+            if name in attrs:
+                attributes[name] = attrs[name]
         self._attributes = attributes
 
     def __getitem__(self, key: str) -> Any:
@@ -134,7 +207,7 @@ class Attributes(Mapping[str, Any]):
         return self._attributes[key]
 
     def __setitem__(self, key: str, value: Any) -> None:
-        """Set the value of the attribute."""
+        """Set the value of an attribute."""
         self._attributes[key] = value
 
     def __iter__(self) -> Iterator[str]:
@@ -147,18 +220,10 @@ class Attributes(Mapping[str, Any]):
 
     def merge(self, src: AttributeMap) -> None:
         """Merge attributes to this instance."""
-        names = self._attribute_names
         dest = self._attributes
-        for key, value in src.items():
-            if key in names:
-                dest[key] = value
-
-    def copy(self) -> 'Attributes':
-        """Return a copy of self."""
-        attrs: Dict[str, Any] = {}
-        for key, value in self._attributes.items():
-            attrs[key] = value
-        return self.__class__(**attrs)
+        for name in self._attribute_names:
+            if name in src:
+                dest[name] = src[name]
 
     def _pretty_print(self) -> None:
         """Print the attributes for debugging purposes."""
@@ -169,33 +234,43 @@ class Attributes(Mapping[str, Any]):
 
 ######################################################################
 
-class LineAttributes:
+class _BackstopAttributes:
+    """Last in the MRO of attribute classes."""
+
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Does nothing."""
+
+######################################################################
+
+class LineAttributes(_BackstopAttributes):
     """Collection of attributes relevant to linear objects."""
 
     def __init__(self) -> None:
-        """Initialize the attributes with default values."""
-        self._stroke: Optional[str] = "black"
-        self._stroke_dasharray: Optional[str] = None
+        """Initialize with default attributes."""
+        super().__init__()
+        self._stroke: Optional[Color] = Color.black()
+        self._stroke_dasharray: Optional[_DashArray] = None
         self._stroke_width = 2.0
 
-    def _set_line_attributes(self, attrs: AttributeMap) -> None:
-        """Set the line attributes to the given values."""
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
         if 'stroke' in attrs:
-            self._stroke = cast(Optional[str], attrs['stroke'])
+            self._stroke = cast(Optional[Color], attrs['stroke'])
         if 'stroke_dasharray' in attrs:
-            self._stroke_dasharray = cast(Optional[str],
+            self._stroke_dasharray = cast(Optional[_DashArray],
                                           attrs['stroke_dasharray'])
         if 'stroke_width' in attrs:
             self._stroke_width = cast(float, attrs['stroke_width'])
 
     @property
-    def stroke(self) -> Optional[str]:
-        """Color of the line (e.g. "black")."""
+    def stroke(self) -> Optional[Color]:
+        """Color of the line."""
         return self._stroke
 
     @property
-    def stroke_dasharray(self) -> Optional[str]:
-        """Dash pattern of the line (e.g. "4 4")."""
+    def stroke_dasharray(self) -> Optional[_DashArray]:
+        """Dash pattern of the line."""
         return self._stroke_dasharray
 
     @property
@@ -205,27 +280,29 @@ class LineAttributes:
 
 ######################################################################
 
-class AreaAttributes:
+class AreaAttributes(LineAttributes):
     """Collection of attributes relevant to 2D shapes."""
 
     def __init__(self) -> None:
-        """Initialize the attributes with default values."""
-        self._fill: Optional[str] = "none"
+        """Initialize with default attributes."""
+        super().__init__()
+        self._fill: Optional[Color] = None
         self._min_height = 0.0
         self._min_width = 0.0
 
-    def _set_area_attributes(self, attrs: AttributeMap) -> None:
-        """Set the area attributes to the given values."""
+    def set_attributes(self, ** attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
         if 'fill' in attrs:
-            self._fill = cast(Optional[str], attrs['fill'])
+            self._fill = cast(Optional[Color], attrs['fill'])
         if 'min_height' in attrs:
             self._min_height = cast(float, attrs['min_height'])
         if 'min_width' in attrs:
             self._min_width = cast(float, attrs['min_width'])
 
     @property
-    def fill(self) -> Optional[str]:
-        """Color of the interior (e.g. "white")."""
+    def fill(self) -> Optional[Color]:
+        """Color of the interior."""
         return self._fill
 
     @property
@@ -240,42 +317,47 @@ class AreaAttributes:
 
 ######################################################################
 
-class TextAttributes:
+class TextAttributes(_BackstopAttributes):
     """Collection of attributes relevant to text."""
 
     def __init__(self) -> None:
-        """Initialize the attributes with default values."""
-        self._font_family: Optional[str] = None
+        """Initialize with default attributes."""
+        super().__init__()
+        self._font_family = "Arial"
         self._font_size = 10.0
-        self._font_style: Optional[str] = None
-        self._font_weight: Optional[str] = None
+        self._font_style = FontStyle.NORMAL
+        self._font_weight = FontWeight.NORMAL
         self._label: Optional[str] = None
-        self._text_fill: Optional[str] = "black"
-        self._text_line_height = 1.25
-        self._text_orientation = Orientation.HORIZONTAL
+        self._label_distance = 0.0
+        self._text_fill: Optional[Color] = Color.black()
+        self._text_line_height = 1.2
+        self._text_orientation = TextOrientation.HORIZONTAL
 
-    def _set_text_attributes(self, attrs: AttributeMap) -> None:
-        """Set the text attributes to the given values."""
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
         if 'font_family' in attrs:
-            self._font_family = cast(Optional[str], attrs['font_family'])
+            self._font_family = cast(str, attrs['font_family'])
         if 'font_size' in attrs:
             self._font_size = cast(float, attrs['font_size'])
         if 'font_style' in attrs:
-            self._font_style = cast(Optional[str], attrs['font_style'])
+            self._font_style = cast(FontStyle, attrs['font_style'])
         if 'font_weight' in attrs:
-            self._font_weight = cast(Optional[str], attrs['font_weight'])
+            self._font_weight = cast(FontWeight, attrs['font_weight'])
         if 'label' in attrs:
             self._label = cast(Optional[str], attrs['label'])
+        if 'label_distance' in attrs:
+            self._label_distance = cast(float, attrs['label_distance'])
         if 'text_fill' in attrs:
-            self._text_fill = cast(Optional[str], attrs['text_fill'])
+            self._text_fill = cast(Optional[Color], attrs['text_fill'])
         if 'text_line_height' in attrs:
             self._text_line_height = cast(float, attrs['text_line_height'])
         if 'text_orientation' in attrs:
             self._text_orientation = cast(
-                Orientation, attrs['text_orientation'])
+                TextOrientation, attrs['text_orientation'])
 
     @property
-    def font_family(self) -> Optional[str]:
+    def font_family(self) -> str:
         """Font family of text (e.g. "sans")."""
         return self._font_family
 
@@ -285,13 +367,13 @@ class TextAttributes:
         return self._font_size
 
     @property
-    def font_style(self) -> Optional[str]:
-        """Font style of text (e.g. "italic")."""
+    def font_style(self) -> FontStyle:
+        """Font style of text (e.g. ITALIC)."""
         return self._font_style
 
     @property
-    def font_weight(self) -> Optional[str]:
-        """Font weight of text (e.g. "bold")."""
+    def font_weight(self) -> FontWeight:
+        """Font weight of text (e.g. BOLD)."""
         return self._font_weight
 
     @property
@@ -300,8 +382,13 @@ class TextAttributes:
         return self._label
 
     @property
-    def text_fill(self) -> Optional[str]:
-        """Color of text (e.g. "black")."""
+    def label_distance(self) -> float:
+        """Distance of the label from the border."""
+        return self._label_distance
+
+    @property
+    def text_fill(self) -> Optional[Color]:
+        """Color of text."""
         return self._text_fill
 
     @property
@@ -310,34 +397,28 @@ class TextAttributes:
         return self._text_line_height
 
     @property
-    def text_orientation(self) -> Orientation:
+    def text_orientation(self) -> TextOrientation:
         """Orientation of the text."""
         return self._text_orientation
 
 ######################################################################
 
-class ContainerAttributes(LineAttributes, AreaAttributes, TextAttributes):
+class ContainerAttributes(AreaAttributes, TextAttributes):
     """Collection of attributes relevant to containers."""
 
     def __init__(self) -> None:
-        """Initialize the attributes with default values."""
-        LineAttributes.__init__(self)
-        AreaAttributes.__init__(self)
-        TextAttributes.__init__(self)
-        self._label_distance = 0.0
+        """Initialize with default attributes."""
+        super().__init__()
+        self._label_distance = 6.0
         self._label_position = LabelPosition.TOP
         self._padding_bottom = 0.0
         self._padding_left = 0.0
         self._padding_right = 0.0
         self._padding_top = 0.0
 
-    def _set_container_attributes(self, attrs: AttributeMap) -> None:
-        """Set the container attributes to the given values."""
-        self._set_line_attributes(attrs)
-        self._set_area_attributes(attrs)
-        self._set_text_attributes(attrs)
-        if 'label_distance' in attrs:
-            self._label_distance = cast(float, attrs['label_distance'])
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
         if 'label_position' in attrs:
             self._label_position = cast(LabelPosition, attrs['label_position'])
         if 'padding_bottom' in attrs:
@@ -348,11 +429,6 @@ class ContainerAttributes(LineAttributes, AreaAttributes, TextAttributes):
             self._padding_right = cast(float, attrs['padding_right'])
         if 'padding_top' in attrs:
             self._padding_top = cast(float, attrs['padding_top'])
-
-    @property
-    def label_distance(self) -> float:
-        """Distance of the label from the border."""
-        return self._label_distance
 
     @property
     def label_position(self) -> LabelPosition:
@@ -382,12 +458,11 @@ class ContainerAttributes(LineAttributes, AreaAttributes, TextAttributes):
 ######################################################################
 
 class BlockAttributes(ContainerAttributes):
-    """Collection of attributes relevant to blocks."""
+    """Collection of attributes relevant to diagram blocks."""
 
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
-        ContainerAttributes.__init__(self)
-        self._label_distance = 2.0
+        super().__init__()
         self._label_position = LabelPosition.CENTER
         self._margin_bottom = 24.0
         self._margin_left = 24.0
@@ -405,11 +480,7 @@ class BlockAttributes(ContainerAttributes):
 
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
-        self._set_container_attributes(attrs)
-        self._set_block_attributes(attrs)
-
-    def _set_block_attributes(self, attrs: AttributeMap) -> None:
-        """Set the attributes of the block to the given values."""
+        super().set_attributes(**attrs)
         if 'margin_bottom' in attrs:
             self._margin_bottom = cast(float, attrs['margin_bottom'])
         if 'margin_left' in attrs:
@@ -455,31 +526,28 @@ class BlockAttributes(ContainerAttributes):
 
 ######################################################################
 
-class ConnectionAttributes(LineAttributes):
+class ConnectionAttributes(LineAttributes, TextAttributes):
     """Collection of attributes relevant to connections."""
 
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
-        LineAttributes.__init__(self)
-        all_sides = set([Side.BOTTOM, Side.LEFT, Side.RIGHT, Side.TOP])
+        super().__init__()
+        all_sides = [Side.BOTTOM, Side.LEFT, Side.RIGHT, Side.TOP]
         self._arrow_aspect = 1.5
         self._arrow_back = False
         self._arrow_base = 3.0
         self._arrow_forward = True
-        self._buffer_fill: Optional[str] = None
-        self._buffer_width: Optional[float] = None
-        self._entrances: Set[Side] = all_sides
-        self._exits: Set[Side] = all_sides
-        self._stroke = "black"
+        self._buffer_fill: Optional[Color] = None
+        self._buffer_width = 0.0
+        self._entrances: Collection[Side] = self._collect_sides(all_sides)
+        self._exits: Collection[Side] = self._collect_sides(all_sides)
+        self._label_distance = 4.0
+        self._text_orientation = TextOrientation.FOLLOW
         self.set_attributes(**attrs)
 
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
-        self._set_line_attributes(attrs)
-        self._set_connection_attributes(attrs)
-
-    def _set_connection_attributes(self, attrs: AttributeMap) -> None:
-        """Set the connection attributes to the given values."""
+        super().set_attributes(**attrs)
         if 'arrow_aspect' in attrs:
             self._arrow_aspect = cast(float, attrs['arrow_aspect'])
         if 'arrow_back' in attrs:
@@ -489,13 +557,23 @@ class ConnectionAttributes(LineAttributes):
         if 'arrow_forward' in attrs:
             self._arrow_forward = cast(bool, attrs['arrow_forward'])
         if 'buffer_fill' in attrs:
-            self._buffer_fill = cast(Optional[str], attrs['buffer_fill'])
+            self._buffer_fill = cast(Optional[Color], attrs['buffer_fill'])
         if 'buffer_width' in attrs:
-            self._buffer_width = cast(Optional[float], attrs['buffer_width'])
+            self._buffer_width = cast(float, attrs['buffer_width'])
         if 'entrances' in attrs:
-            self._entrances = set(cast(Iterable[Side], attrs['entrances']))
+            self._entrances = self._collect_sides(attrs['entrances'])
         if 'exits' in attrs:
-            self._exits = set(cast(Iterable[Side], attrs['exits']))
+            self._exits = self._collect_sides(attrs['exits'])
+
+    @staticmethod
+    def _collect_sides(value: Any) -> Collection[Side]:
+        """Return a collection of sorted unique block sides.
+
+        Works with attribute values as well.
+
+        """
+        sides = cast(Iterable[Side], value)
+        return sorted(set(sides))
 
     @property
     def arrow_aspect(self) -> float:
@@ -518,22 +596,22 @@ class ConnectionAttributes(LineAttributes):
         return self._arrow_forward
 
     @property
-    def buffer_fill(self) -> Optional[str]:
+    def buffer_fill(self) -> Optional[Color]:
         """Color of the buffer around the connection."""
         return self._buffer_fill
 
     @property
-    def buffer_width(self) -> Optional[float]:
+    def buffer_width(self) -> float:
         """Width of the buffer around the connection."""
         return self._buffer_width
 
     @property
-    def entrances(self) -> Set[Side]:
+    def entrances(self) -> Collection[Side]:
         """Sides to enter into the destination block."""
         return self._entrances
 
     @property
-    def exits(self) -> Set[Side]:
+    def exits(self) -> Collection[Side]:
         """Sides to exit from the source block."""
         return self._exits
 
@@ -544,36 +622,33 @@ class DiagramAttributes(ContainerAttributes):
 
     def __init__(self, **attrs: AttributeMap):
         """Initialize the attributes with the given values."""
-        ContainerAttributes.__init__(self)
+        super().__init__()
         self._collapse_connections = False
         self._connection_distance = 4.0
+        self._fill = Color.white()
         self._font_size = 14.0
-        self._label_distance = 6.0
-        self._min_height = 300.0
-        self._min_width = 300.0
-        self._stretch = True
+        self._min_height = 256.0
+        self._min_width = 256.0
+        self._scale = 1.0
+        self._stroke = None
         self._stroke_width = 0.0
         self.set_attributes(**attrs)
 
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
-        self._set_container_attributes(attrs)
-        self._set_diagram_attributes(attrs)
-
-    def _set_diagram_attributes(self, attrs: AttributeMap) -> None:
-        """Set the diagram attributes to the given values."""
+        super().set_attributes(**attrs)
         if 'collapse_connections' in attrs:
             self._collapse_connections = cast(
                 bool, attrs['collapse_connections'])
         if 'connection_distance' in attrs:
             self._connection_distance = cast(
                 float, attrs['connection_distance'])
-        if 'stretch' in attrs:
-            self._stretch = cast(bool, attrs['stretch'])
+        if 'scale' in attrs:
+            self._scale = cast(float, attrs['scale'])
 
     @property
     def collapse_connections(self) -> bool:
-        """Let connections that belong to the same group overlap?."""
+        """Let connections that belong to the same group merge?"""
         return self._collapse_connections
 
     @property
@@ -582,6 +657,6 @@ class DiagramAttributes(ContainerAttributes):
         return self._connection_distance
 
     @property
-    def stretch(self) -> bool:
-        """Stretch diagram to fill container?"""
-        return self._stretch
+    def scale(self) -> float:
+        """Scale drawing using this value."""
+        return self._scale

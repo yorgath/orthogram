@@ -1,16 +1,16 @@
-"""Functions for loading DDFs and writing SVGs."""
+"""Functions for loading DDFs and writing image files."""
 
-import argparse, os
+import argparse
+import os
 
 from typing import Any, Optional
 
 import yaml
 
-from .build import Builder
+from .arrange import Layout
 from .debug import Debug
-from .diagram import DiagramDef
+from .define import Builder, DiagramDef
 from .draw import Drawing
-from .layout import Layout
 
 ######################################################################
 
@@ -54,18 +54,18 @@ def translate_dir(in_dir: str, out_dir: Optional[str] = None) -> None:
         if in_file.endswith(".yaml") or in_file.endswith(".yml"):
             in_path = os.path.join(in_dir, in_file)
             base, _ = os.path.splitext(in_file)
-            out_file = base + ".svg"
+            out_file = base + ".png"
             out_path = os.path.join(out_dir, out_file)
             print(in_path, "=>", out_path)
             translate(in_path, out_path)
 
 def translate(in_file: str, out_file: Optional[str] = None) -> None:
-    """Create a SVG file from a diagram definition file."""
+    """Create a PNG file from a diagram definition file."""
     diagram = load_ddf(in_file)
     if not out_file:
-        pre, ext = os.path.splitext(in_file)
-        out_file = pre + ".svg"
-    write_svg(diagram, out_file)
+        pre, _ = os.path.splitext(in_file)
+        out_file = pre + ".png"
+    write_png(diagram, out_file)
 
 def load_ddf(file: str) -> DiagramDef:
     """Load a diagram definition from a file."""
@@ -76,11 +76,11 @@ def load_ddf(file: str) -> DiagramDef:
 
 def _load_yaml(file: str) -> Any:
     """Read diagram definitions from a YAML file."""
-    with open(file, encoding='utf-8') as s:
-        return yaml.safe_load(s)
+    with open(file, encoding='utf-8') as stream:
+        return yaml.safe_load(stream)
 
-def write_svg(diagram_def: DiagramDef, file: str) -> None:
-    """Produce a SVG file of the diagram."""
+def write_png(diagram_def: DiagramDef, file: str) -> None:
+    """Produce a PNG file of the diagram."""
     layout = Layout(diagram_def)
     drawing = Drawing(layout)
-    drawing.write_svg(file)
+    drawing.write_png(file)

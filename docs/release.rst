@@ -1,6 +1,21 @@
 Release history
 ===============
 
+0.5.0 (2021-04-24)
+------------------
+
+* Major new feature: connections can now have labels.
+
+* Switched from SVG to PNG output using the cairo graphics library.
+  Needed to be able to calculate the dimensions of labels.  Breaking
+  DDF and API changes.
+
+* Colors are now sequences of numbers instead of strings.
+
+* Removed the now irrelevant ``stretch`` attribute.
+
+* Added the ``scale`` attribute.
+
 0.4.4 (2021-02-14)
 ------------------
 

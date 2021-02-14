@@ -56,10 +56,10 @@ following are of particular significance to the program:
   This may help reduce the clutter, though it depends on the
   application.  Try it out and see.
 
-``stretch``
-  By default, the diagram resizes itself to fill the element that
-  contains it.  Set this attribute to ``false`` to make the browser
-  render the diagram in its original dimensions.
+``scale``
+  Use this attribute to scale the output image by a factor you
+  specify.  E.g. ``scale: 1.5`` will produce an image enlarged by 50%.
+  The default value is 1 (i.e. no scaling).
 
 rows
 ----
@@ -115,7 +115,7 @@ is an example:
 
      - label: An anonymous block
        tags: [b1, b2]
-       stroke: blue
+       stroke: [0, 0, 1]
 
 Note that if you do not define a label for a block, the program will
 use its name as a label instead.
@@ -197,11 +197,11 @@ is an example:
 
      - start: a
        end: b
-       stroke: blue
+       stroke: [0, 0, 1]
 
      - start: b
        end: c
-       stroke: "#FF8844"
+       stroke: [1, 0.5, 0.25]
 
 Regarding the value of the ``start`` and ``end`` pseudo-attributes, it
 can be one of the following:
@@ -250,9 +250,9 @@ thus reducing the clutter and size of the diagram.  The ``group``
 value is just a string.  Note that setting this attribute affects the
 drawing order of the connections.  When the program encounters a
 connection marked with a group name, it draws all other connections
-that belong to the same group immediately after first one.  The order
-of groups thus becomes more significant compared to the order of the
-connections themselves.  It is probably good practice to keep
+that belong to the same group immediately after the first one.  The
+order of groups thus becomes more significant compared to the order of
+the connections themselves.  It is probably good practice to keep
 connection definitions referring to the same group close together in
 the file.
 
@@ -281,9 +281,9 @@ the same color:
    styles:
 
      reddish:
-       stroke: "#880000"
-       stroke_width: 3.0
-       fill: "#FFDDDD"
+       stroke: [0.5, 0, 0]
+       stroke_width: 3
+       fill: [1, 0.85, 0.85]
 
 You add style references to an element using the ``style`` attribute.
 The value of this attribute can be either a single style name or a
@@ -312,8 +312,8 @@ connections are drawn in blue:
    groups:
 
      water:
-       stroke: blue
-       stroke_width: 4.0
+       stroke: [0, 0, 1]
+       stroke_width: 4
 
    connections:
 

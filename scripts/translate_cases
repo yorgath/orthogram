@@ -8,5 +8,5 @@ from orthogram import translate_dir
 if __name__ == '__main__':
     root = "cases"
     in_dir = os.path.join(root, "yaml")
-    out_dir = os.path.join(root, "svg")
+    out_dir = os.path.join(root, "png")
     translate_dir(in_dir, out_dir)

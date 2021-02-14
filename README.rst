@@ -3,9 +3,9 @@ Orthogram
 
 Orthogram is a command line program and Python library that lets you
 draw block diagrams.  It reads the definition of a diagram from a YAML
-file and produces a SVG file like this one:
+file and produces a PNG file like this one:
 
-.. image:: examples/showoff.svg
+.. image:: examples/showoff.png
    :width: 100%
    :alt: (Showing off the capabilities)
 
@@ -34,7 +34,7 @@ Install from PyPI:
    pip install orthogram
 
 Assuming there is a diagram definition file named ``diagram.yaml`` in
-your current directory, run the following command to produce a SVG
+your current directory, run the following command to produce a PNG
 file:
 
 .. code::

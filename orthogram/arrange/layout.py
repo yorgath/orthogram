@@ -2,19 +2,23 @@
 
 from typing import Iterator
 
-from .diagram import Diagram, DiagramDef, Node
-from .geometry import Axis, IntPoint
+from ..define import (
+    Diagram,
+    DiagramDef,
+)
+
+from .label import (
+    WireLabel,
+    Labeler,
+)
 
 from .refine import (
     Network,
     Refiner,
-    Wire,
-    WireSegment,
 )
 
 from .route import (
     LayoutGrid,
-    NodesAndPointsIterator,
     Router,
 )
 
@@ -29,7 +33,9 @@ class Layout:
         # Calculate the coarse routes between the blocks.
         self._router = router = Router(diagram)
         # Refine the routes to calculate the exact wires.
-        self._refiner = Refiner(router)
+        self._refiner = refiner = Refiner(router)
+        # Arrange labels on the grid.
+        self._labeler = Labeler(refiner)
 
     @property
     def diagram(self) -> Diagram:
@@ -41,14 +47,10 @@ class Layout:
         """Layout grid."""
         return self._router.grid
 
-    def nodes_and_points(self) -> NodesAndPointsIterator:
-        """Return an iterator over the nodes and their grid positions."""
-        yield from self._router.nodes_and_points()
-
-    def node_point(self, node: Node) -> IntPoint:
-        """Return the position of the node in the grid."""
-        return self._router.node_point(node)
-
     def networks(self) -> Iterator[Network]:
         """Return an iterator over the calculated networks."""
         yield from self._refiner.networks()
+
+    def wire_labels(self) -> Iterator[WireLabel]:
+        """Return an iterator over the wire labels."""
+        yield from self._labeler.wire_labels()

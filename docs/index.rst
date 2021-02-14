@@ -7,21 +7,28 @@ Orthogram
 =========
 
 .. warning::
-   
-   This is work in progress.  There are frequent breaking changes.
-   Pin the minor version while major is zero (i.e. version 0.4.1 would
-   be compatible with 0.4.0; version 0.5.0 is not guaranteed to be
-   compatible with 0.4.1).  In case you use `Poetry`_ for package
+
+   This is work in progress.  There may be breaking changes.  Pin the
+   minor version while major is zero (i.e. version 0.5.1 would be
+   compatible with 0.5.0; version 0.6.0 is *not* guaranteed to be
+   compatible with 0.5.1).  In case you use `Poetry`_ for package
    management, this is the default behavior when upgrading
    requirements.
 
    .. _Poetry: https://python-poetry.org/
 
+.. attention::
+
+   Beginning with version 0.5, output format has switched to PNG.
+   This was necessary in order to be able to calculate the dimensions
+   of text.  Use version 0.4 if you want to produce SVG files (and you
+   do not need labels on connections).
+
 Orthogram is a command line program and Python library that lets you
-draw block diagrams.  It reads a YAML file and produces a SVG file
+draw block diagrams.  It reads a YAML file and produces a PNG file
 like this one:
 
-.. image:: ../examples/showoff.svg
+.. image:: ../examples/showoff.png
    :width: 100%
 
 Orthogram does not aim to be a fully-featured graph layout solution.
@@ -33,8 +40,8 @@ try to do a decent job arranging the connections around the blocks to
 produce a tidy, readable drawing.
 
 When used as a command line tool, Orthogram reads a *diagram
-definition file* and produces a Scalable Vector Graphics file.  The
-definition file is written in YAML.
+definition file* and produces a PNG image file.  The definition file
+is written in YAML.
 
 The source code is hosted on `Github`_.
 

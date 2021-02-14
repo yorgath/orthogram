@@ -10,17 +10,13 @@ enter the following command:
 
    $ python -m orthogram diagram.yaml
 
-This will create a ``diagram.svg`` file in the same directory.  If you
-wish to create a file with a different name or in a different
+This will create a ``diagram.png`` image file in the same directory.
+If you wish to create a file with a different name or in a different
 directory, use the ``-o`` switch like this:
 
 .. code-block:: console
 
-   $ python -m orthogram diagram.yaml -o images/something.svg
-
-The program creates Scalable Vector Graphics (SVG) files.  Use your
-web browser to view the drawing.  Use `Inkscape`_ to convert it to PNG
-or other supported formats.
+   $ python -m orthogram diagram.yaml -o images/something.png
 
 .. note::
 

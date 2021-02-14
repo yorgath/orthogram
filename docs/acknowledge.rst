@@ -14,8 +14,11 @@ This program depends on the following excellent pieces of software:
   library.  A bit overkill for the simple geometry manipulations
   Orthogram does, but why reinvent the wheel?
 
-* `svgwrite`_: Orthogram uses this library to write the SVG files.
-  Much better than having to use straight XML!
+* `Cassowary`_: Linear constraint solver implemented in pure Python.
+  Orthogram uses this to calculate the layout of drawings.
+
+* `pycairo`_: Python interface to the popular `cairo`_ graphics
+  library.
 
 * `PyYAML`_: Simple to use, efficient YAML parser.
 
@@ -26,14 +29,16 @@ author a lot:
 
 * `mypy`_: Python static analyzer.  Makes refactoring so much easier.
 
-* `Poetry`_: Great Python package manager.  Also made publishing to
+* `Poetry`_: Great Python package manager.  Also makes publishing to
   PyPI a breeze.
 
 .. _Python: https://python.org
 .. _NetworkX: https://networkx.org/
 .. _Shapely: https://github.com/Toblerity/Shapely
 .. _GEOS: https://trac.osgeo.org/geos
-.. _svgwrite: https://github.com/mozman/svgwrite
+.. _Cassowary: https://github.com/brodderickrodriguez/cassowary
+.. _pycairo: https://github.com/pygobject/pycairo
+.. _cairo: https://cairographics.org
 .. _PyYAML: https://github.com/yaml/pyyaml
 .. _Sphinx: https://www.sphinx-doc.org/
 .. _Poetry: https://python-poetry.org/

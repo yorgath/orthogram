@@ -1,5 +1,6 @@
 diagram:
   min_height: 0
+  scale: 2
 rows:
   - [a]
   - [~, b]

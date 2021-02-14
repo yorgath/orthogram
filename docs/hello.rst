@@ -24,4 +24,4 @@ Save it as ``hello.yaml`` and run:
 
    $ python -m orthogram hello.yaml
 
-This should create a ``hello.svg`` file in the same directory.
+This should create a ``hello.png`` file in the same directory.

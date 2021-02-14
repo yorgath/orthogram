@@ -1,17 +1,27 @@
 """Provides the elements of a diagram."""
 
+from abc import abstractmethod, ABCMeta
+from collections import OrderedDict
+
 from typing import (
-    Dict,
     Iterable,
     Iterator,
     List,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
+
+from ..geometry import (
+    IntBounds,
+    IntPoint,
+    Orientation,
+)
+
+from ..util import log_warning
 
 from .attributes import (
     AttributeMap,
@@ -19,10 +29,9 @@ from .attributes import (
     BlockAttributes,
     ConnectionAttributes,
     DiagramAttributes,
+    TextAttributes,
+    TextOrientation,
 )
-
-from .geometry import IntBounds, IntPoint, Orientation
-from .util import log_info, log_warning
 
 ######################################################################
 
@@ -59,10 +68,7 @@ class BlockDef:
     ):
         """Initialize for a block with the given properties."""
         self._name = name
-        tag_set: Set[str] = set()
-        if tags:
-            tag_set.update(tags)
-        self._tags = tag_set
+        self._tags = sorted(set(tags))
         self._attributes = attrs
 
     @property
@@ -71,9 +77,9 @@ class BlockDef:
         return self._name
 
     @property
-    def tags(self) -> Set[str]:
+    def tags(self) -> Iterable[str]:
         """Tags used to look up cells."""
-        return set(self._tags)
+        return list(self._tags)
 
     @property
     def attributes(self) -> AttributeMap:
@@ -131,7 +137,7 @@ class ConnectionDef:
 
 ######################################################################
 
-# Multiple connection point can be specified as:
+# Multiple connection points can be specified as:
 # - a single block name (string)
 # - a list of block names (sequence of strings)
 # - a list of block names and associated tag cells (mapping from
@@ -157,7 +163,7 @@ class DiagramDef:
         self._auto_block_attributes = Attributes()
         self._row_defs: List[RowDef] = []
         self._block_defs: List[BlockDef] = []
-        self._block_defs_by_name: Dict[str, BlockDef] = {}
+        self._block_defs_by_name: MutableMapping[str, BlockDef] = OrderedDict()
         self._connection_defs: List[ConnectionDef] = []
 
     @property
@@ -233,19 +239,18 @@ class DiagramDef:
                 self.add_connection(start, end, group, **attrs)
 
     @staticmethod
-    def _to_sub_block_defs(m: MultipleNodes) -> Sequence[SubBlockDef]:
+    def _to_sub_block_defs(multi_nodes: MultipleNodes) -> Sequence[SubBlockDef]:
         """Produce the object necessary for a connection."""
-        if isinstance(m, str):
-            return [m]
-        elif isinstance(m, Sequence):
-            return m
-        elif isinstance(m, Mapping):
+        if isinstance(multi_nodes, str):
+            return [multi_nodes]
+        if isinstance(multi_nodes, Sequence):
+            return multi_nodes
+        if isinstance(multi_nodes, Mapping):
             seq = []
-            for b, t in m.items():
-                seq.append((b, t))
+            for block_name, tag in multi_nodes.items():
+                seq.append((block_name, tag))
             return seq
-        else:
-            assert False, "Bad connection point definition"
+        raise RuntimeError("Bad connection point definition")
 
     def add_connection(
             self,
@@ -321,8 +326,8 @@ class DiagramRow:
         self._i = i
         cells = []
         for j, tag in enumerate(tags):
-            p = IntPoint(i=i, j=j)
-            cell = DiagramCell(p, tag)
+            point = IntPoint(i=i, j=j)
+            cell = DiagramCell(point, tag)
             cells.append(cell)
         self._cells = cells
 
@@ -342,14 +347,14 @@ class DiagramRow:
         """Return an iterator over the cells."""
         yield from self._cells
 
-    def expand(self, n: int) -> None:
+    def expand(self, count: int) -> None:
         """Add cells at the end if the row is shorter than the given length."""
         cells = self._cells
-        m = len(cells)
+        current = len(cells)
         i = self._i
-        for j in range(m, n):
-            p = IntPoint(i=i, j=j)
-            cell = DiagramCell(p)
+        for j in range(current, count):
+            point = IntPoint(i=i, j=j)
+            cell = DiagramCell(point)
             cells.append(cell)
 
 ######################################################################
@@ -374,10 +379,9 @@ class DiagramGrid:
     def width(self) -> int:
         """Number of columns."""
         rows = self._rows
-        if not rows:
-            return 0
-        else:
+        if rows:
             return len(rows[0])
+        return 0
 
     def add_row(self, tags: Sequence[Optional[str]]) -> None:
         """Add a row of cells to the grid."""
@@ -428,11 +432,13 @@ class DiagramGrid:
         stored in the grid.
 
         """
-        for row in self._rows:
+        for row in self:
             for cell in row:
-                p = cell.point
-                if (p.i >= bounds.imin and p.i <= bounds.imax and
-                    p.j >= bounds.jmin and p.j <= bounds.jmax):
+                point = cell.point
+                if (
+                        point.i >= bounds.imin and point.i <= bounds.imax and
+                        point.j >= bounds.jmin and point.j <= bounds.jmax
+                ):
                     yield cell
 
     def _cells(self) -> Iterator[DiagramCell]:
@@ -442,22 +448,17 @@ class DiagramGrid:
         stored in the grid.
 
         """
-        for row in self._rows:
+        for row in self:
             yield from row
 
     def tags(self) -> Iterable[str]:
-        """Return all the tags from the cells.
-
-        This method ensures that the result contains each tag only
-        once.  It returns the tags in no particular order.
-
-        """
-        tags = set()
+        """Return all unique tags from all the cells."""
+        tag_set = set()
         for cell in self._cells():
             tag = cell.tag
             if tag:
-                tags.add(tag)
-        return tags
+                tag_set.add(tag)
+        return sorted(tag_set)
 
 ######################################################################
 
@@ -484,7 +485,30 @@ class Node:
 
 ######################################################################
 
-class Block:
+class _ContainerMixin(metaclass=ABCMeta):
+    """Common methods for blocks and diagrams."""
+
+    @property
+    def label_orientation(self) -> Orientation:
+        """Orientation of the label, horizontal of vertical.
+
+        This is derived from the orientation of text in the
+        attributes.  Since this object is considered to be always
+        horizontal, it converts FOLLOW to HORIZONTAL.
+
+        """
+        tori = self._text_attributes().text_orientation
+        if tori is TextOrientation.VERTICAL:
+            return Orientation.VERTICAL
+        return Orientation.HORIZONTAL
+
+    @abstractmethod
+    def _text_attributes(self) -> TextAttributes:
+        """Override this to return the text attributes of the object."""
+
+######################################################################
+
+class Block(_ContainerMixin):
     """Represents a block of the diagram."""
 
     def __init__(self, name: Optional[str] = None, **attrs: AttributeMap):
@@ -514,11 +538,10 @@ class Block:
     @property
     def bounds(self) -> Optional[IntBounds]:
         """Return the bounding box of the block in the diagram grid."""
-        b = self._bounds
-        if b:
-            return b.copy()
-        else:
-            return None
+        bounds = self._bounds
+        if bounds:
+            return bounds.copy()
+        return None
 
     def label(self) -> Optional[str]:
         """Return a label to draw on the block in the diagram."""
@@ -529,8 +552,7 @@ class Block:
         # as a label.  Be specific here and compare with None.
         if label is None:
             return self._name
-        else:
-            return label
+        return label
 
     def add_node(self, node: Node) -> None:
         """Associate the block with the node.
@@ -560,10 +582,12 @@ class Block:
         """True if the two blocks have common nodes."""
         nodes_1 = set(self.nodes())
         nodes_2 = set(other.nodes())
-        if nodes_1.intersection(nodes_2):
-            return True
-        else:
-            return False
+        inter = nodes_1.intersection(nodes_2)
+        return bool(inter)
+
+    def _text_attributes(self) -> TextAttributes:
+        """Return the text attributes of the object."""
+        return self._attributes
 
 ######################################################################
 
@@ -608,8 +632,10 @@ class SubBlock:
         if bounds:
             for node in self._nodes:
                 i, j = node.point
-                if (i == bounds.imin or i == bounds.imax or
-                    j == bounds.jmin or j == bounds.jmax):
+                if (
+                        i == bounds.imin or i == bounds.imax or
+                        j == bounds.jmin or j == bounds.jmax
+                ):
                     yield node
 
 ######################################################################
@@ -623,7 +649,7 @@ class Connection:
             group: Optional[str] = None,
             **attrs: AttributeMap
     ):
-        """Initialize a connection between the given nodes."""
+        """Initialize a connection between the given blocks."""
         self._start = start
         self._end = end
         self._group = group
@@ -659,7 +685,7 @@ class Connection:
 
 ######################################################################
 
-class Diagram:
+class Diagram(_ContainerMixin):
     """Container for the blocks and connections of the diagram."""
 
     def __init__(self, ddef: DiagramDef):
@@ -667,9 +693,9 @@ class Diagram:
         self._attributes = DiagramAttributes(**ddef.attributes)
         self._grid = self._make_grid(ddef)
         self._blocks: List[Block] = []
-        self._blocks_by_name: Dict[str, Block] = {}
-        self._nodes_to_blocks: Dict[Node, List[Block]] = {}
-        self._points_to_nodes: Dict[IntPoint, Node] = {}
+        self._blocks_by_name: MutableMapping[str, Block] = OrderedDict()
+        self._nodes_to_blocks: MutableMapping[Node, List[Block]] = OrderedDict()
+        self._points_to_nodes: MutableMapping[IntPoint, Node] = OrderedDict()
         self._init_blocks(ddef)
         self._connections: List[Connection] = []
         self._init_connections(ddef)
@@ -700,14 +726,14 @@ class Diagram:
     def _make_leftover_blocks(self, ddef: DiagramDef) -> None:
         """Create blocks from leftover tags."""
         attrs = ddef.auto_block_attributes
-        tags = sorted(self._leftover_tags(ddef))
+        tags = sorted(set(self._leftover_tags(ddef)))
         bdefs = []
         for tag in tags:
             bdef = BlockDef(tag, [], **attrs)
             bdefs.append(bdef)
         self._make_blocks(bdefs)
 
-    def _leftover_tags(self, ddef: DiagramDef) -> Set[str]:
+    def _leftover_tags(self, ddef: DiagramDef) -> Iterable[str]:
         """Cell tags that do not appear in block definitions."""
         tags = set(self._grid.tags())
         for bdef in ddef.block_defs():
@@ -718,7 +744,7 @@ class Diagram:
             for tag in block_tags:
                 if tag in tags:
                     tags.remove(tag)
-        return tags
+        return sorted(tags)
 
     def _make_blocks(self, bdefs: Iterable[BlockDef]) -> None:
         """Use the block definitions to create blocks."""
@@ -739,11 +765,11 @@ class Diagram:
             tags.update(bdef.tags)
             # Find or create the nodes.
             for cell in grid.cells_containing(tags):
-                p = cell.point
-                node = points_to_nodes.get(p)
+                point = cell.point
+                node = points_to_nodes.get(point)
                 if not node:
                     node = Node(cell)
-                    points_to_nodes[p] = node
+                    points_to_nodes[point] = node
                 block.add_node(node)
                 if node not in nodes_to_blocks:
                     nodes_to_blocks[node] = []
@@ -787,12 +813,10 @@ class Diagram:
             sub = SubBlock(block, tag)
             if sub:
                 return sub
-            else:
-                msg = "Node '{}' is not placed""".format(block_name)
-                log_warning(msg)
-                return None
-        else:
+            msg = "Node '{}' is not placed""".format(block_name)
+            log_warning(msg)
             return None
+        return None
 
     def _block(self, name: str) -> Optional[Block]:
         """Retrieve a block by name."""
@@ -824,14 +848,18 @@ class Diagram:
         """Iterate over the blocks connected to a node."""
         yield from self._nodes_to_blocks[node]
 
-    def nodes_and_blocks(self) -> Iterator[Tuple[Node, Set[Block]]]:
-        """Return an iterator over the nodes and the blocks on it."""
+    def nodes_and_blocks(self) -> Iterator[Tuple[Node, Iterable[Block]]]:
+        """Return an iterator over the nodes and the blocks on them."""
         for node, blocks in self._nodes_to_blocks.items():
-            yield node, set(blocks)
+            yield node, list(blocks)
 
     def connections(self) -> Iterator[Connection]:
         """Return an iterator over the connections."""
         yield from self._connections
+
+    def _text_attributes(self) -> TextAttributes:
+        """Return the text attributes of the object."""
+        return self._attributes
 
     def _pretty_print(self) -> None:
         """Print the diagram for debugging purposes."""

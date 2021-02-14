@@ -34,6 +34,25 @@ class IntPoint:
         self._i = int(i)
         self._j = int(j)
 
+    def __eq__(self, other: object) -> bool:
+        """Implement the equality comparison between two points."""
+        if not isinstance(other, IntPoint):
+            return False
+        return (self.i, self.j) == (other.i, other.j)
+
+    def __hash__(self) -> int:
+        """Return the hash value of the tuple of coordinates."""
+        return hash((self._i, self._j))
+
+    def __iter__(self) -> Iterator[int]:
+        """Iterator over (i, j)."""
+        yield self._i
+        yield self._j
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "P(i={},j={})".format(self._i, self._j)
+
     @property
     def i(self) -> int:
         """Coordinate along the vertical axis."""
@@ -43,25 +62,6 @@ class IntPoint:
     def j(self) -> int:
         """Coordinate along the horizontal axis."""
         return self._j
-
-    def __eq__(self, other: object) -> bool:
-        """Implement the equality comparison between two points."""
-        if not isinstance(other, IntPoint):
-            return False
-        return (self.i, self.j) == (other.i, other.j)
-
-    def __hash__(self) -> int:
-        """Return the hash value of the tuple of coordinates."""
-        return hash((self.i, self.j))
-
-    def __iter__(self) -> Iterator[int]:
-        """Iterator over (i, j)."""
-        yield self._i
-        yield self._j
-
-    def __repr__(self) -> str:
-        """Convert to string."""
-        return "P(i={},j={})".format(self.i, self.j)
 
 ######################################################################
 
@@ -94,21 +94,21 @@ class IntBounds:
         It returns None if the collection of points is empty.
 
         """
-        b = None
+        bounds = None
         for point in points:
             i, j = point
-            if b:
-                if i < b.imin:
-                    b.imin = i
-                if i > b.imax:
-                    b.imax = i
-                if j < b.jmin:
-                    b.jmin = j
-                if j > b.jmax:
-                    b.jmax = j
+            if bounds:
+                if i < bounds.imin:
+                    bounds.imin = i
+                if i > bounds.imax:
+                    bounds.imax = i
+                if j < bounds.jmin:
+                    bounds.jmin = j
+                if j > bounds.jmax:
+                    bounds.jmax = j
             else:
-                b = cls(imin=i, jmin=j, imax=i, jmax=j)
-        return b
+                bounds = cls(imin=i, jmin=j, imax=i, jmax=j)
+        return bounds
 
     @property
     def imin(self) -> int:
@@ -149,24 +149,12 @@ class IntBounds:
     @property
     def height(self) -> int:
         """Number of rows."""
-        return self._imax - self._imin + 1
+        return self.imax - self.imin + 1
 
     @property
     def width(self) -> int:
         """Number of columns."""
-        return self._jmax - self._jmin + 1
-
-    @property
-    def size(self) -> Tuple[int, int]:
-        """Height and width of the bounding box."""
-        return self.height, self.width
-
-    def __iter__(self) -> Iterator[float]:
-        """Return an iterator over the coordinates."""
-        yield self._imin
-        yield self._jmin
-        yield self._imax
-        yield self._jmax
+        return self.jmax - self.jmin + 1
 
     def copy(self) -> 'IntBounds':
         """Return a copy of the object."""
@@ -176,6 +164,19 @@ class IntBounds:
             imax=self._imax,
             jmax=self._jmax,
         )
+
+    def expand_to(self, point: IntPoint) -> None:
+        """Expand the box to include the given point."""
+        i = point.i
+        if i < self._imin:
+            self._imin = i
+        if i > self._imax:
+            self._imax = i
+        j = point.j
+        if j < self._jmin:
+            self._jmin = j
+        if j > self._jmax:
+            self._jmax = j
 
 ######################################################################
 
@@ -187,6 +188,10 @@ class FloatPoint:
         self._x = float(x)
         self._y = float(y)
 
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return "P(x={},y={})".format(self._x, self._y)
+
     @property
     def x(self) -> float:
         """Coordinate along the horizontal axis."""
@@ -196,10 +201,6 @@ class FloatPoint:
     def y(self) -> float:
         """Coordinate along the vertical axis."""
         return self._y
-
-    def __repr__(self) -> str:
-        """Convert to string."""
-        return "P(x={},y={})".format(self.x, self.y)
 
 ######################################################################
 
@@ -224,13 +225,6 @@ class FloatBounds:
             self._xmin, self._ymin, self._xmax, self._ymax,
         )
 
-    def __iter__(self) -> Iterator[float]:
-        """Return an iterator over the coordinates."""
-        yield self._xmin
-        yield self._ymin
-        yield self._xmax
-        yield self._ymax
-
     @property
     def xmin(self) -> float:
         """Leftmost coordinate."""
@@ -251,42 +245,10 @@ class FloatBounds:
         """Bottommost coordinate."""
         return self._ymax
 
-    @property
-    def width(self) -> float:
-        """Width of the bounding box."""
-        return self._xmax - self._xmin
-
-    @property
-    def height(self) -> float:
-        """Height of the bounding box."""
-        return self._ymax - self._ymin
-
-    @property
-    def size(self) -> Tuple[float, float]:
-        """Width and height of the bounding box."""
-        return self.width, self.height
-
-    def expand(self, dx: float, dy: float) -> None:
-        """Grow the box to a larger size."""
-        self._xmax += dx
-        self._ymax += dy
-
-    def move(self, dx: float, dy: float) -> None:
-        """Translate the origin of the box."""
-        self._xmin += dx
-        self._ymin += dy
-        self._xmax += dx
-        self._ymax += dy
-
 ######################################################################
 
 class OrientedObject(metaclass=ABCMeta):
     """An object that is either horizontal or vertical."""
-
-    @property
-    @abstractmethod
-    def orientation(self) -> Orientation:
-        """Orientation of the object."""
 
     def is_horizontal(self) -> bool:
         """True if the object is horizontal."""
@@ -295,6 +257,11 @@ class OrientedObject(metaclass=ABCMeta):
     def is_vertical(self) -> bool:
         """True if the object is vertical."""
         return not self.is_horizontal()
+
+    @property
+    @abstractmethod
+    def orientation(self) -> Orientation:
+        """Orientation of the object."""
 
 ######################################################################
 
@@ -305,7 +272,13 @@ class Axis(OrientedObject):
         """Initialize axis for the given orientation and coordinate."""
         self._orientation = orientation
         self._coordinate = coord
-        self._name = "{}{}".format(orientation.name[0], coord)
+        self._name = f"{orientation.name[0]}{coord}"
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        cls = self.__class__.__name__
+        name = self._name
+        return f"{cls}({name})"
 
     @property
     def orientation(self) -> Orientation:
@@ -329,12 +302,8 @@ class Axis(OrientedObject):
         return self.name == other.name
 
     def __hash__(self) -> int:
-        """Return the hash value of the key."""
-        return hash(self.name)
-
-    def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}({})".format(self.__class__.__name__, self.name)
+        """Return the hash value of the unique name."""
+        return hash(self._name)
 
 ######################################################################
 
@@ -342,24 +311,19 @@ class OrientedLine(OrientedObject, metaclass=ABCMeta):
     """Linear object that lies on a grid axis."""
 
     @property
-    @abstractmethod
-    def axis(self) -> Axis:
-        """Axis on which the object lies."""
-
-    @property
     def orientation(self) -> Orientation:
         """Orientation of the object."""
         return self.axis.orientation
+
+    @property
+    @abstractmethod
+    def axis(self) -> Axis:
+        """Axis on which the object lies."""
 
 ######################################################################
 
 class OrientedVector(OrientedLine, metaclass=ABCMeta):
     """Vector between two points, horizontal or vertical."""
-
-    @property
-    @abstractmethod
-    def coordinates(self) -> Tuple[int, int]:
-        """First and second coordinates along the axis."""
 
     @property
     def direction(self) -> Direction:
@@ -368,26 +332,10 @@ class OrientedVector(OrientedLine, metaclass=ABCMeta):
         if self.is_horizontal():
             if coords[0] < coords[1]:
                 return Direction.RIGHT
-            else:
-                return Direction.LEFT
-        else:
-            if coords[0] < coords[1]:
-                return Direction.DOWN
-            else:
-                return Direction.UP
-
-    def point_at(self, coord: int) -> IntPoint:
-        """Return the point on the axis at the given coordinate.
-
-        It does not check whether the point lies inside the vector or
-        not.
-
-        """
-        axis = self.axis
-        if axis.is_horizontal():
-            return IntPoint(axis.coordinate, coord)
-        else:
-            return IntPoint(coord, axis.coordinate)
+            return Direction.LEFT
+        if coords[0] < coords[1]:
+            return Direction.DOWN
+        return Direction.UP
 
     @property
     def first_point(self) -> IntPoint:
@@ -401,12 +349,37 @@ class OrientedVector(OrientedLine, metaclass=ABCMeta):
         coords = self.coordinates
         return self.point_at(coords[1])
 
+    def point_at(self, coord: int) -> IntPoint:
+        """Return the point on the axis at the given coordinate.
+
+        It does not check whether the point lies inside the vector or
+        not.
+
+        """
+        axis = self.axis
+        if axis.is_horizontal():
+            return IntPoint(axis.coordinate, coord)
+        return IntPoint(coord, axis.coordinate)
+
     def through_points(self) -> Iterator[IntPoint]:
         """Return an iterator over all the points along the axis."""
-        c1, c2 = self.coordinates
-        if c1 <= c2:
-            r = range(c1, c2 + 1)
+        coord_1, coord_2 = self.coordinates
+        if coord_1 <= coord_2:
+            span = range(coord_1, coord_2 + 1)
         else:
-            r = range(c1, c2 - 1, -1)
-        for c in r:
-            yield self.point_at(c)
+            span = range(coord_1, coord_2 - 1, -1)
+        for coord in span:
+            yield self.point_at(coord)
+
+    @property
+    @abstractmethod
+    def coordinates(self) -> Tuple[int, int]:
+        """First and second coordinates along the axis."""
+
+    @property
+    def min_max_coordinates(self) -> Tuple[int, int]:
+        """Coordinates in increasing order."""
+        first, second = self.coordinates
+        if first > second:
+            return second, first
+        return first, second

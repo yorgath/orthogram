@@ -1,23 +1,38 @@
 diagram:
   collapse_connections: true
   connection_distance: 6
-  font_family: Arial
   label: Capabilities Demonstration
   padding_top: 12
+  scale: 2
 
 styles:
 
   default_block:
-    fill: white
-    font_family: Arial
+    fill: [1.0, 1.0, 1.0]
     font_size: 8
     label: ""
-    margin_left: 12
-    margin_right: 12
-    min_height: 60
+    margin_left: 16
+    margin_right: 16
 
   default_connection:
     arrow_base: 3.5
+    font_size: 8
+    font_style: italic
+
+  buffered_connection:
+    entrances: [top]
+    stroke: [0.5, 0.0, 0.5]
+    stroke_width: 3
+    buffer_width: 2
+    buffer_fill: [1.0, 0.9, 1.0]
+    text_fill: [0.5, 0.0, 0.5]
+
+groups:
+
+  cgroup:
+    exits: [left]
+    stroke: [0.0, 0.0, 1.0]
+    text_fill: [0.0, 0.0, 0.5]
 
 rows:
 
@@ -31,20 +46,20 @@ blocks:
 
   - name: A
     label: |-
-      Block size is
-      adjusted
-      to fit the lines.
+      Block size is adjusted
+      to fit the contents
+      and the connected lines.
 
   - name: B
     tags: [B1, B8]
-    fill: lightyellow
+    fill: [1.0, 1.0, 0.9]
     label: |-
       This block is used as a frame around other blocks.
-      The green line above has to go around it.
+      The dashed line above has to go around.
     label_distance: 4
     label_position: top
-    stroke: orange
-    stroke_dasharray: 2 4
+    stroke: [1.0, 0.6, 0.0]
+    stroke_dasharray: [2, 4]
     stroke_width: 1
 
   - name: B1
@@ -53,7 +68,7 @@ blocks:
       try to avoid
       each other.
 
-  - name: B3
+  - name: B4
     label: |-
       You can set the
       priority of
@@ -65,22 +80,16 @@ blocks:
       the size of
       lines & arrows.
 
-  - name: B6
-    label: |-
-      You can draw
-      a buffer
-      around lines.
-
   - name: B8
-    fill: navy
+    fill: [0.0, 0.0, 0.5]
     font_weight: bold
     label: |-
       The outline
-      is drawn in-
-      side the block.
-    stroke: purple
+      is drawn inside
+      the block.
+    stroke: [0.5, 0.0, 0.5]
     stroke_width: 8
-    text_fill: white
+    text_fill: [1.0, 1.0, 1.0]
 
   - name: C
     label: |-
@@ -95,19 +104,10 @@ blocks:
       You can create blocks that span many cells,
       and still be able to aim connections at specific cells in them.
 
-  - name: Dc
-    label: ""
-    min_width: 0
-    min_height: 0
-    margin_left: 0
-    margin_right: 0
-    margin_bottom: 0
-    margin_top: 0
-
   - name: E
     font_size: 10
     font_style: italic
-    label: You can change the orientation of text.
+    label: You can set the orientation of text.
     min_width: 48
     text_orientation: vertical
 
@@ -116,32 +116,41 @@ connections:
   - start: A
     end: [B1, B2, B3, B4, B5, B6, B7, B8]
     exits: [right]
-    stroke: red
+    stroke: [1.0, 0.0, 0.0]
 
   - start: C
-    end: [B2, B3, B4, B5, B6, B8]
-    exits: [left]
+    end: [B2, B3, B4, B6, B8]
     group: cgroup
-    stroke: blue
+
+  - start: C
+    end: B5
+    group: cgroup
+    label: These are grouped.
 
   - start: A
     end: C
     arrow_back: true
-    stroke: green
-    stroke_dasharray: 4 4
+    stroke: [0.0, 0.5, 0.0]
+    stroke_dasharray: [4, 4]
     stroke_width: 3
+    text_fill: [0.0, 0.3, 0.0]
+    text_orientation: vertical
+    label: |-
+      You can have arrows
+      both ways.
 
   - start: {D: Dc}
     end: [A, B, C]
     arrow_aspect: 0.5
     arrow_base: 2
-    stroke: lightgray
+    stroke: [0.8, 0.8, 0.8]
     stroke_width: 32
 
   - start: E
-    end: [B3, B5]
-    entrances: [top]
-    stroke: purple
-    stroke_width: 3
-    buffer_width: 2
-    buffer_fill: "#FDF"
+    end: B3
+    style: buffered_connection
+    label: Buffer lines for clarity.
+
+  - start: E
+    end: B5
+    style: buffered_connection

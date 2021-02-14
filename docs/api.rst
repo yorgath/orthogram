@@ -9,9 +9,9 @@ creating an empty diagram definition object:
 
 .. code-block:: python
 
-   from orthogram import DiagramDef, write_svg
+   from orthogram import Color, DiagramDef, write_png
 
-   d = DiagramDef(label="A hand-made diagram", text_fill="blue")
+   d = DiagramDef(label="A hand-made diagram", text_fill=Color(0, 0, 1))
 
 You can pass any diagram :ref:`Attributes` to the constructor as
 key-value pairs.
@@ -49,8 +49,8 @@ You create connections between blocks using the
 
 .. code-block:: python
 
-   d.add_connection("a", "b", group="fire", stroke="red")
-   d.add_connection("c", ("d", "n"), stroke="blue")
+   d.add_connection("a", "b", group="fire", stroke=Color(1, 0, 0))
+   d.add_connection("c", ("d", "n"), stroke=Color(0, 0, 1))
 
 The start and the end of the connection can be either a block name or
 a pair of a block name and a cell tag.  Use the second form to target
@@ -60,11 +60,11 @@ connections en masse (all having the same attributes).  Use the Python
 :py:func:`help()` function to learn more about it.
 
 After you have finished building your diagram, use the
-:py:func:`write_svg` function to write the SVG file:
+:py:func:`write_png` function to write the PNG file:
 
 .. code-block:: python
 
-   write_svg(diagram, "hello.svg")
+   write_png(d, "hello.png")
 
 Using the :py:class:`Builder` class
 -----------------------------------
@@ -77,13 +77,13 @@ definition into the builder:
 .. code-block:: python
 
    import yaml
-   from orthogram import Builder, write_svg
+   from orthogram import Builder, write_png
 
    builder = Builder()
    with open("diagram.yaml") as f:
        data = yaml.safe_load(f)
        builder.add(data)
-   write_svg(builder.diagram_def, "diagram.svg")
+   write_png(builder.diagram_def, "diagram.png")
 
 If you have to be more specific, :py:class:`Builder` provides the
 following methods:
@@ -104,11 +104,12 @@ For example:
 .. code-block:: python
 
    block_def = {
+       'name': "hello",
        'label': "Hello",
-       'fill': "yellow",
-       'stroke': "none",
+       'fill': [1, 1, 0],
+       'stroke': None,
    }
-   builder.add_block('hello', block_def)
+   builder.add_block(block_def)
 
 Use the :py:func:`help` Python function to access the documentation
 for each method.
@@ -129,7 +130,7 @@ shortcuts:
    :py:class:`DiagramDef` object.
 
 :py:func:`translate`
-   Translates a diagram definition file to a SVG file directly.
+   Translates a diagram definition file to a PNG file directly.
 
 :py:func:`translate_dir`
     Translates a whole directory of definition files.
@@ -138,14 +139,14 @@ The use of these functions is straightforward:
 
 .. code-block:: python
 
-   from orthogram import load_ddf, translate, translate_dir, write_svg
+   from orthogram import load_ddf, translate, translate_dir, write_png
 
    # You can do this:
    d = load_ddf("diagram.yaml")
-   write_svg(d, "diagram.svg")
+   write_png(d, "diagram.png")
 
    # also this:
-   translate("diagram.yaml", "diagram.svg")
+   translate("diagram.yaml", "diagram.png")
 
    # and even this:
    translate_dir("~/diagrams")

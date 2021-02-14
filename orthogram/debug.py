@@ -1,7 +1,7 @@
 """Debugging aids."""
 
 class Debug:
-    """Component of class that support debugging."""
+    """Use this to turn on/off debug messages."""
 
     _debug = False
 

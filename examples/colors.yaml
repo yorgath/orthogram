@@ -1,13 +1,13 @@
 diagram:
   collapse_connections: true
   connection_distance: 12
-  fill: white
+  fill: [1, 1, 1]
   label: Combinations of Basic Colors
+  scale: 2
 
 styles:
 
   default_block:
-    font_family: Arial
     font_weight: bold
     label: ""
     margin_bottom: 8
@@ -15,7 +15,7 @@ styles:
 
   default_connection:
     buffer_width: 1
-    buffer_fill: white
+    buffer_fill: [1, 1, 1]
     entrances: [left]
     exits: [right]
     stroke_width: 4
@@ -41,94 +41,94 @@ blocks:
 
   - name: basic_red
     style: basic_colors
-    fill: "#F00"
+    fill: [1, 0, 0]
     label: Red
-    stroke: "#F00"
-    text_fill: white
+    stroke: [1, 0, 0]
+    text_fill: [1, 1, 1]
 
   - name: basic_green
     style: basic_colors
-    fill: "#0F0"
+    fill: [0, 1, 0]
     label: Green
-    stroke: "#0F0"
-    text_fill: black
+    stroke: [0, 1, 0]
+    text_fill: [0, 0, 0]
 
   - name: basic_blue
     style: basic_colors
-    fill: "#00F"
+    fill: [0, 0, 1]
     label: Blue
-    stroke: "#00F"
-    text_fill: white
+    stroke: [0, 0, 1]
+    text_fill: [1, 1, 1]
 
   - name: black
     style: combined_colors
-    fill: "#000"
+    fill: [0, 0, 0]
     label: Black
-    stroke: "#000"
-    text_fill: white
+    stroke: [0, 0, 0]
+    text_fill: [1, 1, 1]
 
   - name: blue
     style: combined_colors
-    fill: "#00F"
+    fill: [0, 0, 1]
     label: Blue
-    stroke: "#00F"
-    text_fill: white
+    stroke: [0, 0, 1]
+    text_fill: [1, 1, 1]
 
   - name: red
     style: combined_colors
-    fill: "#F00"
+    fill: [1, 0, 0]
     label: Red
-    stroke: "#F00"
-    text_fill: white
+    stroke: [1, 0, 0]
+    text_fill: [1, 1, 1]
 
   - name: magenta
     style: combined_colors
-    fill: "#F0F"
+    fill: [1, 0, 1]
     label: Magenta
-    stroke: "#F0F"
-    text_fill: white
+    stroke: [1, 0, 1]
+    text_fill: [1, 1, 1]
 
   - name: green
     style: combined_colors
-    fill: "#0F0"
+    fill: [0, 1, 0]
     label: Green
-    stroke: "#0F0"
-    text_fill: black
+    stroke: [0, 1, 0]
+    text_fill: [0, 0, 0]
 
   - name: cyan
     style: combined_colors
-    fill: "#0FF"
+    fill: [0, 1, 1]
     label: Cyan
-    stroke: "#0FF"
-    text_fill: black
+    stroke: [0, 1, 1]
+    text_fill: [0, 0, 0]
 
   - name: yellow
     style: combined_colors
-    fill: "#FF0"
+    fill: [1, 1, 0]
     label: Yellow
-    stroke: "#FF0"
-    text_fill: black
+    stroke: [1, 1, 0]
+    text_fill: [0, 0, 0]
 
   - name: white
     style: combined_colors
-    fill: "#FFF"
+    fill: [1, 1, 1]
     label: White
-    stroke: "#000"
-    text_fill: black
+    stroke: [0, 0, 0]
+    text_fill: [0, 0, 0]
 
 connections:
 
   - start: basic_red
     end: [red, magenta, yellow, white]
-    stroke: "#F00"
+    stroke: [1, 0, 0]
     group: red
 
   - start: basic_green
     end: [green, cyan, yellow, white]
-    stroke: "#0F0"
+    stroke: [0, 1, 0]
     group: green
 
   - start: basic_blue
     end: [blue, magenta, cyan, white]
-    stroke: "#00F"
+    stroke: [0, 0, 1]
     group: blue

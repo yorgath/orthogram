@@ -3,16 +3,15 @@
 diagram:
 
   label: Combined Cycle Power Plant
-  font_family: Arial
-  fill: lightyellow
+  fill: [1.0, 1.0, 0.9]
   connection_distance: 6
   collapse_connections: true
+  scale: 2
 
 styles:
 
   default_block:
-    fill: white
-    font_family: Arial
+    fill: [1.0, 1.0, 1.0]
     margin_bottom: 18
     margin_left: 18
     margin_right: 18
@@ -24,9 +23,10 @@ styles:
 
   default_connection:
     stroke_width: 3
+    font_style: italic
 
   cold_gas:
-    stroke: turquoise
+    stroke: [0.25, 0.9, 0.8]
 
   combustion:
     label: "Combustion\nChamber"
@@ -34,35 +34,43 @@ styles:
   compressor:
     label: Compressor
 
+  compressed_air:
+    label: "Compressed\nAir"
+
   electrical_generator:
     label: "Electrical\nGenerator"
 
   gas_engine:
     pass_through: true
     stroke_width: 1
-    stroke_dasharray: 4 4
-    fill: palegreen
+    stroke_dasharray: [4, 4]
+    fill: [0.6, 1.0, 0.6]
 
   gas_turbine:
     label: Gas Turbine
 
-  hot_gas:
-    stroke: orangered
-    fill: gold
+  hot_gas_box:
+    stroke: [1.0, 0.3, 0.0]
+    fill: [1.0, 0.85, 0.0]
+
+  hot_gas_line:
+    label: "Hot\nGas"
+    stroke: [1.0, 0.3, 0.0]
+    text_fill: [0.7, 0.0, 0.0]
 
   inside_gas_engine:
     buffer_width: 2
-    buffer_fill: palegreen
+    buffer_fill: [0.6, 1.0, 0.6]
 
   intra_section:
     stroke_width: 12
     arrow_aspect: 0.75
-    stroke: lightgrey
+    stroke: [0.8, 0.8, 0.8]
 
   section:
     pass_through: true
     stroke_width: 0
-    fill: moccasin
+    fill: [1.0, 0.9, 0.7]
     padding_bottom: 12
     padding_left: 12
     padding_right: 12
@@ -71,15 +79,21 @@ styles:
 
   shaft:
     arrow_forward: false
-    stroke: dimgrey
+    stroke: [0.4, 0.4, 0.4]
     stroke_width: 8
-    stroke_dasharray: 8 8
+    stroke_dasharray: [8, 8]
+    label: Shaft
 
   steam:
-    stroke: grey
+    stroke: [0.5, 0.5, 0.5]
+    label: Steam
+    text_orientation: horizontal
 
   water:
-    stroke: royalblue
+    stroke: [0.25, 0.4, 0.9]
+    label: Water
+    text_orientation: horizontal
+    text_fill: [0.25, 0.4, 0.9]
 
 blocks:
 
@@ -89,14 +103,14 @@ blocks:
     margin_top: 0
     min_height: 0
     min_width: 24
-    stroke: none
+    stroke: ~
 
   - name: gas_section
     label: Gas Section
     label_position: top
     tags: [fuel, cmp1, cmb1, gtb1, cmp2, cmb2, gtb2, gsec]
     style: section
-    margin_right: 24
+    margin_right: 8
 
   - name: fuel
     label: Fuel
@@ -110,10 +124,10 @@ blocks:
     style: compressor
 
   - name: cmb1
-    style: [combustion, hot_gas]
+    style: [combustion, hot_gas_box]
 
   - name: gtb1
-    style: [gas_turbine, hot_gas]
+    style: [gas_turbine, hot_gas_box]
 
   - label: Gas Engine 2
     label_position: top_left
@@ -124,10 +138,10 @@ blocks:
     style: compressor
 
   - name: cmb2
-    style: [combustion, hot_gas]
+    style: [combustion, hot_gas_box]
 
   - name: gtb2
-    style: [gas_turbine, hot_gas]
+    style: [gas_turbine, hot_gas_box]
 
   - name: steam_section
     label: Steam Section
@@ -138,11 +152,11 @@ blocks:
 
   - name: sgn
     label: "Steam\nGenerator"
-    style: hot_gas
+    style: hot_gas_box
 
   - name: stb
     label: "Steam\nTurbine"
-    style: hot_gas
+    style: hot_gas_box
 
   - name: cdn
     label: Condenser
@@ -158,7 +172,7 @@ blocks:
     label_position: top
     tags: [egn1, egn2, egn3, tx]
     style: section
-    margin_left: 24
+    margin_left: 8
 
   - name: egn1
     style: [electrical_generator]
@@ -196,29 +210,30 @@ connections:
   - start: fuel
     end: [cmb1, cmb2]
     entrances: [top]
-    stroke: olive
+    stroke: [0.5, 0.5, 0.0]
+    label: Fuel
 
   - start: [gtb1, gtb2]
     end: sgn
     exits: [bottom]
-    style: hot_gas
+    style: hot_gas_line
     group: gas_to_steam
 
   - start: cmp1
     end: cmb1
-    style: [cold_gas, inside_gas_engine]
+    style: [cold_gas, compressed_air, inside_gas_engine]
 
   - start: cmp2
     end: cmb2
-    style: cold_gas
+    style: [cold_gas, compressed_air]
 
   - start: cmb1
     end: gtb1
-    style: hot_gas
+    style: hot_gas_line
 
   - start: cmb2
     end: gtb2
-    style: [hot_gas, inside_gas_engine]
+    style: [hot_gas_line, inside_gas_engine]
 
   - start: gtb1
     end: egn1
@@ -255,7 +270,8 @@ connections:
 
   - start: sgn
     end: exst
-    style: hot_gas
+    style: hot_gas_line
+    label: "Exhaust\nGas"
 
   - start: {gas_section: cmb2}
     end: steam_section

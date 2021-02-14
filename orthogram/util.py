@@ -2,8 +2,6 @@
 
 import sys
 
-from typing import Any, Mapping
-
 ######################################################################
 
 def log_debug(msg: str) -> None:

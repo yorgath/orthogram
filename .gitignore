@@ -3,6 +3,6 @@
 *.pyc
 *~
 poetry.lock
-cases/svg/*.svg
+cases/png/*.png
 dist
 docs/_build

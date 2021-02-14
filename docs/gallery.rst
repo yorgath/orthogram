@@ -4,14 +4,14 @@ Gallery
 Hello
 -----
 
-.. image:: ../examples/hello.svg
+.. image:: ../examples/hello.png
    :width: 100%
    :alt: (Hello world example)
 
 Showing off
 -----------
 
-.. image:: ../examples/showoff.svg
+.. image:: ../examples/showoff.png
    :width: 100%
    :alt: (Showing off the capabilities)
 
@@ -22,20 +22,20 @@ Reproduction of the original from a Wikipedia `article`_:
 
 .. _article: https://en.wikipedia.org/wiki/Computer_architecture
 
-.. image:: ../examples/comparch.svg
+.. image:: ../examples/comparch.png
    :width: 100%
    :alt: (Computer architecture diagram from Wikipedia)
 
 Power plant
 -----------
 
-.. image:: ../examples/powerplant.svg
+.. image:: ../examples/powerplant.png
    :width: 100%
    :alt: (Diagram of a combined cycle power plant)
 
 Colors
 ------
 
-.. image:: ../examples/colors.svg
+.. image:: ../examples/colors.png
    :width: 100%
    :alt: (Combinations of basic colors)

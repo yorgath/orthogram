@@ -1,16 +1,15 @@
 diagram:
   connection_distance: 8
-  fill: white
-  font_family: Arial
+  fill: [1.0, 1.0, 1.0]
   label: |-
     Computer Architecture
     (https://en.wikipedia.org/wiki/Computer_architecture)
   padding_top: 24
+  scale: 2
 
 styles:
 
   default_block:
-    font_family: Arial
     margin_bottom: 12
     margin_left: 12
     margin_right: 12
@@ -18,13 +17,13 @@ styles:
 
   default_connection:
     buffer_width: 1
-    buffer_fill: "#EEE"
+    buffer_fill: [1.0, 1.0, 1.0, 0.8]
     stroke_width: 2
 
   unit:
-    fill: lightskyblue
+    fill: [0.6, 0.8, 1.0]
     min_width: 120
-    stroke_width: 1
+    stroke_width: 2
 
   io:
     min_width: 72
@@ -40,22 +39,23 @@ styles:
     label: ""
     min_width: 0
     min_height: 0
+    stroke_width: 0
 
   control:
     arrow_back: true
-    stroke: red
+    stroke: [1.0, 0.0, 0.0]
 
 blocks:
 
   - name: cpu
     label: CPU
     style: frame
-    fill: papayawhip
+    fill: [1.0, 0.95, 0.9]
 
   - name: proc
     label: Processor
     style: frame
-    fill: "#FFB"
+    fill: [1.0, 1.0, 0.8]
 
   - name: cu
     label: "Control\nUnit"
@@ -131,6 +131,7 @@ connections:
     end: cu
     exits: [right]
     entrances: [right]
+    label: Instructions
 
   - start: in
     end: cu
