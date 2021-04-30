@@ -11,7 +11,7 @@ from cairo import (
     ImageSurface,
 )
 
-from cassowary import SimplexSolver # type: ignore
+from cassowary import SimplexSolver, WEAK # type: ignore
 from shapely.geometry import LineString # type: ignore
 
 from ..arrange import Layout
@@ -96,6 +96,8 @@ class Drawing(Container):
         add_constraint = self._solver.add_constraint
         for constraint in self._grid.constraints():
             add_constraint(constraint)
+        for constraint in self._grid.optional_constraints():
+            add_constraint(constraint, strength=WEAK)
 
     def _add_own_constraints(self) -> None:
         """Add the constraints for the drawing itself."""

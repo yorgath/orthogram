@@ -421,12 +421,16 @@ class DrawingGrid:
         return self._horizontal_lines[-1]
 
     def constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the solver."""
+        """Generate required constraints for the solver."""
         yield from self._line_constraints()
         yield from self._block_box_constraints()
         yield from self._band_constraints()
         yield from self._padding_constraints()
         yield from self._label_constraints()
+
+    def optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the solver."""
+        yield from self._block_box_optional_constraints()
 
     def _line_constraints(self) -> Iterator[Constraint]:
         """Generate the constraints between the lines of the grid."""
@@ -442,9 +446,14 @@ class DrawingGrid:
                 last = line
 
     def _block_box_constraints(self) -> Iterator[Constraint]:
-        """Generate the constraints for the block boxes."""
+        """Generate required constraints for the block boxes."""
         for box in self._block_boxes:
             yield from box.constraints()
+
+    def _block_box_optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the block boxes."""
+        for box in self._block_boxes:
+            yield from box.optional_constraints()
 
     def _band_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the rows and columns."""

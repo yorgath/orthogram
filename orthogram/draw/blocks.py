@@ -78,7 +78,7 @@ class BlockBox(Container):
         self._vertical_lanes.extend(lanes)
 
     def constraints(self) -> Iterator[Constraint]:
-        """Generate the constraints for the solver."""
+        """Generate required constraints for the solver."""
         # Note that we do not need to introduce size constraints from
         # superclass here, since reference constraints guarantee their
         # satisfaction.
@@ -130,3 +130,14 @@ class BlockBox(Container):
         yield self._ymax <= self._bottom_row.track.cmax - attrs.margin_bottom
         yield self._xmin >= self._left_column.track.cmin + attrs.margin_left
         yield self._xmax <= self._right_column.track.cmax - attrs.margin_right
+
+    def optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the solver."""
+        # Try not to grow beyond the minimum dimensions, if possible.
+        attrs = self._attributes()
+        half_width = 0.5 * attrs.min_width
+        half_height = 0.5 * attrs.min_height
+        yield self._ymin == self._top_row.cref - half_height
+        yield self._ymax == self._bottom_row.cref + half_height
+        yield self._xmin == self._left_column.cref - half_width
+        yield self._xmax == self._right_column.cref + half_width

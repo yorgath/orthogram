@@ -1,6 +1,12 @@
 Release history
 ===============
 
+0.5.1 (2021-04-30)
+------------------
+
+* Added optional constraints to prevent block boxes from growing
+  unnecessarily large.
+
 0.5.0 (2021-04-24)
 ------------------
 
