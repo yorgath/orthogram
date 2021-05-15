@@ -12,10 +12,12 @@ from .label import (
     Labeler,
 )
 
-from .refine import (
+from .net import (
+    BundleStructure,
     Network,
-    Refiner,
 )
+
+from .refine import Refiner
 
 from .route import (
     LayoutGrid,
@@ -54,3 +56,7 @@ class Layout:
     def wire_labels(self) -> Iterator[WireLabel]:
         """Return an iterator over the wire labels."""
         yield from self._labeler.wire_labels()
+
+    def bundle_structures(self) -> Iterator[BundleStructure]:
+        """Iterate over the bundle structures."""
+        yield from self._refiner.bundle_structures()

@@ -1,9 +1,11 @@
 """Connection network elements for the Refiner."""
 
 from collections import OrderedDict
+from dataclasses import dataclass
 from enum import Enum, auto
 
 from typing import (
+    Dict,
     Iterable,
     Iterator,
     List,
@@ -320,15 +322,6 @@ class Wire:
         """Associated connection."""
         return self._route.connection
 
-    def joints(self) -> Iterator[Joint]:
-        """Return an iterator over the joints of the wire."""
-        done: Set[Joint] = set()
-        for seg in self._segments:
-            for joint in seg.joints:
-                if joint not in done:
-                    yield joint
-                    done.add(joint)
-
 ######################################################################
 
 class Network:
@@ -505,3 +498,136 @@ class Network:
         point_x = point.j + factor * (h_off + diffs[0])
         point_y = point.i + factor * (v_off + diffs[1])
         return FloatPoint(point_x, point_y)
+
+######################################################################
+
+@dataclass(frozen=True)
+class NetworkBundle:
+    """Combination of a network and one of its bundles."""
+    network: Network
+    bundle: Bundle
+
+    def overlaps_with(self, other: 'NetworkBundle') -> bool:
+        """True if this bundles overlaps with the given one.
+
+        This method takes into account the offsets stored in the
+        bundles.
+
+        """
+        net1, bundle1 = self.network, self.bundle
+        net2, bundle2 = other.network, other.bundle
+        if bundle1.axis != bundle2.axis:
+            return False
+        p11, p12 = net1.offset_bundle(bundle1)
+        p21, p22 = net2.offset_bundle(bundle2)
+        horizontal = bundle1.orientation is Orientation.HORIZONTAL
+        vertical = not horizontal
+        if horizontal and p11.x <= p22.x and p12.x >= p21.x:
+            return True
+        if vertical and p11.y <= p22.y and p12.y >= p21.y:
+            return True
+        return False
+
+######################################################################
+
+class BundleLayer:
+    """Collection of bundles having the same offset."""
+
+    def __init__(self, offset: int):
+        """Initialize an empty layer."""
+        self._offset = offset
+        self._net_bundles: List[NetworkBundle] = []
+
+    def append(self, net_bundle: NetworkBundle) -> None:
+        """Add a network bundle to the layer."""
+        self._net_bundles.append(net_bundle)
+
+    @property
+    def offset(self) -> int:
+        """Common offset of the bundles in the layer."""
+        return self._offset
+
+    def __iter__(self) -> Iterator[NetworkBundle]:
+        """Yield the network bundles (in no particular order)."""
+        yield from self._net_bundles
+
+######################################################################
+
+class BundleStructure:
+    """Collection of overlapping bundles."""
+
+    def __init__(self, axis: Axis, net_bundles: Iterable[NetworkBundle]):
+        """Initialize for the given bundles."""
+        self._axis = axis
+        self._layers_by_offset = self._make_layers(net_bundles)
+
+    @staticmethod
+    def _make_layers(
+            net_bundles: Iterable[NetworkBundle]
+    ) -> MutableMapping[int, BundleLayer]:
+        """Group bundles into layers by offset."""
+        result: Dict[int, BundleLayer] = {}
+        for net_bundle in net_bundles:
+            offset = net_bundle.bundle.offset
+            if offset not in result:
+                result[offset] = BundleLayer(offset)
+            result[offset].append(net_bundle)
+        return result
+
+    def optimize(self) -> None:
+        """Pack bundles as densely as possible.
+
+        This method recreates the layers of the structure and updates
+        the offsets stored in the bundles.
+
+        """
+        # Recreate layers.
+        layers = self._pack_bundles()
+        by_offset = self._layers_by_offset
+        by_offset.clear()
+        for layer in layers:
+            by_offset[layer.offset] = layer
+        # Store the minimized offsets.
+        for i, net_bundles in enumerate(layers):
+            for net_bundle in net_bundles:
+                net_bundle.bundle.offset = i
+
+    def _pack_bundles(self) -> Sequence[BundleLayer]:
+        """Return a dense arrangement of the existing bundle layers."""
+        layers: List[BundleLayer] = []
+        for net_bundle in self.network_bundles():
+            overlap_on = -1
+            n_layers = len(layers)
+            for i in range(n_layers - 1, -1, -1):
+                layer = layers[i]
+                for net_bundle_2 in layer:
+                    if net_bundle.overlaps_with(net_bundle_2):
+                        overlap_on = i
+                        break
+                if overlap_on >= 0:
+                    break
+            if overlap_on == n_layers - 1:
+                # New layer.
+                layer = BundleLayer(overlap_on + 1)
+                layer.append(net_bundle)
+                layers.append(layer)
+            else:
+                # Append to existing layer.
+                layers[overlap_on + 1].append(net_bundle)
+        return layers
+
+    @property
+    def axis(self) -> Axis:
+        """Axis on which the bundles sit."""
+        return self._axis
+
+    def __iter__(self) -> Iterator[BundleLayer]:
+        """Iterate over the layer in offset order."""
+        by_offset = self._layers_by_offset
+        for offset in sorted(by_offset):
+            yield by_offset[offset]
+
+    def network_bundles(self) -> Iterator[NetworkBundle]:
+        """Iterate over the elements in offset order."""
+        for layer in self:
+            yield from layer

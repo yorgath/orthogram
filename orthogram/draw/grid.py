@@ -4,6 +4,8 @@ from collections import OrderedDict
 
 from typing import (
     Callable,
+    Collection,
+    Dict,
     Iterable,
     Iterator,
     List,
@@ -18,21 +20,27 @@ from cassowary import Variable  # type: ignore
 from cassowary.expression import Constraint # type: ignore
 
 from ..arrange import (
+    Joint,
     Layout,
+    RouteSegment,
     Wire,
     WireSegment,
 )
 
 from ..define import Block
+from ..geometry import Axis
 
 from .bands import Band
 from .blocks import BlockBox
 
 from .connections import (
+    DrawingJoint,
     DrawingNetwork,
     DrawingWire,
     DrawingWireLabel,
+    DrawingWireLayer,
     DrawingWireSegment,
+    DrawingWireStructure,
 )
 
 from .labels import Label
@@ -81,21 +89,6 @@ class _Cell:
         """Return the boxes at the right side of the cell."""
         yield from self._boxes_right
 
-    def boxes(self) -> Iterator[BlockBox]:
-        """Return all the boxes."""
-        done = set()
-        sets = [
-            self._boxes_top,
-            self._boxes_bottom,
-            self._boxes_left,
-            self._boxes_right,
-        ]
-        for boxes in sets:
-            for box in boxes:
-                if box not in done:
-                    yield box
-                    done.add(box)
-
 ######################################################################
 
 class DrawingGrid:
@@ -111,10 +104,14 @@ class DrawingGrid:
         self._cell_rows = self._make_cells()
         self._block_boxes = self._make_block_boxes()
         self._block_box_map = self._make_block_box_map()
+        self._joint_map = self._make_joint_map()
         self._networks = self._make_drawing_networks()
-        self._segment_map = self._make_segment_map()
-        self._place_wires()
+        self._wire_segment_map = self._make_wire_segment_map()
+        self._route_segment_map = self._make_route_segment_map()
+        self._axis_structures = self._make_axis_structures()
+        self._apply_layer_variables()
         self._add_labels_to_wires()
+        self._place_structures()
         self._connect_boxes()
 
     def _make_horizontal_lines(self) -> Sequence[Variable]:
@@ -148,19 +145,18 @@ class DrawingGrid:
         """Create the columns."""
         return self._make_bands(self._vertical_lines, "col", "x")
 
+    @staticmethod
     def _make_bands(
-            self,
             lines: Sequence[Variable],
             name_prefix: str, coord_name: str,
     ) -> Sequence[Band]:
         """Create rows or columns."""
         bands: List[Band] = []
-        dist = self._layout.diagram.attributes.connection_distance
         last = None
         for i, line in enumerate(lines):
             if last:
                 index = i - 1
-                band = Band(index, last, line, dist, name_prefix, coord_name)
+                band = Band(index, last, line, name_prefix, coord_name)
                 bands.append(band)
             last = line
         return bands
@@ -189,7 +185,7 @@ class DrawingGrid:
         layout = self._layout
         dia = layout.diagram
         dia_attrs = dia.attributes
-        lane_margin = dia_attrs.connection_distance
+        wire_margin = dia_attrs.connection_distance
         lgrid = layout.grid
         rows = self._rows
         cols = self._columns
@@ -212,7 +208,7 @@ class DrawingGrid:
             box = BlockBox(
                 index,
                 block, top, bottom, left, right,
-                lane_margin,
+                wire_margin,
                 label
             )
             self._associate_box_with_cells(box)
@@ -246,76 +242,117 @@ class DrawingGrid:
             result[box.block] = box
         return result
 
+    def _make_joint_map(self) -> Mapping[Joint, DrawingJoint]:
+        """Map each layout joint to a drawing joint."""
+        result: MutableMapping[Joint, DrawingJoint] = OrderedDict()
+        index = 0
+        for net in self._layout.networks():
+            for wire in net.wires():
+                for seg in wire.segments():
+                    for ljoint in seg.joints:
+                        if ljoint not in result:
+                            result[ljoint] = DrawingJoint(index, ljoint)
+                            index += 1
+        return result
+
+    def _layout_wire_segments(self) -> Iterator[WireSegment]:
+        """Return the connection wire segments of the layout."""
+        for wire in self._layout_wires():
+            yield from wire.segments()
+
+    def _layout_wires(self) -> Iterator[Wire]:
+        """Return the connection wires of the layout."""
+        for net in self._layout.networks():
+            yield from net.wires()
+
     def _make_drawing_networks(self) -> Sequence[DrawingNetwork]:
         """Create drawing wire networks out of the layout networks."""
         result = []
+        index = 0
         for lnet in self._layout.networks():
             dnet = DrawingNetwork()
             for lwire in lnet.wires():
-                dwire = self._make_drawing_wire(lwire)
+                dwire = self._make_drawing_wire(index, lwire)
+                index += 1
                 dnet.append_wire(dwire)
             result.append(dnet)
         return result
 
-    @staticmethod
-    def _make_drawing_wire(layout_wire: Wire) -> DrawingWire:
+    def _make_drawing_wire(
+            self,
+            wire_index: int, layout_wire: Wire,
+    ) -> DrawingWire:
         """Create a drawing wire out of a layout wire."""
-        dwire = DrawingWire(layout_wire)
+        dwire = DrawingWire(wire_index, layout_wire)
         # Populate the wire with segments.
+        jmap = self._joint_map
+        seg_index = 0
+        dist = self._layout.diagram.attributes.connection_distance
         for lseg in layout_wire.segments():
-            dseg = DrawingWireSegment(lseg)
+            start = jmap[lseg.start]
+            end = jmap[lseg.end]
+            dseg = DrawingWireSegment(
+                wire_index, seg_index,
+                lseg, dist,
+                start, end
+            )
             dwire.append_segment(dseg)
+            seg_index += 1
         return dwire
 
-    def _make_segment_map(self) -> Mapping[WireSegment, DrawingWireSegment]:
+    def _make_wire_segment_map(self) -> Mapping[WireSegment,
+                                                DrawingWireSegment]:
         """Map layout wire segments to drawing wire segments."""
         result: MutableMapping[WireSegment, DrawingWireSegment] = OrderedDict()
         for dseg in self._wire_segments():
             result[dseg.layout_segment] = dseg
         return result
 
-    def _place_wires(self) -> None:
-        """Place the connection wires on the grid."""
-        self._place_wires_in_lanes()
-        self._set_wire_coordinates()
+    def _make_route_segment_map(self) -> Mapping[RouteSegment,
+                                                 DrawingWireSegment]:
+        """Map layout route segments to drawing wire segments."""
+        result: MutableMapping[RouteSegment, DrawingWireSegment] = OrderedDict()
+        for wseg, dseg in self._wire_segment_map.items():
+            result[wseg.route_segment] = dseg
+        return result
 
-    def _place_wires_in_lanes(self) -> None:
-        """Place the connection wires in the lanes."""
-        for seg in self._wire_segments():
-            self._place_segment_in_lane(seg)
+    def _make_axis_structures(
+            self
+    ) -> Mapping[Axis, Collection[DrawingWireStructure]]:
+        """Create drawing wire structures out of layout bundle structures.
 
-    def _place_segment_in_lane(self, segment: DrawingWireSegment) -> None:
-        """Place a wire segment in the appropriate lane."""
-        lseg = segment.layout_segment
-        i = lseg.axis.coordinate
-        band: Band
-        if lseg.is_horizontal():
-            band = self._rows[i]
-        else:
-            band = self._columns[i]
-        lane = band.lane(lseg.offset)
-        lane.add_wire(segment)
+        The result is a map from grid axes to the structures that lie
+        on them.
 
-    def _set_wire_coordinates(self) -> None:
-        """Set the coordinates of the connection wires."""
-        for seg in self._wire_segments():
-            self._set_segment_coordinates(seg)
+        """
+        result: Dict[Axis, List[DrawingWireStructure]] = OrderedDict()
+        layout = self._layout
+        dist = layout.diagram.attributes.connection_distance
+        segmap = self._route_segment_map
+        for bstruct in layout.bundle_structures():
+            axis = bstruct.axis
+            dstructs = result.get(axis)
+            if not dstructs:
+                result[axis] = dstructs = []
+            index = len(dstructs)
+            dstruct = DrawingWireStructure(axis, index, dist)
+            for blayer in bstruct:
+                dlayer = DrawingWireLayer(axis, index, blayer.offset)
+                for net_bundle in blayer:
+                    for rseg in net_bundle.bundle.route_segments():
+                        dseg = segmap[rseg]
+                        dlayer.append(dseg)
+                dstruct.add_layer(dlayer)
+            dstructs.append(dstruct)
+        return result
 
-    def _set_segment_coordinates(self, segment: DrawingWireSegment) -> None:
-        """Set the coordinates of the wire segment."""
-        lseg = segment.layout_segment
-        variables: List[Tuple[Variable, Variable]] = []
-        for joint in lseg.joints:
-            point = joint.point
-            hor = joint.horizontal_offset
-            ver = joint.vertical_offset
-            x_var = self._columns[point.j].lane_ref(hor)
-            y_var = self._rows[point.i].lane_ref(ver)
-            variables.append((x_var, y_var))
-        segment.x1 = variables[0][0]
-        segment.y1 = variables[0][1]
-        segment.x2 = variables[1][0]
-        segment.y2 = variables[1][1]
+    def _apply_layer_variables(self) -> None:
+        """Use layer variables in segments."""
+        for struct in self._structures():
+            for layer in struct:
+                cref = layer.cref
+                for seg in layer:
+                    seg.cref = cref
 
     def _add_labels_to_wires(self) -> None:
         """Add the labels to the wires that have one."""
@@ -323,7 +360,7 @@ class DrawingGrid:
         dia_attrs = layout.diagram.attributes
         rows = self._rows
         cols = self._columns
-        draw_segments = self._segment_map
+        draw_segments = self._wire_segment_map
         for lay_label in layout.wire_labels():
             lay_segment = lay_label.segment
             lay_min = lay_label.min_coord
@@ -340,31 +377,45 @@ class DrawingGrid:
             label = Label(attrs, dia_attrs, ori)
             draw_segment.label = DrawingWireLabel(label, cmin, cmax)
 
-    def _connect_boxes(self) -> None:
-        """Connect the block boxes with the wire lanes."""
+    def _place_structures(self) -> None:
+        """Associate wire structures to bands.
+
+        The structures are used to center the connections on the grid
+        lines.
+
+        """
         rows = self._rows
         cols = self._columns
-        cells = self._cell_rows
-        for i, row in enumerate(rows):
-            for j, _ in enumerate(cols):
-                lanes = list(row.lanes_with_end_at(j))
-                cell = cells[i][j]
-                for box in cell.boxes():
-                    box.add_horizontal_lanes(lanes)
-        for j, col in enumerate(cols):
-            for i, _ in enumerate(rows):
-                lanes = list(col.lanes_with_end_at(i))
-                cell = cells[i][j]
-                for box in cell.boxes():
-                    box.add_vertical_lanes(lanes)
+        for struct in self._structures():
+            axis = struct.axis
+            index = axis.coordinate
+            if axis.is_horizontal():
+                bands = rows
+            else:
+                bands = cols
+            band = bands[index]
+            band.add_structure(struct)
 
-    def horizontal_line(self, index: int) -> Variable:
-        """Return the horizontal line at the given index."""
-        return self._horizontal_lines[index]
+    def _structures(self) -> Iterator[DrawingWireStructure]:
+        """Return the wire structures."""
+        for structs in self._axis_structures.values():
+            yield from structs
 
-    def vertical_line(self, index: int) -> Variable:
-        """Return the vertical line at the given index."""
-        return self._vertical_lines[index]
+    def _connect_boxes(self) -> None:
+        """Connect the block boxes and the drawing segments."""
+        box_map = self._block_box_map
+        seg_map = self._wire_segment_map
+        for lwire in self._layout_wires():
+            conn = lwire.connection
+            lsegs = list(lwire.segments())
+            block_lsegs = [
+                (conn.start.block, lsegs[0]),
+                (conn.end.block, lsegs[-1]),
+            ]
+            for block, lseg in block_lsegs:
+                box = box_map[block]
+                dseg = seg_map[lseg]
+                box.connect_segment(dseg)
 
     def horizontal_lines(self) -> Sequence[Variable]:
         """Return the horizontal lines top to bottom."""
@@ -374,14 +425,6 @@ class DrawingGrid:
         """Return the vertical lines left to right."""
         return list(self._vertical_lines)
 
-    def row(self, index: int) -> Band:
-        """Return the row at the given index."""
-        return self._rows[index]
-
-    def column(self, index: int) -> Band:
-        """Return the column at the given index."""
-        return self._columns[index]
-
     def rows(self) -> Iterator[Band]:
         """Return the rows top to bottom."""
         yield from self._rows
@@ -389,16 +432,6 @@ class DrawingGrid:
     def columns(self) -> Iterator[Band]:
         """Return the columns left to right."""
         yield from self._columns
-
-    @property
-    def n_rows(self) -> int:
-        """Number of rows."""
-        return len(self._rows)
-
-    @property
-    def n_columns(self) -> int:
-        """Number of columns."""
-        return len(self._columns)
 
     @property
     def xmin(self) -> Variable:
@@ -420,10 +453,24 @@ class DrawingGrid:
         """Maximum coordinate along the Y axis."""
         return self._horizontal_lines[-1]
 
+    def block_boxes(self) -> Iterator[BlockBox]:
+        """Return the boxes of the diagram blocks."""
+        yield from self._block_boxes
+
+    def block_box(self, block: Block) -> BlockBox:
+        """Return the box of the given block."""
+        return self._block_box_map[block]
+
+    def networks(self) -> Iterator[DrawingNetwork]:
+        """Return the networks of drawing wires."""
+        yield from self._networks
+
     def constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the solver."""
         yield from self._line_constraints()
         yield from self._block_box_constraints()
+        yield from self._joint_constraints()
+        yield from self._wire_constraints()
         yield from self._band_constraints()
         yield from self._padding_constraints()
         yield from self._label_constraints()
@@ -431,6 +478,7 @@ class DrawingGrid:
     def optional_constraints(self) -> Iterator[Constraint]:
         """Generate optional constraints for the solver."""
         yield from self._block_box_optional_constraints()
+        yield from self._band_optional_constraints()
 
     def _line_constraints(self) -> Iterator[Constraint]:
         """Generate the constraints between the lines of the grid."""
@@ -455,10 +503,45 @@ class DrawingGrid:
         for box in self._block_boxes:
             yield from box.optional_constraints()
 
+    def _joint_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the joints.
+
+        These constraints cannot be derived from the segments alone.
+
+        """
+        rows = self._rows
+        cols = self._columns
+        for wire in self._wires():
+            segments = list(wire.segments())
+            first_seg = segments[0]
+            last_seg = segments[-1]
+            seg_joints = [
+                (first_seg, first_seg.start),
+                (last_seg, last_seg.end),
+            ]
+            for seg, joint in seg_joints:
+                point = joint.layout_joint.point
+                if seg.is_horizontal():
+                    col = cols[point.j]
+                    yield joint.x == col.cref
+                else:
+                    row = rows[point.i]
+                    yield joint.y == row.cref
+
+    def _wire_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the connection wires."""
+        for seg in self._wire_segments():
+            yield from seg.constraints()
+
     def _band_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the rows and columns."""
         for band in self._bands():
             yield from band.constraints()
+
+    def _band_optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the rows and columns."""
+        for band in self._bands():
+            yield from band.optional_constraints()
 
     def _bands(self) -> Iterator[Band]:
         """Return the rows and the columns."""
@@ -544,15 +627,3 @@ class DrawingGrid:
         """Return the wires."""
         for net in self._networks:
             yield from net.wires()
-
-    def block_boxes(self) -> Iterator[BlockBox]:
-        """Return the boxes of the diagram blocks."""
-        yield from self._block_boxes
-
-    def block_box(self, block: Block) -> BlockBox:
-        """Return the box of the given block."""
-        return self._block_box_map[block]
-
-    def networks(self) -> Iterator[DrawingNetwork]:
-        """Return the networks of drawing wires."""
-        yield from self._networks

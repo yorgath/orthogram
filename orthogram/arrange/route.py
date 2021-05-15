@@ -62,14 +62,6 @@ class _LayoutCell:
         """node in this cell."""
         return self._node
 
-    def blocks(self) -> Iterator[Block]:
-        """Return an iterator over the blocks that cover the cell."""
-        yield from self._blocks
-
-    def has_block(self, block: Block) -> bool:
-        """Return true if the block is on this cell."""
-        return block in self._blocks
-
 ######################################################################
 
 class LayoutGrid:
@@ -112,10 +104,6 @@ class LayoutGrid:
     def node_point(self, node: Node) -> IntPoint:
         """Return the position of the node in the layout grid."""
         return self._node_points[node]
-
-    def nodes_and_points(self) -> _NodesAndPointsIterator:
-        """Return an iterator over the nodes and their positions."""
-        yield from self._node_points.items()
 
     def points_and_nodes(self) -> _PointsAndNodesIterator:
         """Return an iterator over the points and associated nodes."""

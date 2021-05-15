@@ -11,7 +11,14 @@ from cairo import (
     ImageSurface,
 )
 
-from cassowary import SimplexSolver, WEAK # type: ignore
+from cassowary import (  # type: ignore
+    SimplexSolver,
+    REQUIRED,
+    WEAK,
+)
+
+from cassowary.expression import Constraint # type: ignore
+
 from shapely.geometry import LineString # type: ignore
 
 from ..arrange import Layout
@@ -74,70 +81,75 @@ class Drawing(Container):
         # The coordinates of the elements are calculated by creating
         # constraints between the elements and then solving these
         # constraints.
-        self._solver = solver = SimplexSolver()
-        # Shape coordinates are calculated relative to the start of
-        # the drawing.  Fix the top left corner at zero and calculate
-        # from there.
-        solver.add_stay(self._xmin, 0.0)
-        solver.add_stay(self._ymin, 0.0)
+        self._solver = SimplexSolver()
+        self._configure_variables()
         self._add_constraints()
         elapsed = datetime.now() - time_start
         # DEBUG: Uncomment the following line to print the time needed
         # to calculate the drawing.  Development only!
         # log_debug(f"Initialized drawing in {elapsed}")
 
+    def _configure_variables(self) -> None:
+        """Configure some of the constraint solver variables."""
+        solver = self._solver
+        # Shape coordinates are calculated relative to the start of
+        # the drawing.  Fix the top left corner at zero and calculate
+        # from there.
+        xmin = self._xmin
+        xmin.value = 0.0
+        solver.add_stay(xmin, strength=REQUIRED)
+        ymin = self._ymin
+        ymin.value = 0.0
+        solver.add_stay(ymin, strength=REQUIRED)
+
     def _add_constraints(self) -> None:
         """Add the constraints to the solver."""
-        self._add_grid_constraints()
-        self._add_own_constraints()
-
-    def _add_grid_constraints(self) -> None:
-        """Add the constraints derived from the elements in the grid."""
         add_constraint = self._solver.add_constraint
-        for constraint in self._grid.constraints():
-            add_constraint(constraint)
-        for constraint in self._grid.optional_constraints():
+        for constraint in self._required_constraints():
+            add_constraint(constraint, strength=REQUIRED)
+        for constraint in self._optional_constraints():
             add_constraint(constraint, strength=WEAK)
 
-    def _add_own_constraints(self) -> None:
-        """Add the constraints for the drawing itself."""
-        solver = self._solver
-        add_constraint = solver.add_constraint
-        remove_constraint = solver.remove_constraint
+    def _required_constraints(self) -> Iterator[Constraint]:
+        """Generate required constraints for the solver."""
+        yield from self._grid.constraints()
+        yield from self._own_required_constraints()
+
+    def _optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the solver."""
+        yield from self._grid.optional_constraints()
+        yield from self._own_optional_constraints()
+
+    def _own_required_constraints(self) -> Iterator[Constraint]:
+        """Generate required constraints for the drawing itself."""
+        # Satisfy minimum requested dimensions.
+        attrs = self._attributes()
+        yield self._xmax >= self._xmin + attrs.min_width
+        yield self._ymax >= self._ymin + attrs.min_height
+        # Grid must be inside drawing.
         grid = self._grid
-        # Set minimal dimensions initially.
         top = self.padding_top
         bot = self.padding_bottom
         lef = self.padding_left
         rig = self.padding_right
-        constraints = {
-            't': grid.ymin >= self._ymin + top,
-            'b': grid.ymax <= self._ymax - bot,
-            'l': grid.xmin >= self._xmin + lef,
-            'r': grid.xmax <= self._xmax - rig,
-        }
-        for constraint in constraints.values():
-            add_constraint(constraint)
-        # If the dimensions of the drawing turn out to be smaller than
-        # the ones requested, replace the previous constraints with
-        # ones that bring the drawing to the requested size.
-        attrs = self._attributes()
-        min_width = attrs.min_width
-        width = self._xmax.value - self._xmin.value
-        x_diff = 0.5 * (min_width - width)
-        if x_diff > 0:
-            remove_constraint(constraints['l'])
-            remove_constraint(constraints['r'])
-            add_constraint(grid.xmin >= self._xmin + lef + x_diff)
-            add_constraint(grid.xmax <= self._xmax - rig - x_diff)
-        min_height = attrs.min_height
-        height = self._ymax.value - self._ymin.value
-        y_diff = 0.5 * (min_height - height)
-        if y_diff > 0:
-            remove_constraint(constraints['t'])
-            remove_constraint(constraints['b'])
-            add_constraint(grid.ymin >= self._ymin + top + y_diff)
-            add_constraint(grid.ymax <= self._ymax - bot - y_diff)
+        yield grid.xmin >= self._xmin + lef
+        yield grid.xmax <= self._xmax - rig
+        yield grid.ymin >= self._ymin + top
+        yield grid.ymax <= self._ymax - bot
+
+    def _own_optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the drawing itself."""
+        grid = self._grid
+        # Minimize grid.
+        yield grid.xmax == grid.xmin
+        yield grid.ymax == grid.ymin
+        # Center grid on drawing.
+        top = self.padding_top
+        bot = self.padding_bottom
+        lef = self.padding_left
+        rig = self.padding_right
+        yield grid.xmin - self._xmin - lef == self._xmax - grid.xmax - rig
+        yield grid.ymin - self._ymin - top == self._ymax - grid.ymax - bot
 
     def write_png(self, filename: str) -> None:
         """Write the drawing to a PNG file."""
@@ -346,13 +358,13 @@ class Drawing(Container):
         if segment.is_horizontal():
             x_start = label.cmin.value
             x_end = label.cmax.value
-            y_start = segment.y1.value
-            y_end = segment.y2.value
+            y_start = segment.start.y.value
+            y_end = segment.end.y.value
         else:
             y_start = label.cmin.value
             y_end = label.cmax.value
-            x_start = segment.x1.value
-            x_end = segment.x2.value
+            x_start = segment.start.x.value
+            x_end = segment.end.x.value
         x_label = 0.5 * (x_start + x_end)
         y_label = 0.5 * (y_start + y_end)
         disp = segment.label_displacement
@@ -469,12 +481,12 @@ class Drawing(Container):
         # Sides of rows and columns.
         ctx.set_source_rgb(grade, grade, 1.0)
         for hline in grid.horizontal_lines():
-            line_y = hline.c.value
+            line_y = hline.value
             ctx.move_to(xmin, line_y)
             ctx.line_to(xmax, line_y)
             ctx.stroke()
         for vline in grid.vertical_lines():
-            line_x = vline.c.value
+            line_x = vline.value
             ctx.move_to(line_x, ymin)
             ctx.line_to(line_x, ymax)
             ctx.stroke()

@@ -7,9 +7,11 @@ from itertools import permutations
 
 from typing import (
     Callable,
+    Collection,
     Iterable,
     Iterator,
     List,
+    Mapping,
     MutableMapping,
     Optional,
     Sequence,
@@ -20,7 +22,9 @@ import networkx as nx # type: ignore
 
 from .net import (
     Bundle,
+    BundleStructure,
     Network,
+    NetworkBundle,
     NetworkOrigin,
     WireSegment,
 )
@@ -191,16 +195,6 @@ class _BundleRule:
             self.first, adverb, self.second,
         )
 
-    def bundles(self) -> Iterator[Bundle]:
-        """Return an iterator over the bundles."""
-        yield self.first
-        yield self.second
-
-######################################################################
-
-# Combination of a network and one of its bundles.
-_NetworkAndBundle = Tuple[Network, Bundle]
-
 ######################################################################
 
 class Refiner:
@@ -209,12 +203,13 @@ class Refiner:
     def __init__(self, router: Router):
         """Initialize the refiner for the given router."""
         self._router = router
-        self._networks: List[Network] = []
-        self._init_networks()
-        self._segment_bundles: MutableMapping[
-            RouteSegment, Bundle] = OrderedDict()
-        self._init_segment_bundles()
-        self._update_offsets()
+        self._networks = self._make_networks()
+        self._segment_bundles = self._make_segment_bundles()
+        self._init_bundle_offsets()
+        # Caution: first pass of offset calculation must be completed
+        # before calculating the structures!
+        self._bundle_structures = self._make_bundle_structures()
+        self._optimize_bundles()
 
     @property
     def router(self) -> Router:
@@ -224,6 +219,10 @@ class Refiner:
     def networks(self) -> Iterator[Network]:
         """Return an iterator over the calculated networks."""
         yield from self._networks
+
+    def bundle_structures(self) -> Iterator[BundleStructure]:
+        """Iterate over the bundle structures."""
+        yield from self._bundle_structures
 
     def segment_intersections(self, segment: WireSegment) -> Sequence[int]:
         """Returns the intersections of the segment by other segments."""
@@ -235,13 +234,7 @@ class Refiner:
                     intersections.add(cut)
         return sorted(intersections)
 
-    def _wire_segments(self) -> Iterator[WireSegment]:
-        """Returns the wire segments."""
-        for net in self._networks:
-            for wire in net.wires():
-                yield from wire.segments()
-
-    def _init_networks(self) -> None:
+    def _make_networks(self) -> Sequence[Network]:
         """Create the networks."""
         #
         # Group routes by connection group.  If the connection does
@@ -265,12 +258,12 @@ class Refiner:
             else:
                 group_routes = [route]
                 per_group[key] = group_routes
-        nets = self._networks
-        nets.clear()
+        nets: List[Network] = []
         for key, group_routes in per_group.items():
             net = Network(*key, group_routes)
             self._set_joint_nodes(net)
             nets.append(net)
+        return nets
 
     def _must_collapse_connections(self) -> bool:
         """Collapse connections in the same group?"""
@@ -284,20 +277,26 @@ class Refiner:
             if joint_node:
                 joint.node = joint_node
 
-    def _init_segment_bundles(self) -> None:
+    def _make_segment_bundles(self) -> Mapping[RouteSegment, Bundle]:
         """Map each route segment to the bundle to which it belongs."""
-        seg_bundles = self._segment_bundles
-        seg_bundles.clear()
-        for net in self._networks:
-            for bundle in net.bundles():
-                for seg in bundle.route_segments():
-                    seg_bundles[seg] = bundle
+        seg_bundles: MutableMapping[RouteSegment, Bundle] = OrderedDict()
+        for bundle in self._bundles():
+            for seg in bundle.route_segments():
+                seg_bundles[seg] = bundle
+        return seg_bundles
 
-    def _update_offsets(self) -> None:
-        """Calculate the offsets of the bundles."""
+    def _init_bundle_offsets(self) -> None:
+        """Calculate the initial offsets of the bundles.
+
+        This method uses the stored DAG to calculate the initial
+        values for the offsets of the bundles.  It stores the results
+        in the bundles themselves.
+
+        The calculated values are unoptimized.
+
+        """
         dag = self._bundle_dag()
-        self._update_bundle_offsets(dag)
-        self._stack_bundles()
+        self._calculate_offsets_from_dag(dag)
 
     def _bundle_dag(self) -> nx.DiGraph:
         """Create a DAG of bundles out of the route interactions."""
@@ -597,8 +596,8 @@ class Refiner:
                     log_debug("Rejected {}".format(rule))
 
     @staticmethod
-    def _update_bundle_offsets(graph: nx.DiGraph) -> None:
-        """Calculate the offsets and store them in the bundles."""
+    def _calculate_offsets_from_dag(graph: nx.DiGraph) -> None:
+        """Calculate the offsets of the bundles using the DAG."""
         # Assign inital depths to the nodes.
         nodes = graph.nodes
         for bundle in nodes:
@@ -619,7 +618,7 @@ class Refiner:
                     for bundle2 in graph.successors(bundle1):
                         depth2 = nodes[bundle2]['depth']
                         if depth1 + 1 > depth2:
-                            nodes[bundle2]['depth'] = max(depth1 + 1, depth2)
+                            nodes[bundle2]['depth'] = depth1 + 1
                             changed = True
             if not changed:
                 break
@@ -628,37 +627,32 @@ class Refiner:
             offset = nodes[bundle]['depth']
             bundle.offset = offset
 
-    def _stack_bundles(self) -> None:
-        """Second pass of the refinement process.
+    def _make_bundle_structures(self) -> Collection[BundleStructure]:
+        """Group the bundles in collections of overlapping bundles."""
+        result = []
+        by_axis = self._bundles_by_axis()
+        for axis, axis_nbs in by_axis.items():
+            for over_nbs in self._overlapping_bundles(axis_nbs):
+                struct = BundleStructure(axis, over_nbs)
+                result.append(struct)
+        return result
 
-        The bundles calculated by the first pass are "stacked" as
-        densely as possible on both sides of the axis.  The new
-        offsets are stored back in the bundles.
-
-        """
-        # Group the bundles by axis.
-        parallel: MutableMapping[Axis, List[_NetworkAndBundle]] = OrderedDict()
+    def _bundles_by_axis(self) -> Mapping[Axis, Collection[NetworkBundle]]:
+        """Group the bundles by grid axis."""
+        result: MutableMapping[Axis, List[NetworkBundle]] = OrderedDict()
         for net in self._networks:
             for bundle in net.bundles():
                 axis = bundle.axis
-                if not axis in parallel:
-                    parallel[axis] = []
-                parallel[axis].append((net, bundle))
-        # Stack the bundles of an axis as densely as possible.
-        for axis_nbs in parallel.values():
-            for over_nbs in self._overlapping_bundles(axis_nbs):
-                rows = self._stack_overlapping_bundles(over_nbs)
-                # Center offsets around zero.
-                mid = len(rows) // 2
-                for i, nbs in enumerate(rows):
-                    for net_bundle in nbs:
-                        bundle = net_bundle[1]
-                        bundle.offset = i - mid
+                if not axis in result:
+                    result[axis] = []
+                net_bundle = NetworkBundle(net, bundle)
+                result[axis].append(net_bundle)
+        return result
 
+    @staticmethod
     def _overlapping_bundles(
-            self,
-            net_bundles: Iterable[_NetworkAndBundle]
-    ) -> Iterator[Iterable[_NetworkAndBundle]]:
+            net_bundles: Iterable[NetworkBundle]
+    ) -> Iterator[Collection[NetworkBundle]]:
         """Separate the bundles into collections of overlapping bundles.
 
         This method checks for overlapping bundles at the grid level.
@@ -676,13 +670,13 @@ class Refiner:
         net_bundles = list(net_bundles)
         graph = nx.Graph()
         for net_bundle in net_bundles:
-            bundle = net_bundle[1]
+            bundle = net_bundle.bundle
             graph.add_node(bundle, nb=net_bundle)
         for i, net_bundle_1 in enumerate(net_bundles):
-            _, bundle_1 = net_bundle_1
+            bundle_1 = net_bundle_1.bundle
             for net_bundle_2 in net_bundles[i + 1:]:
-                _, bundle_2 = net_bundle_2
-                if self._bundles_overlap(net_bundle_1, net_bundle_2):
+                bundle_2 = net_bundle_2.bundle
+                if net_bundle_1.overlaps_with(net_bundle_2):
                     graph.add_edge(bundle_1, bundle_2)
         for bundles in nx.connected_components(graph):
             block = []
@@ -691,54 +685,24 @@ class Refiner:
                 block.append(net_bundle)
             yield block
 
-    def _stack_overlapping_bundles(
-            self,
-            net_bundles: Iterable[_NetworkAndBundle]
-    ) -> Sequence[Sequence[_NetworkAndBundle]]:
-        """Stack collinear bundles so that they do not overlap."""
-        key = lambda net_bundle: net_bundle[1].offset
-        net_bundles = sorted(net_bundles, key=key)
-        result: List[List[_NetworkAndBundle]] = []
-        for net_bundle in net_bundles:
-            overlap_on = -1
-            n_results = len(result)
-            for i in range(n_results - 1, -1, -1):
-                row = result[i]
-                for net_bundle_2 in row:
-                    if self._bundles_overlap(net_bundle, net_bundle_2):
-                        overlap_on = i
-                        break
-                if overlap_on >= 0:
-                    break
-            if overlap_on == n_results - 1:
-                # New row.
-                result.append([net_bundle])
-            else:
-                # Append to existing row.
-                result[overlap_on + 1].append(net_bundle)
-        return result
+    def _optimize_bundles(self) -> None:
+        """Second pass of the bundle offset calculation.
 
-    @staticmethod
-    def _bundles_overlap(
-            nb1: _NetworkAndBundle,
-            nb2: _NetworkAndBundle
-    ) -> bool:
-        """True if the two bundles overlap.
-
-        This method takes into account the offsets calculated in the
-        previous steps.
+        The bundles calculated by the first pass are packed as densely
+        as possible to minimize their offsets.  The new offsets are
+        stored back in the bundles.
 
         """
-        net1, bundle1 = nb1
-        net2, bundle2 = nb2
-        if bundle1.axis != bundle2.axis:
-            return False
-        p11, p12 = net1.offset_bundle(bundle1)
-        p21, p22 = net2.offset_bundle(bundle2)
-        horizontal = bundle1.orientation is Orientation.HORIZONTAL
-        vertical = not horizontal
-        if horizontal and p11.x <= p22.x and p12.x >= p21.x:
-            return True
-        if vertical and p11.y <= p22.y and p12.y >= p21.y:
-            return True
-        return False
+        for struct in self._bundle_structures:
+            struct.optimize()
+
+    def _wire_segments(self) -> Iterator[WireSegment]:
+        """Return the wire segments."""
+        for net in self._networks:
+            for wire in net.wires():
+                yield from wire.segments()
+
+    def _bundles(self) -> Iterator[Bundle]:
+        """Return the bundles."""
+        for net in self._networks:
+            yield from net.bundles()

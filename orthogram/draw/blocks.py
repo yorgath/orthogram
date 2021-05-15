@@ -5,7 +5,6 @@ from typing import (
     Iterator,
     List,
     Optional,
-    Sequence,
 )
 
 from cassowary.expression import Constraint # type: ignore
@@ -13,7 +12,7 @@ from cassowary.expression import Constraint # type: ignore
 from ..define import Block, BlockAttributes
 
 from .bands import Band
-from .connections import Lane
+from .connections import DrawingWireSegment
 from .containers import Container
 from .labels import Label
 
@@ -28,7 +27,7 @@ class BlockBox(Container):
             block: Block,
             top_row: Band, bottom_row: Band,
             left_column: Band, right_column: Band,
-            lane_margin: float = 0.0,
+            wire_margin: float = 0.0,
             label: Optional[Label] = None,
     ):
         """Initialize for a diagram block inside the given grid lines."""
@@ -40,9 +39,12 @@ class BlockBox(Container):
         self._bottom_row = bottom_row
         self._left_column = left_column
         self._right_column = right_column
-        self._lane_margin = lane_margin
-        self._horizontal_lanes: List[Lane] = []
-        self._vertical_lanes: List[Lane] = []
+        self._wire_margin = wire_margin
+        self._connected_segments: List[DrawingWireSegment] = []
+
+    def _attributes(self) -> BlockAttributes:
+        """Attributes of the block."""
+        return self._block.attributes
 
     @property
     def block(self) -> Block:
@@ -69,13 +71,11 @@ class BlockBox(Container):
         """Last column of the box."""
         return self._right_column
 
-    def add_horizontal_lanes(self, lanes: Iterable[Lane]) -> None:
-        """Associate the box with horizontal lanes connected to it."""
-        self._horizontal_lanes.extend(lanes)
-
-    def add_vertical_lanes(self, lanes: Iterable[Lane]) -> None:
-        """Associate the box with vertical lanes connected to it."""
-        self._vertical_lanes.extend(lanes)
+    def connect_segment(self, segment: DrawingWireSegment) -> None:
+        """Connect the drawing segment to the box."""
+        segments = self._connected_segments
+        if segment not in segments:
+            segments.append(segment)
 
     def constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the solver."""
@@ -84,7 +84,7 @@ class BlockBox(Container):
         # satisfaction.
         yield from self._ref_constraints()
         yield from self._label_constraints()
-        yield from self._lane_constraints()
+        yield from self._wire_constraints()
         yield from self._band_constraints()
 
     def _ref_constraints(self) -> Iterable[Constraint]:
@@ -97,31 +97,19 @@ class BlockBox(Container):
         yield self._xmin <= self._left_column.cref - half_width
         yield self._xmax >= self._right_column.cref + half_width
 
-    def _attributes(self) -> BlockAttributes:
-        """Attributes of the block."""
-        return self._block.attributes
-
-    def _lane_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints to fit the connected lanes."""
-        lanes = self._sorted_lanes(self._horizontal_lanes)
-        margin = self._lane_margin
-        if lanes:
-            lane = lanes[0]
-            yield self._ymin <= lane.cmin + lane.margin_before - margin
-            lane = lanes[-1]
-            yield self._ymax >= lane.cmax - lane.margin_after + margin
-        lanes = self._sorted_lanes(self._vertical_lanes)
-        if lanes:
-            lane = lanes[0]
-            yield self._xmin <= lane.cmin + lane.margin_before - margin
-            lane = lanes[-1]
-            yield self._xmax >= lane.cmax - lane.margin_after + margin
-
-    @staticmethod
-    def _sorted_lanes(lanes: Iterable[Lane]) -> Sequence[Lane]:
-        """Sort lanes according to their order in the drawing."""
-        key = lambda lane: lane.sort_key
-        return sorted(lanes, key=key)
+    def _wire_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints to fit the connected wires."""
+        gap = self._wire_margin
+        for seg in self._connected_segments:
+            half_width = 0.5 * seg.wire_width + gap
+            if seg.is_horizontal():
+                y_wire = seg.start.y
+                yield self._ymin <= y_wire - half_width
+                yield self._ymax >= y_wire + half_width
+            else:
+                x_wire = seg.start.x
+                yield self._xmin <= x_wire - half_width
+                yield self._xmax >= x_wire + half_width
 
     def _band_constraints(self) -> Iterable[Constraint]:
         """Generate constraints to fit in the rows and columns."""

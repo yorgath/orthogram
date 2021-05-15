@@ -631,7 +631,8 @@ class SubBlock:
         bounds = self._block.bounds
         if bounds:
             for node in self._nodes:
-                i, j = node.point
+                point = node.point
+                i, j = point.i, point.j
                 if (
                         i == bounds.imin or i == bounds.imax or
                         j == bounds.jmin or j == bounds.jmax

@@ -13,9 +13,9 @@ from cassowary.expression import Constraint # type: ignore
 from shapely.geometry import Polygon # type: ignore
 
 from ..define import ContainerAttributes
+from ..names import Named
 
 from .labels import Label
-from .names import Named
 
 ######################################################################
 

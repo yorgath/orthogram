@@ -69,9 +69,8 @@ class WireLine:
     ):
         """Initialize for the given wire.
 
-        The line string must be the one calculated directly from the
-        positions of the tracks.  The polygons will be used to clip
-        the line to its proper dimensions.
+        The polygons will be used to clip the line to its proper
+        dimensions.
 
         """
         self._wire = wire

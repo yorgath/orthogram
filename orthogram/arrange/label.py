@@ -9,19 +9,12 @@ from typing import (
     Sequence,
 )
 
-from ..geometry import (
-    IntPoint,
-    Orientation,
-)
-
 from .net import (
     Wire,
     WireSegment,
 )
 
-from .refine import (
-    Refiner,
-)
+from .refine import Refiner
 
 ######################################################################
 

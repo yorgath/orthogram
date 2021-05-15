@@ -10,6 +10,8 @@ from typing import (
     Tuple,
 )
 
+from .names import Named
+
 ######################################################################
 
 class Orientation(Enum):
@@ -43,11 +45,6 @@ class IntPoint:
     def __hash__(self) -> int:
         """Return the hash value of the tuple of coordinates."""
         return hash((self._i, self._j))
-
-    def __iter__(self) -> Iterator[int]:
-        """Iterator over (i, j)."""
-        yield self._i
-        yield self._j
 
     def __repr__(self) -> str:
         """Convert to string."""
@@ -96,7 +93,7 @@ class IntBounds:
         """
         bounds = None
         for point in points:
-            i, j = point
+            i, j = point.i, point.j
             if bounds:
                 if i < bounds.imin:
                     bounds.imin = i
@@ -145,16 +142,6 @@ class IntBounds:
     @jmax.setter
     def jmax(self, value: int) -> None:
         self._jmax = value
-
-    @property
-    def height(self) -> int:
-        """Number of rows."""
-        return self.imax - self.imin + 1
-
-    @property
-    def width(self) -> int:
-        """Number of columns."""
-        return self.jmax - self.jmin + 1
 
     def copy(self) -> 'IntBounds':
         """Return a copy of the object."""
@@ -265,20 +252,15 @@ class OrientedObject(metaclass=ABCMeta):
 
 ######################################################################
 
-class Axis(OrientedObject):
+class Axis(Named, OrientedObject):
     """Grid axis, horizontal or vertical."""
 
     def __init__(self, orientation: Orientation, coord: int):
         """Initialize axis for the given orientation and coordinate."""
+        name = f"{orientation.name[0]}{coord}"
+        super().__init__(name)
         self._orientation = orientation
         self._coordinate = coord
-        self._name = f"{orientation.name[0]}{coord}"
-
-    def __repr__(self) -> str:
-        """Convert to string."""
-        cls = self.__class__.__name__
-        name = self._name
-        return f"{cls}({name})"
 
     @property
     def orientation(self) -> Orientation:
@@ -289,11 +271,6 @@ class Axis(OrientedObject):
     def coordinate(self) -> int:
         """Constant coordinate along the axis."""
         return self._coordinate
-
-    @property
-    def name(self) -> str:
-        """Name of the axis (unique in the diagram)."""
-        return self._name
 
     def __eq__(self, other: object) -> bool:
         """Implement the equality comparison between two axes."""
