@@ -17,7 +17,7 @@ from typing import (
 )
 
 from cassowary import Variable  # type: ignore
-from cassowary.expression import Constraint # type: ignore
+from cassowary.expression import Constraint  # type: ignore
 
 from ..arrange import (
     Joint,
@@ -28,7 +28,16 @@ from ..arrange import (
 )
 
 from ..define import Block
-from ..geometry import Axis
+
+from ..geometry import (
+    Axis,
+    IntPoint,
+)
+
+from ..util import (
+    class_str,
+    grid_str,
+)
 
 from .bands import Band
 from .blocks import BlockBox
@@ -47,15 +56,40 @@ from .labels import Label
 
 ######################################################################
 
-class _Cell:
-    """Cell in the grid."""
+class DrawingCell:
+    """Cell in the drawing grid."""
 
-    def __init__(self) -> None:
+    def __init__(self, point: IntPoint) -> None:
         """Initialize an empty cell."""
+        self._point = point
         self._boxes_top: List[BlockBox] = []
         self._boxes_bottom: List[BlockBox] = []
         self._boxes_left: List[BlockBox] = []
         self._boxes_right: List[BlockBox] = []
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        point = self._point
+        i = point.i
+        j = point.j
+        content = f"i={i}, j={j}"
+        return class_str(self, content)
+
+    def boxes_top(self) -> Iterator[BlockBox]:
+        """Iterate over the boxes at the top side of the cell."""
+        yield from self._boxes_top
+
+    def boxes_bottom(self) -> Iterator[BlockBox]:
+        """Iterate over the boxes at the bottom side of the cell."""
+        yield from self._boxes_bottom
+
+    def boxes_left(self) -> Iterator[BlockBox]:
+        """Iterate over the boxes at the left side of the cell."""
+        yield from self._boxes_left
+
+    def boxes_right(self) -> Iterator[BlockBox]:
+        """Iterate over the boxes at the right side of the cell."""
+        yield from self._boxes_right
 
     def place_box_top(self, box: BlockBox) -> None:
         """Place a box at the top side of the cell."""
@@ -72,22 +106,6 @@ class _Cell:
     def place_box_right(self, box: BlockBox) -> None:
         """Place a box at the right side of the cell."""
         self._boxes_right.append(box)
-
-    def boxes_top(self) -> Iterator[BlockBox]:
-        """Return the boxes at the top side of the cell."""
-        yield from self._boxes_top
-
-    def boxes_bottom(self) -> Iterator[BlockBox]:
-        """Return the boxes at the bottom side of the cell."""
-        yield from self._boxes_bottom
-
-    def boxes_left(self) -> Iterator[BlockBox]:
-        """Return the boxes at the left side of the cell."""
-        yield from self._boxes_left
-
-    def boxes_right(self) -> Iterator[BlockBox]:
-        """Return the boxes at the right side of the cell."""
-        yield from self._boxes_right
 
 ######################################################################
 
@@ -113,6 +131,76 @@ class DrawingGrid:
         self._add_labels_to_wires()
         self._place_structures()
         self._connect_boxes()
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        height = len(self._rows)
+        width = len(self._columns)
+        content = grid_str(height, width)
+        return class_str(self, content)
+
+    def horizontal_lines(self) -> Sequence[Variable]:
+        """Return the horizontal lines top to bottom."""
+        return list(self._horizontal_lines)
+
+    def vertical_lines(self) -> Sequence[Variable]:
+        """Return the vertical lines left to right."""
+        return list(self._vertical_lines)
+
+    def rows(self) -> Iterator[Band]:
+        """Iterate over the rows top to bottom."""
+        yield from self._rows
+
+    def columns(self) -> Iterator[Band]:
+        """Iterate over the columns left to right."""
+        yield from self._columns
+
+    @property
+    def xmin(self) -> Variable:
+        """Minimum coordinate along the X axis."""
+        return self._vertical_lines[0]
+
+    @property
+    def xmax(self) -> Variable:
+        """Maximum coordinate along the X axis."""
+        return self._vertical_lines[-1]
+
+    @property
+    def ymin(self) -> Variable:
+        """Minimum coordinate along the Y axis."""
+        return self._horizontal_lines[0]
+
+    @property
+    def ymax(self) -> Variable:
+        """Maximum coordinate along the Y axis."""
+        return self._horizontal_lines[-1]
+
+    def block_boxes(self) -> Iterator[BlockBox]:
+        """Iterate over the boxes of the diagram blocks."""
+        yield from self._block_boxes
+
+    def block_box(self, block: Block) -> BlockBox:
+        """Return the box of the given block."""
+        return self._block_box_map[block]
+
+    def networks(self) -> Iterator[DrawingNetwork]:
+        """Iterate over the networks of drawing wires."""
+        yield from self._networks
+
+    def constraints(self) -> Iterator[Constraint]:
+        """Generate required constraints for the solver."""
+        yield from self._line_constraints()
+        yield from self._block_box_constraints()
+        yield from self._joint_constraints()
+        yield from self._wire_constraints()
+        yield from self._band_constraints()
+        yield from self._padding_constraints()
+        yield from self._label_constraints()
+
+    def optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the solver."""
+        yield from self._block_box_optional_constraints()
+        yield from self._band_optional_constraints()
 
     def _make_horizontal_lines(self) -> Sequence[Variable]:
         """Create the horizontal lines."""
@@ -161,15 +249,16 @@ class DrawingGrid:
             last = line
         return bands
 
-    def _make_cells(self) -> Sequence[Sequence[_Cell]]:
+    def _make_cells(self) -> Sequence[Sequence[DrawingCell]]:
         """Create the cells."""
         rows = []
         height = len(self._rows)
         width = len(self._columns)
-        for _ in range(height):
+        for i in range(height):
             row = []
-            for _ in range(width):
-                cell = _Cell()
+            for j in range(width):
+                point = IntPoint(i, j)
+                cell = DrawingCell(point)
                 row.append(cell)
             rows.append(row)
         return rows
@@ -189,7 +278,7 @@ class DrawingGrid:
         lgrid = layout.grid
         rows = self._rows
         cols = self._columns
-        for index, block in enumerate(dia.blocks()):
+        for block in dia.blocks():
             bounds = lgrid.block_bounds(block)
             # It is possible that some blocks declared in the DDF are
             # not placed in the layout.
@@ -206,7 +295,6 @@ class DrawingGrid:
                 ori = block.label_orientation
                 label = Label(attrs, dia_attrs, ori, text)
             box = BlockBox(
-                index,
                 block, top, bottom, left, right,
                 wire_margin,
                 label
@@ -251,7 +339,7 @@ class DrawingGrid:
                 for seg in wire.segments():
                     for ljoint in seg.joints:
                         if ljoint not in result:
-                            result[ljoint] = DrawingJoint(index, ljoint)
+                            result[ljoint] = DrawingJoint(ljoint)
                             index += 1
         return result
 
@@ -268,36 +356,25 @@ class DrawingGrid:
     def _make_drawing_networks(self) -> Sequence[DrawingNetwork]:
         """Create drawing wire networks out of the layout networks."""
         result = []
-        index = 0
         for lnet in self._layout.networks():
-            dnet = DrawingNetwork()
+            dnet = DrawingNetwork(lnet.name)
             for lwire in lnet.wires():
-                dwire = self._make_drawing_wire(index, lwire)
-                index += 1
+                dwire = self._make_drawing_wire(lwire)
                 dnet.append_wire(dwire)
             result.append(dnet)
         return result
 
-    def _make_drawing_wire(
-            self,
-            wire_index: int, layout_wire: Wire,
-    ) -> DrawingWire:
+    def _make_drawing_wire(self, layout_wire: Wire) -> DrawingWire:
         """Create a drawing wire out of a layout wire."""
-        dwire = DrawingWire(wire_index, layout_wire)
+        dwire = DrawingWire(layout_wire)
         # Populate the wire with segments.
         jmap = self._joint_map
-        seg_index = 0
         dist = self._layout.diagram.attributes.connection_distance
         for lseg in layout_wire.segments():
             start = jmap[lseg.start]
             end = jmap[lseg.end]
-            dseg = DrawingWireSegment(
-                wire_index, seg_index,
-                lseg, dist,
-                start, end
-            )
+            dseg = DrawingWireSegment(lseg, dist, start, end)
             dwire.append_segment(dseg)
-            seg_index += 1
         return dwire
 
     def _make_wire_segment_map(self) -> Mapping[WireSegment,
@@ -334,10 +411,10 @@ class DrawingGrid:
             dstructs = result.get(axis)
             if not dstructs:
                 result[axis] = dstructs = []
-            index = len(dstructs)
-            dstruct = DrawingWireStructure(axis, index, dist)
+            struct_name = bstruct.name
+            dstruct = DrawingWireStructure(struct_name, axis, dist)
             for blayer in bstruct:
-                dlayer = DrawingWireLayer(axis, index, blayer.offset)
+                dlayer = DrawingWireLayer(struct_name, blayer.offset)
                 for net_bundle in blayer:
                     for rseg in net_bundle.bundle.route_segments():
                         dseg = segmap[rseg]
@@ -417,69 +494,6 @@ class DrawingGrid:
                 dseg = seg_map[lseg]
                 box.connect_segment(dseg)
 
-    def horizontal_lines(self) -> Sequence[Variable]:
-        """Return the horizontal lines top to bottom."""
-        return list(self._horizontal_lines)
-
-    def vertical_lines(self) -> Sequence[Variable]:
-        """Return the vertical lines left to right."""
-        return list(self._vertical_lines)
-
-    def rows(self) -> Iterator[Band]:
-        """Return the rows top to bottom."""
-        yield from self._rows
-
-    def columns(self) -> Iterator[Band]:
-        """Return the columns left to right."""
-        yield from self._columns
-
-    @property
-    def xmin(self) -> Variable:
-        """Minimum coordinate along the X axis."""
-        return self._vertical_lines[0]
-
-    @property
-    def xmax(self) -> Variable:
-        """Maximum coordinate along the X axis."""
-        return self._vertical_lines[-1]
-
-    @property
-    def ymin(self) -> Variable:
-        """Minimum coordinate along the Y axis."""
-        return self._horizontal_lines[0]
-
-    @property
-    def ymax(self) -> Variable:
-        """Maximum coordinate along the Y axis."""
-        return self._horizontal_lines[-1]
-
-    def block_boxes(self) -> Iterator[BlockBox]:
-        """Return the boxes of the diagram blocks."""
-        yield from self._block_boxes
-
-    def block_box(self, block: Block) -> BlockBox:
-        """Return the box of the given block."""
-        return self._block_box_map[block]
-
-    def networks(self) -> Iterator[DrawingNetwork]:
-        """Return the networks of drawing wires."""
-        yield from self._networks
-
-    def constraints(self) -> Iterator[Constraint]:
-        """Generate required constraints for the solver."""
-        yield from self._line_constraints()
-        yield from self._block_box_constraints()
-        yield from self._joint_constraints()
-        yield from self._wire_constraints()
-        yield from self._band_constraints()
-        yield from self._padding_constraints()
-        yield from self._label_constraints()
-
-    def optional_constraints(self) -> Iterator[Constraint]:
-        """Generate optional constraints for the solver."""
-        yield from self._block_box_optional_constraints()
-        yield from self._band_optional_constraints()
-
     def _line_constraints(self) -> Iterator[Constraint]:
         """Generate the constraints between the lines of the grid."""
         parallels = [
@@ -557,35 +571,35 @@ class DrawingGrid:
 
     def _padding_top_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for padding one block over another."""
-        pairs = self._box_pairs(_Cell.boxes_top)
+        pairs = self._box_pairs(DrawingCell.boxes_top)
         for box_under, box_over in pairs:
             pad = box_under.padding_top
             yield box_under.ymin <= box_over.ymin - pad
 
     def _padding_bottom_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for padding one block under another."""
-        pairs = self._box_pairs(_Cell.boxes_bottom)
+        pairs = self._box_pairs(DrawingCell.boxes_bottom)
         for box_under, box_over in pairs:
             pad = box_under.padding_bottom
             yield box_under.ymax >= box_over.ymax + pad
 
     def _padding_left_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for padding one block left of another."""
-        pairs = self._box_pairs(_Cell.boxes_left)
+        pairs = self._box_pairs(DrawingCell.boxes_left)
         for box_under, box_over in pairs:
             pad = box_under.padding_left
             yield box_under.xmin <= box_over.xmin - pad
 
     def _padding_right_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for padding one block right of another."""
-        pairs = self._box_pairs(_Cell.boxes_right)
+        pairs = self._box_pairs(DrawingCell.boxes_right)
         for box_under, box_over in pairs:
             pad = box_under.padding_right
             yield box_under.xmax >= box_over.xmax + pad
 
     def _box_pairs(
             self,
-            get_boxes: Callable[[_Cell], Iterable[BlockBox]],
+            get_boxes: Callable[[DrawingCell], Iterable[BlockBox]],
     ) -> Iterator[Tuple[BlockBox, BlockBox]]:
         """Return pairs of boxes overlapping at the top side.
 
@@ -603,7 +617,7 @@ class DrawingGrid:
                     yield pair
                     done.add(pair)
 
-    def _cells(self) -> Iterator[_Cell]:
+    def _cells(self) -> Iterator[DrawingCell]:
         """Return the cells, row first."""
         for cells in self._cell_rows:
             yield from cells

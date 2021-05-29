@@ -17,10 +17,8 @@ from ..define import (
     TextAttributes,
 )
 
-from ..geometry import (
-    Orientation,
-    OrientedObject,
-)
+from ..geometry import Orientation
+from ..util import class_str
 
 from .functions import (
     font_slant,
@@ -31,7 +29,7 @@ from .functions import (
 
 ######################################################################
 
-class Label(OrientedObject):
+class Label:
     """Piece of text drawn on the diagram."""
 
     def __init__(
@@ -60,53 +58,17 @@ class Label(OrientedObject):
         self._lines: List[str] = []
         if text:
             self._lines = text.split("\n")
+        self._text = text
         self._diagram_attributes = diagram_attributes
         self._orientation = orientation
         width, height = self._calculate_dimensions()
         self._width = width
         self._height = height
 
-    def _calculate_dimensions(self) -> Tuple[float, float]:
-        """Calculate the dimensions of the label."""
-        width = height = line_height = 0.0
-        # We will calculate the dimensions using a temporary drawing
-        # surface!
-        with new_surface(self._diagram_attributes, 0, 0) as surface:
-            ctx = self.new_context(surface)
-            lines = self._lines
-            # Calculate the width.
-            for line in lines:
-                extents = ctx.text_extents(line)
-                width = max(width, extents.width)
-            # Calculate the height of a single line.  We assume that
-            # the string "Mj" has the maximum height!
-            line_height = ctx.text_extents("Mj").height
-            # Calculate the total height.
-            factor = self._text_attributes.text_line_height
-            height = len(lines) * factor * line_height
-        return width, height
-
-    def new_context(self, surface: ImageSurface) -> Context:
-        """Create a new context for drawing the label on the surface.
-
-        It returns a Cairo context which is compatible with the one
-        used to calculate the dimensions of the label.
-
-        """
-        ctx = Context(surface)
-        attrs = self._text_attributes
-        color = attrs.text_fill
-        if color:
-            ctx.set_source_rgba(*color.rgba)
-        else:
-            # No color = transparent text.
-            ctx.set_source_rgba(0, 0, 0, 0)
-        family = attrs.font_family
-        slant = font_slant(attrs)
-        weight = font_weight(attrs)
-        ctx.select_font_face(family, slant, weight)
-        ctx.set_font_size(pt_to_px(attrs.font_size))
-        return ctx
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._text)
+        return class_str(self, content)
 
     def __len__(self) -> int:
         """Return the number of lines."""
@@ -117,14 +79,27 @@ class Label(OrientedObject):
         """Attributes of the label."""
         return self._text_attributes
 
+    @property
+    def text(self) -> Optional[str]:
+        """Text of the label."""
+        return self._text
+
     def lines(self) -> Iterator[str]:
-        """Lines of text that make up the label."""
+        """Iterate over the lines that make up the label."""
         yield from self._lines
 
     @property
     def orientation(self) -> Orientation:
         """Orientation of the text in the label."""
         return self._orientation
+
+    def is_horizontal(self) -> bool:
+        """True if the label is horizontal."""
+        return self._orientation is Orientation.HORIZONTAL
+
+    def is_vertical(self) -> bool:
+        """True if the label is vertical."""
+        return not self.is_horizontal()
 
     @property
     def width(self) -> float:
@@ -165,3 +140,46 @@ class Label(OrientedObject):
         if self.is_vertical():
             return self._width
         return self._height
+
+    def new_context(self, surface: ImageSurface) -> Context:
+        """Create a new context for drawing the label on the surface.
+
+        It returns a Cairo context which is compatible with the one
+        used to calculate the dimensions of the label.
+
+        """
+        ctx = Context(surface)
+        attrs = self._text_attributes
+        color = attrs.text_fill
+        if color:
+            ctx.set_source_rgba(*color.rgba)
+        else:
+            # No color = transparent text.
+            ctx.set_source_rgba(0, 0, 0, 0)
+        family = attrs.font_family
+        slant = font_slant(attrs)
+        weight = font_weight(attrs)
+        ctx.select_font_face(family, slant, weight)
+        ctx.set_font_size(pt_to_px(attrs.font_size))
+        return ctx
+
+    def _calculate_dimensions(self) -> Tuple[float, float]:
+        """Calculate the dimensions of the label."""
+        width = height = line_height = 0.0
+        # We will calculate the dimensions using a temporary drawing
+        # surface!
+        scale = self._diagram_attributes.scale
+        with new_surface(0, 0, scale) as surface:
+            ctx = self.new_context(surface)
+            lines = self._lines
+            # Calculate the width.
+            for line in lines:
+                extents = ctx.text_extents(line)
+                width = max(width, extents.width)
+            # Calculate the height of a single line.  We assume that
+            # the string "Mj" has the maximum height!
+            line_height = ctx.text_extents("Mj").height
+            # Calculate the total height.
+            factor = self._text_attributes.text_line_height
+            height = len(lines) * factor * line_height
+        return width, height

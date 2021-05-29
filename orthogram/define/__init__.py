@@ -18,11 +18,11 @@ from .attributes import (
 )
 
 from .build import Builder
+from .defs import DiagramDef
 
 from .diagram import (
     Block,
     Connection,
     Diagram,
-    DiagramDef,
     Node,
 )

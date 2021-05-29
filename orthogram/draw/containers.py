@@ -1,40 +1,44 @@
-"""Provides abstract base classes for container drawing elements."""
-
-from abc import ABCMeta, abstractmethod
+"""Provides classes for container drawing elements."""
 
 from typing import (
     Iterable,
     Optional,
 )
 
-from cassowary import Variable # type: ignore
-from cassowary.expression import Constraint # type: ignore
+from cassowary import Variable  # type: ignore
+from cassowary.expression import Constraint  # type: ignore
 
-from shapely.geometry import Polygon # type: ignore
+from shapely.geometry import Polygon  # type: ignore
 
 from ..define import ContainerAttributes
-from ..names import Named
+from ..util import class_str
 
 from .labels import Label
 
 ######################################################################
 
-class Container(Named, metaclass=ABCMeta):
+class Container:
     """Rectangular object that contains other objects."""
 
-    def __init__(self, name: str, label: Optional[Label] = None):
+    def __init__(
+            self,
+            attrs: ContainerAttributes,
+            var_prefix: str,
+            label: Optional[Label] = None,
+    ):
         """Initialize a container with the given name."""
-        super().__init__(name)
+        self._attributes = attrs
+        self._var_prefix = var_prefix
         self._label = label
-        self._xmin = Variable(f"{name}_xmin")
-        self._xmax = Variable(f"{name}_xmax")
-        self._ymin = Variable(f"{name}_ymin")
-        self._ymax = Variable(f"{name}_ymax")
+        self._xmin = Variable(f"{var_prefix}_xmin")
+        self._xmax = Variable(f"{var_prefix}_xmax")
+        self._ymin = Variable(f"{var_prefix}_ymin")
+        self._ymax = Variable(f"{var_prefix}_ymax")
 
-    @property
-    def label(self) -> Optional[Label]:
-        """The label of the block inside the box."""
-        return self._label
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._var_prefix)
+        return class_str(self, content)
 
     @property
     def xmin(self) -> Variable:
@@ -57,9 +61,19 @@ class Container(Named, metaclass=ABCMeta):
         return self._ymax
 
     @property
+    def label(self) -> Optional[Label]:
+        """The label to draw on the box."""
+        return self._label
+
+    @property
+    def attributes(self) -> ContainerAttributes:
+        """Attributes of the container."""
+        return self._attributes
+
+    @property
     def padding_top(self) -> float:
         """Padding over the contents."""
-        attrs = self._attributes()
+        attrs = self.attributes
         pad = attrs.stroke_width + attrs.padding_top
         label = self._label
         if label and attrs.label_position.is_top():
@@ -69,7 +83,7 @@ class Container(Named, metaclass=ABCMeta):
     @property
     def padding_bottom(self) -> float:
         """Padding under the contents."""
-        attrs = self._attributes()
+        attrs = self.attributes
         pad = attrs.stroke_width + attrs.padding_bottom
         label = self._label
         if label and attrs.label_position.is_bottom():
@@ -78,15 +92,15 @@ class Container(Named, metaclass=ABCMeta):
 
     @property
     def padding_left(self) -> float:
-        """Margin if on the left side of the box."""
-        attrs = self._attributes()
+        """Padding left of the contents."""
+        attrs = self.attributes
         pad = attrs.stroke_width + attrs.padding_left
         return pad
 
     @property
     def padding_right(self) -> float:
-        """Margin if on the right side of the box."""
-        attrs = self._attributes()
+        """Padding right of the contents."""
+        attrs = self.attributes
         pad = attrs.stroke_width + attrs.padding_right
         return pad
 
@@ -106,13 +120,7 @@ class Container(Named, metaclass=ABCMeta):
         ]
         return Polygon(points)
 
-    def _size_constraints(self) -> Iterable[Constraint]:
-        """Generate constraints to satisfy minimum dimensions."""
-        attrs = self._attributes()
-        yield self._xmax >= self._xmin + attrs.min_width
-        yield self._ymax >= self._ymin + attrs.min_height
-
-    def _label_constraints(self) -> Iterable[Constraint]:
+    def label_constraints(self) -> Iterable[Constraint]:
         """Generate constraints to fit the label."""
         yield self._xmax >= self._xmin + self._width_for_label()
         yield self._ymax >= self._ymin + self._height_for_label()
@@ -121,7 +129,7 @@ class Container(Named, metaclass=ABCMeta):
         """Width necessary for the label."""
         label = self._label
         if label:
-            attrs = self._attributes()
+            attrs = self.attributes
             sides = 2 * (attrs.stroke_width + attrs.label_distance)
             width = label.box_width + sides
             return width
@@ -131,17 +139,8 @@ class Container(Named, metaclass=ABCMeta):
         """Height necessary for the label."""
         label = self._label
         if label:
-            attrs = self._attributes()
+            attrs = self.attributes
             sides = 2 * (attrs.stroke_width + attrs.label_distance)
             height = label.box_height + sides
             return height
         return 0.0
-
-    @property
-    def attributes(self) -> ContainerAttributes:
-        """Attributes of the diagram object."""
-        return self._attributes()
-
-    @abstractmethod
-    def _attributes(self) -> ContainerAttributes:
-        """Override this to return the attributes of the container."""

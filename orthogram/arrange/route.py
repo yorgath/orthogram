@@ -1,20 +1,16 @@
 """Route connections between diagram blocks."""
 
-from collections import OrderedDict
-
 from typing import (
+    Dict,
     Iterable,
     Iterator,
     List,
-    Mapping,
-    MutableMapping,
     Optional,
-    Sequence,
     Set,
     Tuple,
 )
 
-import networkx as nx # type: ignore
+import networkx as nx  # type: ignore
 
 from ..define import (
     Block,
@@ -27,39 +23,51 @@ from ..define import (
 
 from ..geometry import (
     Axis,
+    Direction,
     IntBounds,
     IntPoint,
     Orientation,
     OrientedVector,
 )
 
-from ..util import log_warning
+from ..util import (
+    class_str,
+    grid_str,
+    log_warning,
+)
 
 ######################################################################
-
-# Iterator of nodes and their positions in the layout grid.
-_NodesAndPointsIterator = Iterator[Tuple[Node, IntPoint]]
 
 # Iterator of layout grid points and nodes.
-_PointsAndNodesIterator = Iterator[Tuple[IntPoint, Optional[Node]]]
+PointsAndNodesIterator = Iterator[Tuple[IntPoint, Optional[Node]]]
 
 ######################################################################
 
-class _LayoutCell:
-    """Position in the grid, may hold a node and its connected blocks."""
+class LayoutCell:
+    """Position in the grid, may hold a node."""
 
-    def __init__(
-            self,
-            node: Optional[Node] = None,
-            blocks: Iterable[Block] = (),
-    ):
-        """Initialize with the given contents."""
+    def __init__(self, point: IntPoint, node: Optional[Node] = None):
+        """Initialize the cell at the given layout grid point."""
+        self._point = point
         self._node = node
-        self._blocks = set(blocks)
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        point = self._point
+        i = point.i
+        j = point.j
+        node = repr(self._node)
+        content = f"i={i}, j={j}, node={node}"
+        return class_str(self, content)
+
+    @property
+    def point(self) -> IntPoint:
+        """Location of the cell in the grid."""
+        return self._point
 
     @property
     def node(self) -> Optional[Node]:
-        """node in this cell."""
+        """The node in this cell."""
         return self._node
 
 ######################################################################
@@ -75,17 +83,14 @@ class LayoutGrid:
         diagram_grid = diagram.grid
         self._height = 2 * diagram_grid.height + 1
         self._width = 2 * diagram_grid.width + 1
-        self._rows: List[List[_LayoutCell]]
-        self._node_points: MutableMapping[Node, IntPoint]
-        self._init_rows(diagram)
+        # These will be initialized together.
+        self._rows = self._make_rows(diagram)
+        self._node_points = self._map_nodes_to_points()
 
-    def  __repr__(self) -> str:
-        """Convert to string."""
-        return "{}(height={}, width={})".format(
-            self.__class__.__name__,
-            self._height,
-            self._width,
-        )
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = grid_str(self._height, self._width)
+        return class_str(self, content)
 
     @property
     def height(self) -> int:
@@ -97,7 +102,7 @@ class LayoutGrid:
         """Number of grid columns."""
         return self._width
 
-    def cell_at(self, point: IntPoint) -> _LayoutCell:
+    def cell_at(self, point: IntPoint) -> LayoutCell:
         """Return the cell at the given grid point."""
         return self._rows[point.i][point.j]
 
@@ -105,8 +110,8 @@ class LayoutGrid:
         """Return the position of the node in the layout grid."""
         return self._node_points[node]
 
-    def points_and_nodes(self) -> _PointsAndNodesIterator:
-        """Return an iterator over the points and associated nodes."""
+    def points_and_nodes(self) -> PointsAndNodesIterator:
+        """Iterate over the points and associated nodes."""
         for i, row in enumerate(self._rows):
             for j, cell in enumerate(row):
                 point = IntPoint(i, j)
@@ -129,7 +134,7 @@ class LayoutGrid:
         return bounds
 
     def block_points(self, block: Block) -> Iterator[IntPoint]:
-        """Return an iterator over the points covered by the block.
+        """Iterate over the points covered by the block.
 
         This includes the layout points between the nodes.
 
@@ -145,7 +150,7 @@ class LayoutGrid:
                     yield IntPoint(i, j)
 
     def edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
-        """Return an iterator over all the edges of the grid."""
+        """Iterate over all the edges between the points of the grid."""
         height = self._height
         width = self._width
         for i in range(height):
@@ -158,31 +163,34 @@ class LayoutGrid:
                     point_2 = IntPoint(i + 1, j)
                     yield point_1, point_2
 
-    @staticmethod
-    def axis(orientation: Orientation, coord: int) -> Axis:
-        """Return an axis of the grid."""
-        return Axis(orientation, coord)
-
-    def _init_rows(self, diagram: Diagram) -> None:
+    def _make_rows(self, diagram: Diagram) -> List[List[LayoutCell]]:
         """Create the cells of the grid."""
         # Create an empty grid first.
         rows = []
-        for _ in range(self._height):
-            row: List[_LayoutCell] = []
-            for _ in range(self._width):
-                cell = _LayoutCell()
+        for i in range(self._height):
+            row: List[LayoutCell] = []
+            for j in range(self._width):
+                layout_point = IntPoint(i, j)
+                cell = LayoutCell(layout_point)
                 row.append(cell)
             rows.append(row)
         # Now put the nodes into the cells.
-        node_points = OrderedDict()
-        for node, blocks in diagram.nodes_and_blocks():
+        for node in diagram.nodes():
             diagram_point = node.point
             layout_point = self._diagram_to_layout(diagram_point)
-            cell = _LayoutCell(node, blocks)
+            cell = LayoutCell(layout_point, node)
             rows[layout_point.i][layout_point.j] = cell
-            node_points[node] = layout_point
-        self._rows = rows
-        self._node_points = node_points
+        return rows
+
+    def _map_nodes_to_points(self) -> Dict[Node, IntPoint]:
+        """Return a map from each node to its point."""
+        node_points: Dict[Node, IntPoint] = {}
+        for row in self._rows:
+            for cell in row:
+                node = cell.node
+                if node:
+                    node_points[node] = cell.point
+        return node_points
 
     @staticmethod
     def _diagram_to_layout(diagram_point: IntPoint) -> IntPoint:
@@ -193,40 +201,72 @@ class LayoutGrid:
 
 ######################################################################
 
-class RouteSegment(OrientedVector):
+class RouteSegment:
     """Segment of a route between angles."""
 
-    def __init__(self, connection: Connection, axis: Axis, c1: int, c2: int):
+    def __init__(
+            self,
+            connection: Connection,
+            index: int,
+            vector: OrientedVector,
+    ):
         """Initialize the segment for a given connection."""
         self._connection = connection
-        self._axis = axis
-        self._coords = (c1, c2)
+        self._index = index
+        self._grid_vector = vector
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        coords = self._coords
-        return "{}({}; {}; {}->{})".format(
-            self.__class__.__name__,
-            self._connection,
-            self._axis,
-            coords[0],
-            coords[1],
-        )
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
+
+    @property
+    def connection(self) -> Connection:
+        """Associated connection."""
+        return self._connection
+
+    @property
+    def index(self) -> int:
+        """Index number of the segment in the route."""
+        return self._index
 
     @property
     def axis(self) -> Axis:
         """Axis on which the segment lies."""
-        return self._axis
+        return self._grid_vector.axis
+
+    def is_horizontal(self) -> bool:
+        """True if the segment is horizontal."""
+        return self._grid_vector.is_horizontal()
 
     @property
     def coordinates(self) -> Tuple[int, int]:
         """First and last coordinates along the axis."""
-        return self._coords
+        return self._grid_vector.coordinates
 
     @property
-    def connection(self) -> Connection:
-        """Connection behind the route."""
-        return self._connection
+    def min_max_coordinates(self) -> Tuple[int, int]:
+        """Coordinates in increasing order."""
+        return self._grid_vector.min_max_coordinates
+
+    @property
+    def direction(self) -> Direction:
+        """Direction of the segment."""
+        return self._grid_vector.direction
+
+    @property
+    def first_point(self) -> IntPoint:
+        """First point of the segment."""
+        return self._grid_vector.first_point
+
+    @property
+    def last_point(self) -> IntPoint:
+        """Last point of the segment."""
+        return self._grid_vector.last_point
+
+    def through_points(self) -> Iterator[IntPoint]:
+        """Iterate over all the points along the axis."""
+        yield from self._grid_vector.through_points()
 
     @property
     def label_orientation(self) -> Orientation:
@@ -242,7 +282,7 @@ class RouteSegment(OrientedVector):
             return Orientation.HORIZONTAL
         if tori is TextOrientation.VERTICAL:
             return Orientation.VERTICAL
-        return self.orientation
+        return self._grid_vector.orientation
 
     def follows_label(self) -> bool:
         """True if the orientation matches that of the label.
@@ -251,7 +291,22 @@ class RouteSegment(OrientedVector):
         label may be preferable when arranging the labels.
 
         """
-        return self.orientation is self.label_orientation
+        return self._grid_vector.orientation is self.label_orientation
+
+    @property
+    def name(self) -> str:
+        """Name of the segment, derived from the connection."""
+        conn = self._connection
+        index_1 = conn.index
+        index_2 = self._index
+        return f"{index_1}.{index_2}"
+
+    def description(self) -> str:
+        """Return a description of the segment."""
+        name = self.name
+        ends = self._connection.ends_description()
+        points = self._grid_vector.vector_depiction()
+        return f"{name}, {ends}, points={points}"
 
 ######################################################################
 
@@ -260,29 +315,17 @@ class Route:
 
     def __init__(
             self,
-            name: str,
             connection: Connection,
-            segments: Sequence[RouteSegment],
+            segments: Iterable[RouteSegment],
     ):
-        """Initialize the route of a connection with the given segments.
-
-        The name must be unique among all the routes of the diagram,
-        because it is used as a group name when the connection does
-        not belong to a named group.
-
-        """
-        self._name = name
+        """Initialize the route of a connection with the given segments."""
         self._connection = connection
         self._segments = list(segments)
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}({})".format(self.__class__.__name__, self._name)
-
-    @property
-    def name(self) -> str:
-        """A name that identifies the route."""
-        return self._name
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
 
     @property
     def connection(self) -> Connection:
@@ -290,8 +333,17 @@ class Route:
         return self._connection
 
     def segments(self) -> Iterator[RouteSegment]:
-        """Return an iterator over the segments that make up the route."""
+        """Iterate over the segments that make up the route."""
         yield from self._segments
+
+    @property
+    def name(self) -> str:
+        """The name of the route, derived from the connection."""
+        return str(self._connection.index)
+
+    def description(self) -> str:
+        """Description of the route, based on the connection."""
+        return self._connection.description()
 
 ######################################################################
 
@@ -302,10 +354,8 @@ class Router:
         """Initialize the router for the given diagram."""
         self._diagram = diagram
         self._grid = LayoutGrid(diagram)
-        self._grid_graph: nx.Graph
-        self._init_grid_graph()
-        self._routes: List[Route]
-        self._init_routes()
+        self._grid_graph = self._make_grid_graph()
+        self._routes = self._make_routes()
 
     @property
     def diagram(self) -> Diagram:
@@ -322,12 +372,12 @@ class Router:
         return self._grid.cell_at(point).node
 
     def routes(self) -> Iterator[Route]:
-        """Return an iterator over the routes."""
+        """Iterate over the routes."""
         yield from self._routes
 
-    def segment_map(self) -> Mapping[IntPoint, Iterable[RouteSegment]]:
+    def segment_map(self) -> Dict[IntPoint, List[RouteSegment]]:
         """Return a map that maps grid points to the segments on them."""
-        result: MutableMapping[IntPoint, List[RouteSegment]] = OrderedDict()
+        result: Dict[IntPoint, List[RouteSegment]] = {}
         for route in self._routes:
             for seg in route.segments():
                 is_hor = seg.is_horizontal()
@@ -347,29 +397,29 @@ class Router:
                     segments.append(seg)
         return result
 
-    def _init_grid_graph(self) -> None:
-        """Initialize the graph of the edges of the grid.
+    def _make_grid_graph(self) -> nx.Graph:
+        """Create the graph of the edges of the grid.
 
         The initial graph contains only nodes.  The edges are created
         differently for each shortest path run.
 
         """
-        self._grid_graph = graph = nx.Graph()
+        graph = nx.Graph()
         grid = self._grid
         for point, node in grid.points_and_nodes():
             graph.add_node(point, node=node)
+        return graph
 
-    def _init_routes(self) -> None:
+    def _make_routes(self) -> List[Route]:
         """Create the routes for all the connections of the diagram."""
         routes: List[Route] = []
         for connection in self._diagram.connections():
-            name = "R{}".format(len(routes))
-            route = self._make_route(name, connection)
+            route = self._make_route(connection)
             if route:
                 routes.append(route)
-        self._routes = routes
+        return routes
 
-    def _make_route(self, name: str, connection: Connection) -> Optional[Route]:
+    def _make_route(self, connection: Connection) -> Optional[Route]:
         """Create the route between two nodes.
 
         Returns None if it fails to connect the two ends of the
@@ -379,13 +429,12 @@ class Router:
         points = self._shortest_path_of_connection(connection)
         if points:
             segments = self._make_segments_for_route(points, connection)
-            return Route(name, connection, segments)
+            return Route(connection, segments)
         return None
 
     def _shortest_path_of_connection(
-            self,
-            connection: Connection,
-    ) -> Sequence[IntPoint]:
+            self, connection: Connection
+    ) -> List[IntPoint]:
         """Calculate the shortest path between the two blocks.
 
         Returns the points through which the path passes.
@@ -404,8 +453,9 @@ class Router:
                         shortest_path = path
                         shortest_length = length
         if not shortest_path:
-            msg = "No path between {} and {}".format(
-                connection.start.name, connection.end.name)
+            start_name = connection.start.block.name
+            end_name = connection.end.block.name
+            msg = f"No path between {start_name} and {end_name}"
             log_warning(msg)
             return []
         return shortest_path
@@ -553,9 +603,9 @@ class Router:
 
     def _make_segments_for_route(
             self,
-            points: Sequence[IntPoint],
+            points: Iterable[IntPoint],
             connection: Connection,
-    ) -> Sequence[RouteSegment]:
+    ) -> List[RouteSegment]:
         """Generate segments for a route."""
         segments: List[RouteSegment] = []
         seg_points: List[IntPoint] = []
@@ -572,6 +622,7 @@ class Router:
                     seg_points.append(point)
                 else:
                     seg = self._make_segment_for_route(
+                        len(segments),
                         seg_points[0], point_2,
                         connection,
                     )
@@ -579,6 +630,7 @@ class Router:
                     seg_points = [point_2, point]
         # Last segment.
         seg = self._make_segment_for_route(
+            len(segments),
             seg_points[0], seg_points[-1],
             connection,
         )
@@ -587,6 +639,7 @@ class Router:
 
     def _make_segment_for_route(
             self,
+            index: int,
             point_1: IntPoint, point_2: IntPoint,
             connection: Connection,
     ) -> RouteSegment:
@@ -598,8 +651,9 @@ class Router:
         else:
             axis_coord = point_1.j
             coord_1, coord_2 = point_1.i, point_2.i
-        axis = self._grid.axis(ori, axis_coord)
-        return RouteSegment(connection, axis, coord_1, coord_2)
+        axis = Axis(ori, axis_coord)
+        vec = OrientedVector(axis, (coord_1, coord_2))
+        return RouteSegment(connection, index, vec)
 
     @staticmethod
     def _points_orientation(

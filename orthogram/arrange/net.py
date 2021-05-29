@@ -1,7 +1,5 @@
 """Connection network elements for the Refiner."""
 
-from collections import OrderedDict
-from dataclasses import dataclass
 from enum import Enum, auto
 
 from typing import (
@@ -11,12 +9,10 @@ from typing import (
     List,
     MutableMapping,
     Optional,
-    Sequence,
-    Set,
     Tuple,
 )
 
-import networkx as nx # type: ignore
+import networkx as nx  # type: ignore
 
 from ..define import (
     Connection,
@@ -31,6 +27,8 @@ from ..geometry import (
     Orientation,
     OrientedVector,
 )
+
+from ..util import class_str
 
 from .route import (
     Route,
@@ -54,10 +52,14 @@ class NetworkOrigin(Enum):
 
 ######################################################################
 
-class Bundle(OrientedVector):
+class Bundle:
     """Collection of collinear interacting route segments."""
 
-    def __init__(self, route_segments: Iterable[RouteSegment]):
+    def __init__(
+            self,
+            name: str,
+            route_segments: Iterable[RouteSegment],
+    ):
         """Initialize with the given route segments.
 
         At least one route segment must be given.  This is necessary
@@ -65,52 +67,36 @@ class Bundle(OrientedVector):
         bundles cannot exist.
 
         """
+        self._name = name
         seg_list = list(route_segments)
         assert seg_list
         self._route_segments = seg_list
-        seg = seg_list[0]
-        self._axis = axis = seg.axis
+        a_segment = seg_list[0]
+        bundle_axis = a_segment.axis
         # Calculate the coordinate range.
-        horizontal = axis.orientation is Orientation.HORIZONTAL
+        horizontal = bundle_axis.orientation is Orientation.HORIZONTAL
         coords = set()
         for seg in seg_list:
+            # All segments must be collinear.
+            assert seg.axis == bundle_axis
             for point in seg.through_points():
                 if horizontal:
                     coords.add(point.j)
                 else:
                     coords.add(point.i)
-        self._coords = min(coords), max(coords)
+        # Bundle is always top-to-bottom or left-to-right.
+        coord_pair = min(coords), max(coords)
+        self._grid_vector = OrientedVector(bundle_axis, coord_pair)
         # Initialize the offset.
         self._offset = 0
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        coords = self._coords
-        return "{}({};{}->{})".format(
-            self.__class__.__name__,
-            self._axis,
-            coords[0],
-            coords[1],
-        )
-
-    @property
-    def axis(self) -> Axis:
-        """Axis on which the bundle lies."""
-        return self._axis
-
-    @property
-    def coordinates(self) -> Tuple[int, int]:
-        """First and last coordinates along the axis.
-
-        Since the bundle may contain segments with different
-        directions, the direction of the bundle itself is always
-        either down or to the right.
-
-        """
-        return self._coords
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
 
     def route_segments(self) -> Iterator[RouteSegment]:
-        """Return an iterator over the associated segments."""
+        """Iterate over the associated segments."""
         yield from self._route_segments
 
     @property
@@ -120,7 +106,38 @@ class Bundle(OrientedVector):
 
     @offset.setter
     def offset(self, value: int) -> None:
+        """Set the offset."""
         self._offset = value
+
+    @property
+    def axis(self) -> Axis:
+        """Axis on which the bundle lies."""
+        return self._grid_vector.axis
+
+    @property
+    def orientation(self) -> Orientation:
+        """Orientation of the bundle."""
+        return self._grid_vector.orientation
+
+    @property
+    def min_point(self) -> IntPoint:
+        """First grid point of the bundle."""
+        return self._grid_vector.first_point
+
+    @property
+    def max_point(self) -> IntPoint:
+        """Last grid point of the bundle."""
+        return self._grid_vector.last_point
+
+    def through_points(self) -> Iterator[IntPoint]:
+        """Iterate over all the points along the axis."""
+        yield from self._grid_vector.through_points()
+
+    def description(self) -> str:
+        """Return a description of the bundle."""
+        name = repr(self._name)
+        points = self._grid_vector.vector_depiction()
+        return f"{name}, points={points}"
 
 ######################################################################
 
@@ -129,46 +146,28 @@ class Joint:
 
     def __init__(
             self,
+            name: str,
             point: IntPoint,
             horizontal: Optional[Bundle],
             vertical: Optional[Bundle],
             node: Optional[Node] = None,
     ):
         """Initialize the joint at the meeting point of the two bundles."""
+        self._name = name
         self._point = point
         self._horizontal_bundle = horizontal
         self._vertical_bundle = vertical
         self._node = node
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}(p={},h={},v={})".format(
-            self.__class__.__name__,
-            self._point,
-            self._horizontal_bundle,
-            self._vertical_bundle,
-        )
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
 
     @property
     def point(self) -> IntPoint:
-        """Central point of placement."""
+        """Grid point around which the joint is placed."""
         return self._point
-
-    @property
-    def horizontal_offset(self) -> int:
-        """Horizontal offset."""
-        bundle = self._vertical_bundle
-        if bundle:
-            return bundle.offset
-        return 0
-
-    @property
-    def vertical_offset(self) -> int:
-        """Vertical offset."""
-        bundle = self._horizontal_bundle
-        if bundle:
-            return bundle.offset
-        return 0
 
     @property
     def node(self) -> Optional[Node]:
@@ -180,23 +179,53 @@ class Joint:
         """Set the node."""
         self._node = node
 
+    @property
+    def horizontal_offset(self) -> int:
+        """Horizontal offset relative to the point."""
+        bundle = self._vertical_bundle
+        if bundle:
+            return bundle.offset
+        return 0
+
+    @property
+    def vertical_offset(self) -> int:
+        """Vertical offset relative to the point."""
+        bundle = self._horizontal_bundle
+        if bundle:
+            return bundle.offset
+        return 0
+
+    @property
+    def name(self) -> str:
+        """Name of the joint."""
+        return self._name
+
+    def description(self) -> str:
+        """Return a description of the joint."""
+        name = repr(self._name)
+        point = self._point
+        i, j = point.i, point.j
+        return f"{name}, i={i}, j={j}"
+
 ######################################################################
 
-class WireSegment(OrientedVector):
+class WireSegment:
     """Segment between two angles of a wire."""
 
-    def __init__(self, route_segment: RouteSegment, start: Joint, end: Joint):
-        """Initialize the wire."""
+    def __init__(
+            self,
+            route_segment: RouteSegment,
+            start: Joint, end: Joint,
+    ):
+        """Initialize for the given route segment."""
         self._route_segment = route_segment
         self._start = start
         self._end = end
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}({})".format(
-            self.__class__.__name__,
-            self._route_segment,
-        )
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
 
     @property
     def route_segment(self) -> RouteSegment:
@@ -205,26 +234,27 @@ class WireSegment(OrientedVector):
 
     @property
     def connection(self) -> Connection:
-        """Connection behind the wire."""
+        """Connection associated with the wire."""
         return self._route_segment.connection
 
     @property
-    def axis(self) -> Axis:
-        """Axis on which the segment lies."""
-        return self._route_segment.axis
+    def index(self) -> int:
+        """Index number of the segment along the wire."""
+        return self._route_segment.index
 
     @property
-    def coordinates(self) -> Tuple[int, int]:
-        """First and last coordinates along the axis."""
-        return self._route_segment.coordinates
+    def label_orientation(self) -> Orientation:
+        """Orientation of the label, horizontal of vertical.
+
+        See RouteSegment property of the same name.
+
+        """
+        return self._route_segment.label_orientation
 
     @property
-    def offset(self) -> int:
-        """Offset relative to the central axis."""
-        joint = self._start
-        if self._route_segment.is_horizontal():
-            return joint.vertical_offset
-        return joint.horizontal_offset
+    def joints(self) -> Tuple[Joint, Joint]:
+        """The joints at the two ends of the segment."""
+        return self._start, self._end
 
     @property
     def start(self) -> Joint:
@@ -237,31 +267,60 @@ class WireSegment(OrientedVector):
         return self._end
 
     @property
-    def joints(self) -> Tuple[Joint, Joint]:
-        """The joints at the two ends of the segment."""
-        return self._start, self._end
+    def offset(self) -> int:
+        """Offset relative to the central axis."""
+        joint = self._start
+        if self.is_horizontal():
+            return joint.vertical_offset
+        return joint.horizontal_offset
 
     @property
-    def label_orientation(self) -> Orientation:
-        """Orientation of the label, horizontal of vertical.
+    def axis(self) -> Axis:
+        """Axis on which the segment lies."""
+        return self._route_segment.axis
 
-        See RouteSegment property of the same name.
+    def is_horizontal(self) -> bool:
+        """True if the segment is horizontal."""
+        return self._route_segment.is_horizontal()
 
-        """
-        return self._route_segment.label_orientation
+    @property
+    def coordinates(self) -> Tuple[int, int]:
+        """First and last coordinates along the axis."""
+        return self._route_segment.coordinates
+
+    @property
+    def min_max_coordinates(self) -> Tuple[int, int]:
+        """Coordinates in increasing order."""
+        return self._route_segment.min_max_coordinates
+
+    @property
+    def direction(self) -> Direction:
+        """Direction of the segment."""
+        return self._route_segment.direction
+
+    @property
+    def name(self) -> str:
+        """Name of the segment."""
+        return self._route_segment.name
+
+    def description(self) -> str:
+        """Return a description of the wire segment."""
+        return self._route_segment.description()
 
     def cut_by(self, other: 'WireSegment') -> Optional[int]:
-        """Return the coordinate the other segment cuts this."""
-        ori_self = self.orientation
-        ori_other = other.orientation
+        """Return the coordinate at which the other segment cuts this."""
+        axis_self = self.axis
+        ori_self = axis_self.orientation
+        axis_other = other.axis
+        ori_other = axis_other.orientation
         if ori_other is ori_self:
             # Parallel segments do not interset.
             return None
         min_self, max_self = self.min_max_coordinates
-        base_other = other.axis.coordinate
+        base_other = axis_other.coordinate
         if base_other <= min_self or base_other >= max_self:
             return None
-        base_self = self.axis.coordinate
+        base_self = axis_self.coordinate
         off_self = self.offset
         min_other, max_other = other.min_max_coordinates
         dir_other = other.direction
@@ -301,26 +360,32 @@ class WireSegment(OrientedVector):
 class Wire:
     """Connects two blocks together."""
 
-    def __init__(self, route: Route, segments: Sequence[WireSegment]):
+    def __init__(
+            self,
+            route: Route,
+            segments: Iterable[WireSegment],
+    ):
         """Create a wire with the given segments for a route."""
         self._route = route
         self._segments = list(segments)
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}({})".format(
-            self.__class__.__name__,
-            self._route.name,
-        )
-
-    def segments(self) -> Iterator[WireSegment]:
-        """Return an iterator over the segments."""
-        yield from self._segments
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
 
     @property
     def connection(self) -> Connection:
         """Associated connection."""
         return self._route.connection
+
+    def segments(self) -> Iterator[WireSegment]:
+        """Iterate over the segments."""
+        yield from self._segments
+
+    def description(self) -> str:
+        """Return a description of the wire."""
+        return self._route.description()
 
 ######################################################################
 
@@ -337,44 +402,45 @@ class Network:
         self._origin = origin
         self._group = group
         self._routes = list(routes)
-        self._bundles: List[Bundle] = []
-        self._init_bundles()
-        self._joints: MutableMapping[IntPoint, Joint] = OrderedDict()
-        self._init_joints()
-        self._wires: List[Wire] = []
-        self._init_wires()
+        self._name = f"{origin.name}_{group}"
+        self._bundles = self._make_bundles()
+        self._joints = self._make_joints()
+        self._joint_map = self._map_points_to_joints()
+        self._wires = self._make_wires()
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        return "{}({},{};routes={};bundles={})".format(
-            self.__class__.__name__,
-            self._origin.name,
-            self._group,
-            len(self._routes),
-            len(self._bundles),
-        )
+        """Represent as string."""
+        return class_str(self, repr(self._name))
+
+    @property
+    def name(self) -> str:
+        """Name of the network."""
+        return self._name
 
     def bundles(self) -> Iterator[Bundle]:
-        """Return an iterator over the bundles of the network."""
+        """Iterate over the bundles that make up the network."""
         yield from self._bundles
 
     def wires(self) -> Iterator[Wire]:
-        """Return an iterator over the calculated wires."""
+        """Iterate over the calculated wires."""
         yield from self._wires
 
     def joints(self) -> Iterator[Joint]:
-        """Return an iterator over all the joints of the network."""
-        yield from self._joints.values()
+        """Iterate over all the joints of the network."""
+        yield from self._joints
 
-    def offset_bundle(self, bundle: Bundle, use_offsets: bool) -> Tuple[FloatPoint, FloatPoint]:
+    def offset_bundle(
+            self, bundle: Bundle, use_offsets: bool
+    ) -> Tuple[FloatPoint, FloatPoint]:
         """Return a pair of points suitable for overlap check."""
-        joint_1 = self._joints[bundle.first_point]
+        jmap = self._joint_map
+        joint_1 = jmap[bundle.min_point]
         point_1 = self._float_point(bundle, joint_1, use_offsets)
-        joint_2 = self._joints[bundle.last_point]
+        joint_2 = jmap[bundle.max_point]
         point_2 = self._float_point(bundle, joint_2, use_offsets)
         return point_1, point_2
 
-    def _init_bundles(self) -> None:
+    def _make_bundles(self) -> List[Bundle]:
         """Create the bundles of segments."""
         # Use a graph to discover the interactions.
         graph = nx.Graph()
@@ -390,23 +456,31 @@ class Network:
                 seg2 = segments[j]
                 if self._segments_interact(seg1, seg2):
                     graph.add_edge(seg1, seg2)
-        bundles = self._bundles
-        bundles.clear()
+        bundles: List[Bundle] = []
         done = set()
+        net_name = str(self._name)
         for segments in nx.connected_components(graph):
             bundle_segments = []
             for seg in segments:
                 bundle_segments.append(seg)
                 done.add(seg)
-            bundle = Bundle(bundle_segments)
+            index = len(bundles)
+            name = f"{net_name}.{index}"
+            bundle = Bundle(name, bundle_segments)
             bundles.append(bundle)
+        return bundles
 
     @staticmethod
     def _segments_interact(
             segment_1: RouteSegment,
             segment_2: RouteSegment
     ) -> bool:
-        """True if the segments are collinear and share points."""
+        """True if the segments are collinear and share points.
+
+        This is defined here instead on the route segment class,
+        because it is a very particular implementation.
+
+        """
         if segment_1 is segment_2:
             return False
         if segment_1.axis != segment_2.axis:
@@ -417,24 +491,29 @@ class Network:
             return True
         return False
 
-    def _init_joints(self) -> None:
+    def _make_joints(self) -> List[Joint]:
         """Create the joints."""
         # Find the bundles at each point.
-        horizontal: MutableMapping[IntPoint, Bundle] = OrderedDict()
-        vertical: MutableMapping[IntPoint, Bundle] = OrderedDict()
+        horizontal: Dict[IntPoint, Bundle] = {}
+        vertical: Dict[IntPoint, Bundle] = {}
         self._collect_bundles(horizontal, vertical)
         # Create the joints at each segment end.
-        joints = self._joints
-        joints.clear()
+        joints: List[Joint] = []
+        jmap: Dict[IntPoint, Joint] = {}
+        my_name = self._name
         for route in self._routes:
             for seg in route.segments():
                 points = [seg.first_point, seg.last_point]
                 for point in points:
-                    if point not in joints:
+                    if point not in jmap:
                         hor = horizontal.get(point)
                         ver = vertical.get(point)
-                        joint = Joint(point, hor, ver)
-                        joints[point] = joint
+                        index = len(joints)
+                        name = f"{my_name}.{index}"
+                        joint = Joint(name, point, hor, ver)
+                        joints.append(joint)
+                        jmap[point] = joint
+        return joints
 
     def _collect_bundles(
             self,
@@ -452,24 +531,27 @@ class Network:
             for point in bundle.through_points():
                 col[point] = bundle
 
-    def _init_wires(self) -> None:
+    def _map_points_to_joints(self) -> Dict[IntPoint, Joint]:
+        """Return a map from a grid point to a joint."""
+        jmap = {}
+        for joint in self._joints:
+            jmap[joint.point] = joint
+        return jmap
+
+    def _make_wires(self) -> List[Wire]:
         """Create the wires."""
-        wires = self._wires
-        wires.clear()
-        joints = self._joints
+        wires: List[Wire] = []
+        jmap = self._joint_map
         for route in self._routes:
-            segments = []
+            segments: List[WireSegment] = []
             for rseg in route.segments():
-                joint_1 = joints[rseg.first_point]
-                joint_2 = joints[rseg.last_point]
+                joint_1 = jmap[rseg.first_point]
+                joint_2 = jmap[rseg.last_point]
                 cseg = WireSegment(rseg, joint_1, joint_2)
                 segments.append(cseg)
             wire = Wire(route, segments)
             wires.append(wire)
-
-    # In order to find bundles that overlap, the integer offsets are
-    # converted to real numbers by multiplying with this quantity.
-    _FACTOR = 0.001
+        return wires
 
     @classmethod
     def _float_point(
@@ -484,7 +566,7 @@ class Network:
         # avoid false positives.
         if joint.node:
             ori = bundle.orientation
-            out = (point == bundle.first_point)
+            out = (point == bundle.min_point)
             key = (ori, out)
             values = {
                 (Orientation.VERTICAL, False): (0, -1),
@@ -502,13 +584,34 @@ class Network:
             point_y += factor * joint.vertical_offset
         return FloatPoint(point_x, point_y)
 
+    # In order to find bundles that overlap, the integer offsets are
+    # converted to real numbers by multiplying with this quantity.
+    _FACTOR = 0.001
+
 ######################################################################
 
-@dataclass(frozen=True)
 class NetworkBundle:
     """Combination of a network and one of its bundles."""
-    network: Network
-    bundle: Bundle
+
+    def __init__(self, network: Network, bundle: Bundle):
+        """Initialize for the given bundle."""
+        self._network = network
+        self._bundle = bundle
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self._bundle.description()
+        return class_str(self, content)
+
+    @property
+    def network(self) -> Network:
+        """The network to which the bundle belongs."""
+        return self._network
+
+    @property
+    def bundle(self) -> Bundle:
+        """The bundle."""
+        return self._bundle
 
     def overlaps_with(self, other: 'NetworkBundle', use_offsets: bool) -> bool:
         """True if this bundle overlaps with the given one."""
@@ -531,46 +634,66 @@ class NetworkBundle:
 class BundleLayer:
     """Collection of bundles having the same offset."""
 
-    def __init__(self, offset: int):
+    def __init__(self, struct_name: str, offset: int):
         """Initialize an empty layer."""
+        self._name = f"{struct_name}.{offset}"
         self._offset = offset
         self._net_bundles: List[NetworkBundle] = []
 
-    def append(self, net_bundle: NetworkBundle) -> None:
-        """Add a network bundle to the layer."""
-        self._net_bundles.append(net_bundle)
+    def __repr__(self) -> str:
+        """Represent as string."""
+        return class_str(self, repr(self._name))
+
+    def __iter__(self) -> Iterator[NetworkBundle]:
+        """Iterate over the network bundles (in no particular order)."""
+        yield from self._net_bundles
 
     @property
     def offset(self) -> int:
         """Common offset of the bundles in the layer."""
         return self._offset
 
-    def __iter__(self) -> Iterator[NetworkBundle]:
-        """Yield the network bundles (in no particular order)."""
-        yield from self._net_bundles
+    def append(self, net_bundle: NetworkBundle) -> None:
+        """Add a network bundle to the layer."""
+        self._net_bundles.append(net_bundle)
 
 ######################################################################
 
 class BundleStructure:
     """Collection of overlapping bundles."""
 
-    def __init__(self, axis: Axis, net_bundles: Iterable[NetworkBundle]):
+    def __init__(
+            self,
+            axis: Axis,
+            index: int,
+            net_bundles: Iterable[NetworkBundle],
+    ):
         """Initialize for the given bundles."""
         self._axis = axis
+        self._index = index
+        self._name = f"{axis.name}.{index}"
         self._layers_by_offset = self._make_layers(net_bundles)
 
-    @staticmethod
-    def _make_layers(
-            net_bundles: Iterable[NetworkBundle]
-    ) -> MutableMapping[int, BundleLayer]:
-        """Group bundles into layers by offset."""
-        result: Dict[int, BundleLayer] = {}
-        for net_bundle in net_bundles:
-            offset = net_bundle.bundle.offset
-            if offset not in result:
-                result[offset] = BundleLayer(offset)
-            result[offset].append(net_bundle)
-        return result
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._name)
+        return class_str(self, content)
+
+    def __iter__(self) -> Iterator[BundleLayer]:
+        """Iterate over the layers in offset order."""
+        by_offset = self._layers_by_offset
+        for offset in sorted(by_offset):
+            yield by_offset[offset]
+
+    @property
+    def name(self) -> str:
+        """Name of the structure."""
+        return self._name
+
+    @property
+    def axis(self) -> Axis:
+        """Axis on which the bundles sit."""
+        return self._axis
 
     def optimize(self) -> None:
         """Pack bundles as densely as possible.
@@ -590,10 +713,23 @@ class BundleStructure:
             for net_bundle in net_bundles:
                 net_bundle.bundle.offset = i
 
-    def _pack_bundles(self) -> Sequence[BundleLayer]:
+    def _make_layers(
+            self,
+            net_bundles: Iterable[NetworkBundle]
+    ) -> Dict[int, BundleLayer]:
+        """Group bundles into layers by offset."""
+        result: Dict[int, BundleLayer] = {}
+        for net_bundle in net_bundles:
+            offset = net_bundle.bundle.offset
+            if offset not in result:
+                result[offset] = self._make_layer(offset)
+            result[offset].append(net_bundle)
+        return result
+
+    def _pack_bundles(self) -> List[BundleLayer]:
         """Return a dense arrangement of the existing bundle layers."""
         layers: List[BundleLayer] = []
-        for net_bundle in self.network_bundles():
+        for net_bundle in self._network_bundles():
             overlap_on = -1
             n_layers = len(layers)
             for i in range(n_layers - 1, -1, -1):
@@ -606,7 +742,7 @@ class BundleStructure:
                     break
             if overlap_on == n_layers - 1:
                 # New layer.
-                layer = BundleLayer(overlap_on + 1)
+                layer = self._make_layer(overlap_on + 1)
                 layer.append(net_bundle)
                 layers.append(layer)
             else:
@@ -614,18 +750,11 @@ class BundleStructure:
                 layers[overlap_on + 1].append(net_bundle)
         return layers
 
-    @property
-    def axis(self) -> Axis:
-        """Axis on which the bundles sit."""
-        return self._axis
-
-    def __iter__(self) -> Iterator[BundleLayer]:
-        """Iterate over the layer in offset order."""
-        by_offset = self._layers_by_offset
-        for offset in sorted(by_offset):
-            yield by_offset[offset]
-
-    def network_bundles(self) -> Iterator[NetworkBundle]:
+    def _network_bundles(self) -> Iterator[NetworkBundle]:
         """Iterate over the elements in offset order."""
         for layer in self:
             yield from layer
+
+    def _make_layer(self, offset: int) -> BundleLayer:
+        """Create a new empty layer."""
+        return BundleLayer(self._name, offset)

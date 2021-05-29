@@ -1,33 +1,19 @@
 """Refine the results of the router."""
 
-from collections import OrderedDict
-from dataclasses import dataclass
 from enum import Enum, auto
 from itertools import permutations
 
 from typing import (
     Callable,
-    Collection,
+    Dict,
     Iterable,
     Iterator,
     List,
-    Mapping,
-    MutableMapping,
     Optional,
-    Sequence,
     Tuple,
 )
 
-import networkx as nx # type: ignore
-
-from .net import (
-    Bundle,
-    BundleStructure,
-    Network,
-    NetworkBundle,
-    NetworkOrigin,
-    WireSegment,
-)
+import networkx as nx  # type: ignore
 
 from ..debug import Debug
 
@@ -38,7 +24,19 @@ from ..geometry import (
     Orientation,
 )
 
-from ..util import log_debug
+from ..util import (
+    class_str,
+    log_debug,
+)
+
+from .net import (
+    Bundle,
+    BundleStructure,
+    Network,
+    NetworkBundle,
+    NetworkOrigin,
+    WireSegment,
+)
 
 from .route import (
     Route,
@@ -48,46 +46,72 @@ from .route import (
 
 ######################################################################
 
-class _Passthrough:
+class BundleSegment:
+    """Combination of a bundle and one of its segments.
+
+    We need to have this to make rules, because the direction of the
+    bundle is *not* the direction of the segment.
+
+    """
+
+    def __init__(self, bundle: Bundle, segment: RouteSegment):
+        """Initialize for a given bundle and segment."""
+        self._bundle = bundle
+        self._segment = segment
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
+
+    @property
+    def bundle(self) -> Bundle:
+        """The bundle."""
+        return self._bundle
+
+    @property
+    def segment(self) -> RouteSegment:
+        """The segment."""
+        return self._segment
+
+    def description(self) -> str:
+        """Return a description of the bundle."""
+        bundle = self._bundle
+        seg = self._segment
+        return f"{bundle}, {seg}"
+
+######################################################################
+
+class Passthrough:
     """Passing of a route through a point."""
 
     def __init__(
             self,
+            route: Route,
             point: IntPoint,
-            segment_in: Optional[RouteSegment],
-            segment_out: Optional[RouteSegment],
+            bundle_segment_in: Optional[BundleSegment],
+            bundle_segment_out: Optional[BundleSegment],
     ):
-        """Initialize for the given segments interacting at the point."""
+        """Initialize for the given bundles interacting at the point."""
+        self._route = route
         self._point = point
-        bottom: Optional[RouteSegment] = None
-        left: Optional[RouteSegment] = None
-        right: Optional[RouteSegment] = None
-        top: Optional[RouteSegment] = None
-        Dir = Direction
-        if segment_in:
-            direc = segment_in.direction
-            if direc is Dir.DOWN:
-                top = segment_in
-            elif direc is Dir.LEFT:
-                right = segment_in
-            elif direc is Dir.RIGHT:
-                left = segment_in
-            elif direc is Dir.UP:
-                bottom = segment_in
-        if segment_out:
-            direc = segment_out.direction
-            if direc is Dir.DOWN:
-                bottom = segment_out
-            elif direc is Dir.LEFT:
-                left = segment_out
-            elif direc is Dir.RIGHT:
-                right = segment_out
-            elif direc is Dir.UP:
-                top = segment_out
-        self._segment_bottom = bottom
-        self._segment_left = left
-        self._segment_right = right
-        self._segment_top = top
+        self._bundle_segment_in = bundle_segment_in
+        self._bundle_segment_out = bundle_segment_out
+        self._bundle_bottom: Optional[Bundle] = None
+        self._bundle_left: Optional[Bundle] = None
+        self._bundle_right: Optional[Bundle] = None
+        self._bundle_top: Optional[Bundle] = None
+        self._store_bundles()
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
+
+    @property
+    def route(self) -> Route:
+        """Route passing through the point."""
+        return self._route
 
     @property
     def point(self) -> IntPoint:
@@ -95,48 +119,125 @@ class _Passthrough:
         return self._point
 
     @property
-    def segment_bottom(self) -> Optional[RouteSegment]:
-        """Route segment at the bottom side."""
-        return self._segment_bottom
+    def bundle_bottom(self) -> Optional[Bundle]:
+        """Bundle at the bottom side."""
+        return self._bundle_bottom
 
     @property
-    def segment_left(self) -> Optional[RouteSegment]:
-        """Route segment at the left side."""
-        return self._segment_left
+    def bundle_left(self) -> Optional[Bundle]:
+        """Bundle at the left side."""
+        return self._bundle_left
 
     @property
-    def segment_right(self) -> Optional[RouteSegment]:
-        """Route segment at the right side."""
-        return self._segment_right
+    def bundle_right(self) -> Optional[Bundle]:
+        """Bundle at the right side."""
+        return self._bundle_right
 
     @property
-    def segment_top(self) -> Optional[RouteSegment]:
-        """Route segment at the top side."""
-        return self._segment_top
+    def bundle_top(self) -> Optional[Bundle]:
+        """Bundle at the top side."""
+        return self._bundle_top
 
-    def segments(self) -> Iterator[RouteSegment]:
-        """Return the segments passing through the point."""
-        segments = [
-            self._segment_bottom,
-            self._segment_left,
-            self._segment_right,
-            self._segment_top,
+    def bundles(self) -> Iterator[Bundle]:
+        """Return the bundles passing through the point."""
+        bundles = [
+            self._bundle_bottom,
+            self._bundle_left,
+            self._bundle_right,
+            self._bundle_top,
         ]
-        for seg in segments:
-            if seg:
-                yield seg
+        for bundle in bundles:
+            if bundle:
+                yield bundle
+
+    def description(self) -> str:
+        """Return a description of the object."""
+        point = self._point
+        i = point.i
+        j = point.j
+        route = self._route
+        return f"{route}, i={i}, j={j}"
+
+    def _store_bundles(self) -> None:
+        """Store the bundles in the appropriate place."""
+        Dir = Direction
+        bottom: Optional[Bundle] = None
+        left: Optional[Bundle] = None
+        right: Optional[Bundle] = None
+        top: Optional[Bundle] = None
+        bundle_segment = self._bundle_segment_in
+        if bundle_segment:
+            bundle = bundle_segment.bundle
+            segment = bundle_segment.segment
+            direc = segment.direction
+            if direc is Dir.DOWN:
+                top = bundle
+            elif direc is Dir.LEFT:
+                right = bundle
+            elif direc is Dir.RIGHT:
+                left = bundle
+            elif direc is Dir.UP:
+                bottom = bundle
+        bundle_segment = self._bundle_segment_out
+        if bundle_segment:
+            bundle = bundle_segment.bundle
+            segment = bundle_segment.segment
+            direc = segment.direction
+            if direc is Dir.DOWN:
+                bottom = bundle
+            elif direc is Dir.LEFT:
+                left = bundle
+            elif direc is Dir.RIGHT:
+                right = bundle
+            elif direc is Dir.UP:
+                top = bundle
+        self._bundle_bottom = bottom
+        self._bundle_left = left
+        self._bundle_right = right
+        self._bundle_top = top
 
 ######################################################################
 
-@dataclass
-class _Interaction:
+class Interaction:
     """Interaction of two routes at a point."""
-    point: IntPoint
-    passthroughs: Tuple[_Passthrough, _Passthrough]
+
+    def __init__(
+            self,
+            point: IntPoint,
+            passthroughs: Tuple[Passthrough, Passthrough],
+    ):
+        """Initialize at the given point for two route passthroughs."""
+        self._point = point
+        self._passthroughs = passthroughs
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
+
+    @property
+    def point(self) -> IntPoint:
+        """Grid point at which the interaction happens."""
+        return self._point
+
+    @property
+    def passthroughs(self) -> Tuple[Passthrough, Passthrough]:
+        """The passthroughs of the two routes."""
+        return self._passthroughs
+
+    def description(self) -> str:
+        """Return a description of the object."""
+        passthroughs = self._passthroughs
+        route_1 = passthroughs[0].route
+        route_2 = passthroughs[1].route
+        point = self._point
+        i = point.i
+        j = point.j
+        return f"{route_1}, {route_2}, i={i}, j={j}"
 
 ######################################################################
 
-class _RuleCategory(Enum):
+class RuleCategory(Enum):
     """Types of rules."""
     T = auto()
     V = auto()
@@ -144,56 +245,66 @@ class _RuleCategory(Enum):
 
 ######################################################################
 
-@dataclass
-class _SegmentRule:
-    """Declares that one route segment comes after another."""
-    category: _RuleCategory
-    first: RouteSegment
-    second: RouteSegment
-
-    def __post_init__(self) -> None:
-        """Do some runtime checks."""
-        assert self.first.orientation is self.second.orientation
-
-######################################################################
-
-# This is the type of factory functions that create segment rules for
-# a predefined rule category.
-_SegmentRuleFactory = Callable[[RouteSegment, RouteSegment], _SegmentRule]
-
-def _segment_rule_factory(category: _RuleCategory) -> _SegmentRuleFactory:
-    """Return a function that creates segment rules of the given category."""
-    def factory(
-            first: RouteSegment, second: RouteSegment,
-            category: _RuleCategory = category,
-    ) -> _SegmentRule:
-        return _SegmentRule(category, first, second)
-    return factory
-
-######################################################################
-
-@dataclass(repr=False)
-class _BundleRule:
+class BundleRule:
     """Declares that one bundle comes after another."""
-    category: _RuleCategory
-    first: Bundle
-    second: Bundle
 
-    def __post_init__(self) -> None:
-        """Do some runtime checks."""
-        assert self.first.orientation is self.second.orientation
+    def __init__(
+            self,
+            category: RuleCategory,
+            first: Bundle, second: Bundle,
+    ):
+        """Initialize the rule between the two bundles."""
+        # Ensure that the two bundles are collinear.
+        assert first.orientation is second.orientation
+        self._category = category
+        self._first = first
+        self._second = second
 
     def __repr__(self) -> str:
-        """Convert to string."""
+        """Represent as string."""
+        content = self.description()
+        return class_str(self, content)
+
+    @property
+    def category(self) -> RuleCategory:
+        """Type of rule."""
+        return self._category
+
+    @property
+    def first(self) -> Bundle:
+        """Bundle that comes first."""
+        return self._first
+
+    @property
+    def second(self) -> Bundle:
+        """Bundle that comes second."""
+        return self._second
+
+    def description(self) -> str:
+        """Return a description of the rule."""
+        cat = repr(self._category.name)
         if self.first.orientation is Orientation.HORIZONTAL:
             adverb = "OVER"
         else:
-            adverb = "BEFORE"
-        return "{}({}; {} {} {})".format(
-            self.__class__.__name__,
-            self.category.name,
-            self.first, adverb, self.second,
-        )
+            adverb = "LEFT OF"
+        str1 = self._first
+        str2 = self._second
+        return f"{cat}, {str1} *{adverb}* {str2}"
+
+######################################################################
+
+# This is the type of factory functions that create bundle rules for a
+# predefined rule category.
+BundleRuleFactory = Callable[[Bundle, Bundle], BundleRule]
+
+def _bundle_rule_factory(category: RuleCategory) -> BundleRuleFactory:
+    """Return a function that creates bundle rules of the given category."""
+    def factory(
+            first: Bundle, second: Bundle,
+            category: RuleCategory = category,
+    ) -> BundleRule:
+        return BundleRule(category, first, second)
+    return factory
 
 ######################################################################
 
@@ -204,7 +315,7 @@ class Refiner:
         """Initialize the refiner for the given router."""
         self._router = router
         self._networks = self._make_networks()
-        self._segment_bundles = self._make_segment_bundles()
+        self._bundle_segments = self._make_bundle_segments()
         self._init_bundle_offsets()
         # Caution: first pass of offset calculation must be completed
         # before calculating the structures!
@@ -217,15 +328,15 @@ class Refiner:
         return self._router
 
     def networks(self) -> Iterator[Network]:
-        """Return an iterator over the calculated networks."""
+        """Iterate over the calculated networks."""
         yield from self._networks
 
     def bundle_structures(self) -> Iterator[BundleStructure]:
         """Iterate over the bundle structures."""
         yield from self._bundle_structures
 
-    def segment_intersections(self, segment: WireSegment) -> Sequence[int]:
-        """Returns the intersections of the segment by other segments."""
+    def segment_intersections(self, segment: WireSegment) -> List[int]:
+        """Return the intersections of the segment with other segments."""
         intersections = set()
         for other in self._wire_segments():
             if other is not segment:
@@ -234,7 +345,7 @@ class Refiner:
                     intersections.add(cut)
         return sorted(intersections)
 
-    def _make_networks(self) -> Sequence[Network]:
+    def _make_networks(self) -> List[Network]:
         """Create the networks."""
         #
         # Group routes by connection group.  If the connection does
@@ -242,7 +353,7 @@ class Refiner:
         #
         collapse_connections = self._must_collapse_connections()
         K = Tuple[NetworkOrigin, str]
-        per_group: MutableMapping[K, List[Route]] = OrderedDict()
+        per_group: Dict[K, List[Route]] = {}
         for route in self._router.routes():
             group = route.connection.group
             # Use an extra key to avoid name collisions.
@@ -277,20 +388,20 @@ class Refiner:
             if joint_node:
                 joint.node = joint_node
 
-    def _make_segment_bundles(self) -> Mapping[RouteSegment, Bundle]:
+    def _make_bundle_segments(self) -> Dict[RouteSegment, BundleSegment]:
         """Map each route segment to the bundle to which it belongs."""
-        seg_bundles: MutableMapping[RouteSegment, Bundle] = OrderedDict()
+        result: Dict[RouteSegment, BundleSegment] = {}
         for bundle in self._bundles():
             for seg in bundle.route_segments():
-                seg_bundles[seg] = bundle
-        return seg_bundles
+                result[seg] = BundleSegment(bundle, seg)
+        return result
 
     def _init_bundle_offsets(self) -> None:
         """Calculate the initial offsets of the bundles.
 
-        This method uses the stored DAG to calculate the initial
-        values for the offsets of the bundles.  It stores the results
-        in the bundles themselves.
+        This method uses a DAG to calculate the initial values for the
+        offsets of the bundles.  It stores the results in the bundles
+        themselves.
 
         The calculated values are unoptimized.
 
@@ -305,48 +416,43 @@ class Refiner:
         # The bundles are the nodes of the graph.
         self._add_bundles_to_dag(graph, interactions)
         # Edges represent the order of two bundles.
-        tv_rules: List[_BundleRule] = []
-        s_rules: List[Sequence[_BundleRule]] = []
+        tv_rules: List[BundleRule] = []
+        s_rules: List[List[BundleRule]] = []
         for inter in interactions:
             pt1, pt2 = inter.passthroughs
             # Store T and V rules one by one, because we roll them
             # back individually.
-            seg_rule = self._t_rule(pt1, pt2)
-            if seg_rule:
-                bundle_rule = self._segment_rule_to_bundle_rule(seg_rule)
-                tv_rules.append(bundle_rule)
-            for seg_rule in self._v_rules(pt1, pt2):
-                bundle_rule = self._segment_rule_to_bundle_rule(seg_rule)
-                tv_rules.append(bundle_rule)
+            rule = self._t_rule(pt1, pt2)
+            if rule:
+                tv_rules.append(rule)
+            for rule in self._v_rules(pt1, pt2):
+                tv_rules.append(rule)
             # Store S rules as lists of rules, because we must be able
             # to roll back the whole list.
-            for seg_rules in self._s_rules(pt1, pt2):
-                bundle_rules = self._segment_rules_to_bundle_rules(seg_rules)
-                s_rules.append(bundle_rules)
-        for bundle_rule in tv_rules:
-            self._try_add_rules_to_dag(graph, [bundle_rule])
-        for bundle_rules in s_rules:
-            self._try_add_rules_to_dag(graph, bundle_rules)
+            for rules in self._s_rules(pt1, pt2):
+                s_rules.append(rules)
+        for rule in tv_rules:
+            self._try_add_rules_to_dag(graph, [rule])
+        for rules in s_rules:
+            self._try_add_rules_to_dag(graph, rules)
         return graph
 
+    @staticmethod
     def _add_bundles_to_dag(
-            self,
             graph: nx.DiGraph,
-            interactions: Iterable[_Interaction],
+            interactions: Iterable[Interaction],
     ) -> None:
         """Add the bundles to the DAG as nodes."""
-        seg_bundles = self._segment_bundles
         for inter in interactions:
             for passthrough in inter.passthroughs:
-                for seg in passthrough.segments():
-                    bundle = seg_bundles[seg]
+                for bundle in passthrough.bundles():
                     if bundle not in graph:
                         graph.add_node(bundle)
 
-    def _interactions(self) -> Iterator[_Interaction]:
+    def _interactions(self) -> Iterator[Interaction]:
         """Iterate over the interactions of the routes at each point."""
         # Collect the passthroughs at each point.
-        per_point: MutableMapping[IntPoint, List[_Passthrough]] = OrderedDict()
+        per_point: Dict[IntPoint, List[Passthrough]] = {}
         for route in self._router.routes():
             for passthrough in self._passthroughs(route):
                 point = passthrough.point
@@ -369,40 +475,45 @@ class Refiner:
         for point in points:
             passthroughs = per_point[point]
             for passthrough_1, passthrough_2 in permutations(passthroughs, 2):
-                inter = _Interaction(point, (passthrough_1, passthrough_2))
+                inter = Interaction(point, (passthrough_1, passthrough_2))
                 yield inter
 
-    @staticmethod
-    def _passthroughs(route: Route) -> Iterator[_Passthrough]:
+    def _passthroughs(self, route: Route) -> Iterator[Passthrough]:
         """Iterate over the points through which the route passes."""
+        bundle_segments = self._bundle_segments
         seg1: Optional[RouteSegment] = None
+        bseg1: Optional[BundleSegment] = None
         for seg2 in route.segments():
+            bseg2 = bundle_segments[seg2]
             points = list(seg2.through_points())
             n_points = len(points)
             for i in range(n_points - 1):
                 point = points[i]
-                yield _Passthrough(
+                yield Passthrough(
+                    route=route,
                     point=point,
-                    segment_in=seg1,
-                    segment_out=seg2,
+                    bundle_segment_in=bseg1,
+                    bundle_segment_out=bseg2,
                 )
                 # Set previous segment for each point.
                 seg1 = seg2
+                bseg1 = bundle_segments[seg1]
         # Last point of route.
-        if seg1:
+        if seg1 and bseg1:
             points = list(seg1.through_points())
-            yield _Passthrough(
+            yield Passthrough(
+                route=route,
                 point=points[-1],
-                segment_in=seg1,
-                segment_out=None,
+                bundle_segment_in=bseg1,
+                bundle_segment_out=None,
             )
 
     @staticmethod
     def _t_rule(
-            passthrough_1: _Passthrough,
-            passthrough_2: _Passthrough
-    ) -> Optional[_SegmentRule]:
-        """Rule between segments for the T-junction interaction.
+            passthrough_1: Passthrough,
+            passthrough_2: Passthrough
+    ) -> Optional[BundleRule]:
+        """Rule between bundles for the T-junction interaction.
 
         The two routes interact like this:
 
@@ -411,15 +522,15 @@ class Refiner:
           |
 
         """
-        bot_1 = passthrough_1.segment_bottom
-        lef_1 = passthrough_1.segment_left
-        rig_1 = passthrough_1.segment_right
-        top_1 = passthrough_1.segment_top
-        bot_2 = passthrough_2.segment_bottom
-        lef_2 = passthrough_2.segment_left
-        rig_2 = passthrough_2.segment_right
-        top_2 = passthrough_2.segment_top
-        make = _segment_rule_factory(_RuleCategory.T)
+        bot_1 = passthrough_1.bundle_bottom
+        lef_1 = passthrough_1.bundle_left
+        rig_1 = passthrough_1.bundle_right
+        top_1 = passthrough_1.bundle_top
+        bot_2 = passthrough_2.bundle_bottom
+        lef_2 = passthrough_2.bundle_left
+        rig_2 = passthrough_2.bundle_right
+        top_2 = passthrough_2.bundle_top
+        make = _bundle_rule_factory(RuleCategory.T)
         result = None
         if bot_1 and lef_1 and bot_2 and rig_2:
             result = make(bot_1, bot_2)
@@ -449,9 +560,9 @@ class Refiner:
 
     @staticmethod
     def _v_rules(
-            passthrough_1: _Passthrough,
-            passthrough_2: _Passthrough
-    ) -> Sequence[_SegmentRule]:
+            passthrough_1: Passthrough,
+            passthrough_2: Passthrough
+    ) -> List[BundleRule]:
         """Rules for the vertex-to-vertex interaction.
 
         The two routes interact at a single point, like this:
@@ -465,13 +576,13 @@ class Refiner:
         them will do.
 
         """
-        bot_1 = passthrough_1.segment_bottom
-        lef_1 = passthrough_1.segment_left
-        rig_1 = passthrough_1.segment_right
-        lef_2 = passthrough_2.segment_left
-        rig_2 = passthrough_2.segment_right
-        top_2 = passthrough_2.segment_top
-        make = _segment_rule_factory(_RuleCategory.V)
+        bot_1 = passthrough_1.bundle_bottom
+        lef_1 = passthrough_1.bundle_left
+        rig_1 = passthrough_1.bundle_right
+        lef_2 = passthrough_2.bundle_left
+        rig_2 = passthrough_2.bundle_right
+        top_2 = passthrough_2.bundle_top
+        make = _bundle_rule_factory(RuleCategory.V)
         if bot_1 and lef_1 and rig_2 and top_2:
             return [make(bot_1, top_2), make(rig_2, lef_1)]
         if bot_1 and rig_1 and lef_2 and top_2:
@@ -480,9 +591,9 @@ class Refiner:
 
     @staticmethod
     def _s_rules(
-            passthrough_1: _Passthrough,
-            passthrough_2: _Passthrough
-    ) -> Iterable[Sequence[_SegmentRule]]:
+            passthrough_1: Passthrough,
+            passthrough_2: Passthrough
+    ) -> List[List[BundleRule]]:
         """Rules for the "spoon" interaction.
 
         The two routes interact like this:
@@ -496,15 +607,15 @@ class Refiner:
         pair will do.
 
         """
-        bot_1 = passthrough_1.segment_bottom
-        lef_1 = passthrough_1.segment_left
-        rig_1 = passthrough_1.segment_right
-        top_1 = passthrough_1.segment_top
-        bot_2 = passthrough_2.segment_bottom
-        lef_2 = passthrough_2.segment_left
-        rig_2 = passthrough_2.segment_right
-        top_2 = passthrough_2.segment_top
-        make = _segment_rule_factory(_RuleCategory.S)
+        bot_1 = passthrough_1.bundle_bottom
+        lef_1 = passthrough_1.bundle_left
+        rig_1 = passthrough_1.bundle_right
+        top_1 = passthrough_1.bundle_top
+        bot_2 = passthrough_2.bundle_bottom
+        lef_2 = passthrough_2.bundle_left
+        rig_2 = passthrough_2.bundle_right
+        top_2 = passthrough_2.bundle_top
+        make = _bundle_rule_factory(RuleCategory.S)
         if bot_1 and lef_1 and bot_2 and lef_2:
             return [
                 [make(bot_1, bot_2), make(lef_2, lef_1)],
@@ -527,39 +638,10 @@ class Refiner:
             ]
         return []
 
-    def _bundle_rules(
-            self,
-            rules: Sequence[_SegmentRule]
-    ) -> Sequence[_BundleRule]:
-        """Convert segment rules to a bundle rules."""
-        bundle_rules = []
-        for rule in rules:
-            bundle_rule = self._segment_rule_to_bundle_rule(rule)
-            bundle_rules.append(bundle_rule)
-        return bundle_rules
-
-    def _segment_rules_to_bundle_rules(
-            self,
-            rules: Sequence[_SegmentRule],
-    ) -> Sequence[_BundleRule]:
-        """Convert a sequence of segment rules to a bundle rules."""
-        bundle_rules = []
-        for rule in rules:
-            bundle_rule = self._segment_rule_to_bundle_rule(rule)
-            bundle_rules.append(bundle_rule)
-        return bundle_rules
-
-    def _segment_rule_to_bundle_rule(self, rule: _SegmentRule) -> _BundleRule:
-        """Convert a segment rule to a bundle rule."""
-        seg_bundles = self._segment_bundles
-        bundle1 = seg_bundles[rule.first]
-        bundle2 = seg_bundles[rule.second]
-        return _BundleRule(rule.category, bundle1, bundle2)
-
     @staticmethod
     def _try_add_rules_to_dag(
             graph: nx.DiGraph,
-            rules: Sequence[_BundleRule],
+            rules: List[BundleRule],
     ) -> None:
         """Try to add the rules as edges to the DAG.
 
@@ -586,14 +668,14 @@ class Refiner:
         if success:
             if Debug.is_enabled():
                 for rule in rules:
-                    log_debug("Added {}".format(rule))
+                    log_debug(f"Added {rule}")
         if not success:
             # Remove the edges in case of cycles.
             for edge in added:
                 graph.remove_edge(*edge)
             if Debug.is_enabled():
                 for rule in rules:
-                    log_debug("Rejected {}".format(rule))
+                    log_debug(f"Rejected {rule}")
 
     @staticmethod
     def _calculate_offsets_from_dag(graph: nx.DiGraph) -> None:
@@ -627,19 +709,22 @@ class Refiner:
             offset = nodes[bundle]['depth']
             bundle.offset = offset
 
-    def _make_bundle_structures(self) -> Collection[BundleStructure]:
+    def _make_bundle_structures(self) -> List[BundleStructure]:
         """Group the bundles in collections of overlapping bundles."""
-        result = []
+        result: List[BundleStructure] = []
         by_axis = self._bundles_by_axis()
         for axis, axis_nbs in by_axis.items():
+            structs: List[BundleStructure] = []
             for over_nbs in self._overlapping_bundles(axis_nbs):
-                struct = BundleStructure(axis, over_nbs)
-                result.append(struct)
+                index = len(structs)
+                struct = BundleStructure(axis, index, over_nbs)
+                structs.append(struct)
+                result.extend(structs)
         return result
 
-    def _bundles_by_axis(self) -> Mapping[Axis, Collection[NetworkBundle]]:
+    def _bundles_by_axis(self) -> Dict[Axis, List[NetworkBundle]]:
         """Group the bundles by grid axis."""
-        result: MutableMapping[Axis, List[NetworkBundle]] = OrderedDict()
+        result: Dict[Axis, List[NetworkBundle]] = {}
         for net in self._networks:
             for bundle in net.bundles():
                 axis = bundle.axis
@@ -652,7 +737,7 @@ class Refiner:
     @staticmethod
     def _overlapping_bundles(
             net_bundles: Iterable[NetworkBundle]
-    ) -> Iterator[Collection[NetworkBundle]]:
+    ) -> Iterator[List[NetworkBundle]]:
         """Separate the bundles into collections of overlapping bundles.
 
         This method checks for overlapping bundles at the grid level.

@@ -5,10 +5,10 @@ from typing import (
     List,
 )
 
-from cassowary import Variable # type: ignore
-from cassowary.expression import Constraint # type: ignore
+from cassowary import Variable  # type: ignore
+from cassowary.expression import Constraint  # type: ignore
 
-from ..names import Named
+from ..util import class_str
 
 from .connections import (
     DrawingWireSegment,
@@ -17,18 +17,20 @@ from .connections import (
 
 ######################################################################
 
-class Track(Named):
+class Track:
     """Contains the boxes and lines of a band."""
 
-    def __init__(self, name_prefix: str, index: int, coord_name: str):
+    def __init__(self, name: str, coord_name: str):
         """Initialize an empty track."""
-        name = f"{name_prefix}_{index}_track"
-        super().__init__(name)
+        self._name = name
         var_prefix = f"{name}_{coord_name}"
-        var_name = f"{var_prefix}min"
-        self._cmin = Variable(var_name)
-        var_name = f"{var_prefix}max"
-        self._cmax = Variable(var_name)
+        self._cmin = Variable(f"{var_prefix}min")
+        self._cmax = Variable(f"{var_prefix}max")
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._name)
+        return class_str(self, content)
 
     @property
     def cmin(self) -> Variable:
@@ -42,7 +44,7 @@ class Track(Named):
 
 ######################################################################
 
-class Band(Named):
+class Band:
     """Row or column in the grid."""
 
     def __init__(
@@ -51,21 +53,24 @@ class Band(Named):
             min_line: Variable, max_line: Variable,
             name_prefix: str, coord_name: str,
     ):
-        """Initialize the band at the given index."""
-        name = f"{name_prefix}_{index}"
-        super().__init__(name)
+        """Initialize the band with the given index number."""
         self._index = index
         self._cmin = min_line
         self._cmax = max_line
-        var_prefix = f"{name_prefix}_{index}_"
-        var_name = f"{var_prefix}{coord_name}ref"
+        self._name = name = f"{name_prefix}_{index}"
+        var_name = f"{name}_{coord_name}ref"
         self._cref = Variable(var_name)
-        self._track = Track(name_prefix, index, coord_name)
+        self._track = Track(name, coord_name)
         self._wire_structures: List[DrawingWireStructure] = []
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._name)
+        return class_str(self, content)
 
     @property
     def index(self) -> int:
-        """Index of the band in the grid."""
+        """Index number of the band in the grid."""
         return self._index
 
     @property
@@ -83,10 +88,23 @@ class Band(Named):
         self._wire_structures.append(struct)
 
     def constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the solver."""
+        """Generate required constraints for the solver."""
         yield from self._line_constraints()
         yield from self._wire_constraints()
         yield from self._structure_constraints()
+
+    def optional_constraints(self) -> Iterator[Constraint]:
+        """Generate optional constraints for the solver."""
+        # Center connections on band axis.
+        cref = self._cref
+        for struct in self._wire_structures:
+            layers = list(struct)
+            first = layers[0]
+            last = layers[-1]
+            # Approach the reference line as much as possible.
+            yield last.cref - cref == 0
+            # Symmetry.
+            yield last.cref - cref == cref - first.cref
 
     def _line_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the lines."""
@@ -104,26 +122,13 @@ class Band(Named):
             yield seg.cmin >= track.cmin
             yield seg.cmax <= track.cmax
 
-    def _segments(self) -> Iterator[DrawingWireSegment]:
-        """Return the wire segments in the band."""
-        for struct in self._wire_structures:
-            for layer in struct:
-                yield from layer
-
     def _structure_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the wire structures."""
         for struct in self._wire_structures:
             yield from struct.constraints()
 
-    def optional_constraints(self) -> Iterator[Constraint]:
-        """Generate optional constraints for the solver."""
-        # Center connections on band axis.
-        cref = self._cref
+    def _segments(self) -> Iterator[DrawingWireSegment]:
+        """Return the wire segments in the band."""
         for struct in self._wire_structures:
-            layers = list(struct)
-            first = layers[0]
-            last = layers[-1]
-            # Approach the reference line as much as possible.
-            yield last.cref - cref == 0
-            # Symmetry.
-            yield last.cref - cref == cref - first.cref
+            for layer in struct:
+                yield from layer

@@ -9,7 +9,7 @@ from cairo import (
     ImageSurface,
 )
 
-from shapely.geometry import ( # type: ignore
+from shapely.geometry import (  # type: ignore
     JOIN_STYLE,
     Polygon,
 )
@@ -18,7 +18,6 @@ from ..define import (
     AreaAttributes,
     AttributeMap,
     ConnectionAttributes,
-    DiagramAttributes,
     FontStyle,
     FontWeight,
     LineAttributes,
@@ -27,12 +26,8 @@ from ..define import (
 
 ######################################################################
 
-def new_surface(
-        attrs: DiagramAttributes,
-        width: float, height: float,
-) -> ImageSurface:
+def new_surface(width: float, height: float, scale: float) -> ImageSurface:
     """Return a new surface having the requested dimensions."""
-    scale = attrs.scale
     surf_width = math.ceil(scale * width)
     surf_height = math.ceil(scale * height)
     surface = ImageSurface(Format.ARGB32, surf_width, surf_height)
@@ -40,7 +35,7 @@ def new_surface(
     return surface
 
 def pt_to_px(points: float) -> float:
-    """Convert points to pixels (a.k.a. user units)."""
+    """Convert points to pixels (a.k.a. user or device units)."""
     return 1.25 * points
 
 def buffer_rectangle(poly: Polygon, distance: float) -> Polygon:

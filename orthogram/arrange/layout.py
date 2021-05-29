@@ -50,13 +50,13 @@ class Layout:
         return self._router.grid
 
     def networks(self) -> Iterator[Network]:
-        """Return an iterator over the calculated networks."""
+        """Iterate over the calculated networks."""
         yield from self._refiner.networks()
-
-    def wire_labels(self) -> Iterator[WireLabel]:
-        """Return an iterator over the wire labels."""
-        yield from self._labeler.wire_labels()
 
     def bundle_structures(self) -> Iterator[BundleStructure]:
         """Iterate over the bundle structures."""
         yield from self._refiner.bundle_structures()
+
+    def wire_labels(self) -> Iterator[WireLabel]:
+        """Iterate over the wire labels."""
+        yield from self._labeler.wire_labels()

@@ -1,17 +1,15 @@
 """Provides means to collect and merge attributes."""
 
-from collections import OrderedDict
 from enum import Enum, IntEnum, auto
 
 from typing import (
     Any,
-    Collection,
+    Dict,
     Iterable,
     Iterator,
+    List,
     Mapping,
-    MutableMapping,
     Optional,
-    Sequence,
     Tuple,
     cast,
 )
@@ -100,7 +98,7 @@ class LabelPosition(Enum):
 ######################################################################
 
 class Color:
-    """Color to draw shapes with."""
+    """Color to draw shapes in."""
 
     def __init__(self, r: float, g: float, b: float, a: float = 1.0):
         """Initialize with the given values for the components."""
@@ -108,6 +106,15 @@ class Color:
         self._green = g
         self._blue = b
         self._alpha = a
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        cls = self.__class__.__name__
+        r = self._red
+        g = self._green
+        b = self._blue
+        a = self._alpha
+        return f"{cls}({r}, {g}, {b}, {a})"
 
     @property
     def red(self) -> float:
@@ -147,7 +154,7 @@ class Color:
 ######################################################################
 
 # Type of stroke dash array values.
-_DashArray = Sequence[float]
+DashArray = List[float]
 
 ######################################################################
 
@@ -196,7 +203,7 @@ class Attributes(Mapping[str, Any]):
 
     def __init__(self, **attrs: AttributeMap):
         """Initialize the collection with the given values."""
-        attributes: MutableMapping[str, Any] = OrderedDict()
+        attributes: Dict[str, Any] = {}
         for name in self._attribute_names:
             if name in attrs:
                 attributes[name] = attrs[name]
@@ -211,7 +218,7 @@ class Attributes(Mapping[str, Any]):
         self._attributes[key] = value
 
     def __iter__(self) -> Iterator[str]:
-        """Return an iterator over the attribute names."""
+        """Iterate over the attribute names."""
         yield from self._attributes
 
     def __len__(self) -> int:
@@ -230,38 +237,32 @@ class Attributes(Mapping[str, Any]):
         print("Attributes:")
         for name in sorted(self._attribute_names):
             if name in self:
-                print("\t{}: {}".format(name, self[name]))
+                print(f"\t{name}: {self[name]}")
 
 ######################################################################
 
-class _BackstopAttributes:
+class AttributesBackstop:
     """Last in the MRO of attribute classes."""
 
     def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Does nothing."""
+        """Does nothing.
+
+        This is necessary so that the calls to super from the child
+        classes do not propagate to object.
+
+        """
 
 ######################################################################
 
-class LineAttributes(_BackstopAttributes):
+class LineAttributes(AttributesBackstop):
     """Collection of attributes relevant to linear objects."""
 
     def __init__(self) -> None:
         """Initialize with default attributes."""
         super().__init__()
         self._stroke: Optional[Color] = Color.black()
-        self._stroke_dasharray: Optional[_DashArray] = None
+        self._stroke_dasharray: Optional[DashArray] = None
         self._stroke_width = 2.0
-
-    def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'stroke' in attrs:
-            self._stroke = cast(Optional[Color], attrs['stroke'])
-        if 'stroke_dasharray' in attrs:
-            self._stroke_dasharray = cast(Optional[_DashArray],
-                                          attrs['stroke_dasharray'])
-        if 'stroke_width' in attrs:
-            self._stroke_width = cast(float, attrs['stroke_width'])
 
     @property
     def stroke(self) -> Optional[Color]:
@@ -269,14 +270,28 @@ class LineAttributes(_BackstopAttributes):
         return self._stroke
 
     @property
-    def stroke_dasharray(self) -> Optional[_DashArray]:
+    def stroke_dasharray(self) -> Optional[DashArray]:
         """Dash pattern of the line."""
-        return self._stroke_dasharray
+        dashes = self._stroke_dasharray
+        if dashes:
+            return list(dashes)
+        return None
 
     @property
     def stroke_width(self) -> float:
-        """Width of the line (in pt)."""
+        """Width of the line."""
         return self._stroke_width
+
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'stroke' in attrs:
+            self._stroke = cast(Optional[Color], attrs['stroke'])
+        if 'stroke_dasharray' in attrs:
+            self._stroke_dasharray = cast(Optional[DashArray],
+                                          attrs['stroke_dasharray'])
+        if 'stroke_width' in attrs:
+            self._stroke_width = cast(float, attrs['stroke_width'])
 
 ######################################################################
 
@@ -289,16 +304,6 @@ class AreaAttributes(LineAttributes):
         self._fill: Optional[Color] = None
         self._min_height = 0.0
         self._min_width = 0.0
-
-    def set_attributes(self, ** attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'fill' in attrs:
-            self._fill = cast(Optional[Color], attrs['fill'])
-        if 'min_height' in attrs:
-            self._min_height = cast(float, attrs['min_height'])
-        if 'min_width' in attrs:
-            self._min_width = cast(float, attrs['min_width'])
 
     @property
     def fill(self) -> Optional[Color]:
@@ -315,9 +320,19 @@ class AreaAttributes(LineAttributes):
         """Minimum width of the shape."""
         return self._min_width
 
+    def set_attributes(self, ** attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'fill' in attrs:
+            self._fill = cast(Optional[Color], attrs['fill'])
+        if 'min_height' in attrs:
+            self._min_height = cast(float, attrs['min_height'])
+        if 'min_width' in attrs:
+            self._min_width = cast(float, attrs['min_width'])
+
 ######################################################################
 
-class TextAttributes(_BackstopAttributes):
+class TextAttributes(AttributesBackstop):
     """Collection of attributes relevant to text."""
 
     def __init__(self) -> None:
@@ -332,29 +347,6 @@ class TextAttributes(_BackstopAttributes):
         self._text_fill: Optional[Color] = Color.black()
         self._text_line_height = 1.2
         self._text_orientation = TextOrientation.HORIZONTAL
-
-    def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'font_family' in attrs:
-            self._font_family = cast(str, attrs['font_family'])
-        if 'font_size' in attrs:
-            self._font_size = cast(float, attrs['font_size'])
-        if 'font_style' in attrs:
-            self._font_style = cast(FontStyle, attrs['font_style'])
-        if 'font_weight' in attrs:
-            self._font_weight = cast(FontWeight, attrs['font_weight'])
-        if 'label' in attrs:
-            self._label = cast(Optional[str], attrs['label'])
-        if 'label_distance' in attrs:
-            self._label_distance = cast(float, attrs['label_distance'])
-        if 'text_fill' in attrs:
-            self._text_fill = cast(Optional[Color], attrs['text_fill'])
-        if 'text_line_height' in attrs:
-            self._text_line_height = cast(float, attrs['text_line_height'])
-        if 'text_orientation' in attrs:
-            self._text_orientation = cast(
-                TextOrientation, attrs['text_orientation'])
 
     @property
     def font_family(self) -> str:
@@ -383,7 +375,7 @@ class TextAttributes(_BackstopAttributes):
 
     @property
     def label_distance(self) -> float:
-        """Distance of the label from the border."""
+        """Distance of the label from the border of the shape."""
         return self._label_distance
 
     @property
@@ -401,6 +393,29 @@ class TextAttributes(_BackstopAttributes):
         """Orientation of the text."""
         return self._text_orientation
 
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'font_family' in attrs:
+            self._font_family = cast(str, attrs['font_family'])
+        if 'font_size' in attrs:
+            self._font_size = cast(float, attrs['font_size'])
+        if 'font_style' in attrs:
+            self._font_style = cast(FontStyle, attrs['font_style'])
+        if 'font_weight' in attrs:
+            self._font_weight = cast(FontWeight, attrs['font_weight'])
+        if 'label' in attrs:
+            self._label = cast(Optional[str], attrs['label'])
+        if 'label_distance' in attrs:
+            self._label_distance = cast(float, attrs['label_distance'])
+        if 'text_fill' in attrs:
+            self._text_fill = cast(Optional[Color], attrs['text_fill'])
+        if 'text_line_height' in attrs:
+            self._text_line_height = cast(float, attrs['text_line_height'])
+        if 'text_orientation' in attrs:
+            self._text_orientation = cast(
+                TextOrientation, attrs['text_orientation'])
+
 ######################################################################
 
 class ContainerAttributes(AreaAttributes, TextAttributes):
@@ -415,20 +430,6 @@ class ContainerAttributes(AreaAttributes, TextAttributes):
         self._padding_left = 0.0
         self._padding_right = 0.0
         self._padding_top = 0.0
-
-    def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'label_position' in attrs:
-            self._label_position = cast(LabelPosition, attrs['label_position'])
-        if 'padding_bottom' in attrs:
-            self._padding_bottom = cast(float, attrs['padding_bottom'])
-        if 'padding_left' in attrs:
-            self._padding_left = cast(float, attrs['padding_left'])
-        if 'padding_right' in attrs:
-            self._padding_right = cast(float, attrs['padding_right'])
-        if 'padding_top' in attrs:
-            self._padding_top = cast(float, attrs['padding_top'])
 
     @property
     def label_position(self) -> LabelPosition:
@@ -455,6 +456,20 @@ class ContainerAttributes(AreaAttributes, TextAttributes):
         """Distance between the contents and the top border."""
         return self._padding_top
 
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'label_position' in attrs:
+            self._label_position = cast(LabelPosition, attrs['label_position'])
+        if 'padding_bottom' in attrs:
+            self._padding_bottom = cast(float, attrs['padding_bottom'])
+        if 'padding_left' in attrs:
+            self._padding_left = cast(float, attrs['padding_left'])
+        if 'padding_right' in attrs:
+            self._padding_right = cast(float, attrs['padding_right'])
+        if 'padding_top' in attrs:
+            self._padding_top = cast(float, attrs['padding_top'])
+
 ######################################################################
 
 class BlockAttributes(ContainerAttributes):
@@ -477,22 +492,6 @@ class BlockAttributes(ContainerAttributes):
         self._padding_top = 8.0
         self._pass_through = False
         self.set_attributes(**attrs)
-
-    def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'margin_bottom' in attrs:
-            self._margin_bottom = cast(float, attrs['margin_bottom'])
-        if 'margin_left' in attrs:
-            self._margin_left = cast(float, attrs['margin_left'])
-        if 'margin_right' in attrs:
-            self._margin_right = cast(float, attrs['margin_right'])
-        if 'margin_top' in attrs:
-            self._margin_top = cast(float, attrs['margin_top'])
-        if 'name' in attrs:
-            self._name = cast(str, attrs['name'])
-        if 'pass_through' in attrs:
-            self._pass_through = cast(bool, attrs['pass_through'])
 
     @property
     def margin_bottom(self) -> float:
@@ -524,6 +523,22 @@ class BlockAttributes(ContainerAttributes):
         """Can a connection pass through the block?"""
         return self._pass_through
 
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'margin_bottom' in attrs:
+            self._margin_bottom = cast(float, attrs['margin_bottom'])
+        if 'margin_left' in attrs:
+            self._margin_left = cast(float, attrs['margin_left'])
+        if 'margin_right' in attrs:
+            self._margin_right = cast(float, attrs['margin_right'])
+        if 'margin_top' in attrs:
+            self._margin_top = cast(float, attrs['margin_top'])
+        if 'name' in attrs:
+            self._name = cast(str, attrs['name'])
+        if 'pass_through' in attrs:
+            self._pass_through = cast(bool, attrs['pass_through'])
+
 ######################################################################
 
 class ConnectionAttributes(LineAttributes, TextAttributes):
@@ -539,34 +554,14 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         self._arrow_forward = True
         self._buffer_fill: Optional[Color] = None
         self._buffer_width = 0.0
-        self._entrances: Collection[Side] = self._collect_sides(all_sides)
-        self._exits: Collection[Side] = self._collect_sides(all_sides)
+        self._entrances = self._collect_sides(all_sides)
+        self._exits = self._collect_sides(all_sides)
         self._label_distance = 4.0
         self._text_orientation = TextOrientation.FOLLOW
         self.set_attributes(**attrs)
 
-    def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'arrow_aspect' in attrs:
-            self._arrow_aspect = cast(float, attrs['arrow_aspect'])
-        if 'arrow_back' in attrs:
-            self._arrow_back = cast(bool, attrs['arrow_back'])
-        if 'arrow_base' in attrs:
-            self._arrow_base = cast(float, attrs['arrow_base'])
-        if 'arrow_forward' in attrs:
-            self._arrow_forward = cast(bool, attrs['arrow_forward'])
-        if 'buffer_fill' in attrs:
-            self._buffer_fill = cast(Optional[Color], attrs['buffer_fill'])
-        if 'buffer_width' in attrs:
-            self._buffer_width = cast(float, attrs['buffer_width'])
-        if 'entrances' in attrs:
-            self._entrances = self._collect_sides(attrs['entrances'])
-        if 'exits' in attrs:
-            self._exits = self._collect_sides(attrs['exits'])
-
     @staticmethod
-    def _collect_sides(value: Any) -> Collection[Side]:
+    def _collect_sides(value: Any) -> List[Side]:
         """Return a collection of sorted unique block sides.
 
         Works with attribute values as well.
@@ -606,14 +601,34 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         return self._buffer_width
 
     @property
-    def entrances(self) -> Collection[Side]:
+    def entrances(self) -> List[Side]:
         """Sides to enter into the destination block."""
-        return self._entrances
+        return list(self._entrances)
 
     @property
-    def exits(self) -> Collection[Side]:
+    def exits(self) -> List[Side]:
         """Sides to exit from the source block."""
-        return self._exits
+        return list(self._exits)
+
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'arrow_aspect' in attrs:
+            self._arrow_aspect = cast(float, attrs['arrow_aspect'])
+        if 'arrow_back' in attrs:
+            self._arrow_back = cast(bool, attrs['arrow_back'])
+        if 'arrow_base' in attrs:
+            self._arrow_base = cast(float, attrs['arrow_base'])
+        if 'arrow_forward' in attrs:
+            self._arrow_forward = cast(bool, attrs['arrow_forward'])
+        if 'buffer_fill' in attrs:
+            self._buffer_fill = cast(Optional[Color], attrs['buffer_fill'])
+        if 'buffer_width' in attrs:
+            self._buffer_width = cast(float, attrs['buffer_width'])
+        if 'entrances' in attrs:
+            self._entrances = self._collect_sides(attrs['entrances'])
+        if 'exits' in attrs:
+            self._exits = self._collect_sides(attrs['exits'])
 
 ######################################################################
 
@@ -634,18 +649,6 @@ class DiagramAttributes(ContainerAttributes):
         self._stroke_width = 0.0
         self.set_attributes(**attrs)
 
-    def set_attributes(self, **attrs: AttributeMap) -> None:
-        """Set the attributes to the given values."""
-        super().set_attributes(**attrs)
-        if 'collapse_connections' in attrs:
-            self._collapse_connections = cast(
-                bool, attrs['collapse_connections'])
-        if 'connection_distance' in attrs:
-            self._connection_distance = cast(
-                float, attrs['connection_distance'])
-        if 'scale' in attrs:
-            self._scale = cast(float, attrs['scale'])
-
     @property
     def collapse_connections(self) -> bool:
         """Let connections that belong to the same group merge?"""
@@ -660,3 +663,15 @@ class DiagramAttributes(ContainerAttributes):
     def scale(self) -> float:
         """Scale drawing using this value."""
         return self._scale
+
+    def set_attributes(self, **attrs: AttributeMap) -> None:
+        """Set the attributes to the given values."""
+        super().set_attributes(**attrs)
+        if 'collapse_connections' in attrs:
+            self._collapse_connections = cast(
+                bool, attrs['collapse_connections'])
+        if 'connection_distance' in attrs:
+            self._connection_distance = cast(
+                float, attrs['connection_distance'])
+        if 'scale' in attrs:
+            self._scale = cast(float, attrs['scale'])

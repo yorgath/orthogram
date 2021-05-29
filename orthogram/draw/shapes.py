@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from shapely import affinity # type: ignore
+from shapely import affinity  # type: ignore
 
-from shapely.geometry import ( # type: ignore
+from shapely.geometry import (  # type: ignore
     LinearRing,
     LineString,
     Point,
@@ -13,14 +13,24 @@ from shapely.geometry import ( # type: ignore
 
 from ..arrange import Wire
 from ..define import ConnectionAttributes
-from ..util import log_warning
+
+from ..util import (
+    class_str,
+    log_warning,
+)
 
 from .functions import buffer_rectangle
 
 ######################################################################
 
 class Arrow:
-    """Represents an arrow at the end of a connection line."""
+    """Represents an arrow at the end of a connection line.
+
+    Note that the geometry of the arrow is a linear ring, not a
+    polygon, which means that the arrow cannot have holes in it.  This
+    simplifies drawing the arrow.
+
+    """
 
     def __init__(self, attrs: ConnectionAttributes):
         """Initialize for the given attributes."""
@@ -30,6 +40,11 @@ class Arrow:
         self._geometry: Optional[LinearRing] = None
 
     @property
+    def geometry(self) -> Optional[LinearRing]:
+        """Geometry used to draw the arrow."""
+        return self._geometry
+
+    @property
     def length(self) -> float:
         """Length of the arrow from base to tip."""
         return self._length
@@ -37,11 +52,6 @@ class Arrow:
     def is_valid(self) -> bool:
         """True if the arrow has its geometry set."""
         return self._geometry is not None
-
-    @property
-    def geometry(self) -> Optional[LinearRing]:
-        """Geometry used to draw the arrow."""
-        return self._geometry
 
     def set_geometry(self, base_middle: Point, tip: Point) -> None:
         """Calculate the geometry of the arrow using the points."""
@@ -57,7 +67,7 @@ class Arrow:
 
 ######################################################################
 
-class WireLine:
+class WireShape:
     """Encapsulates the geometry for a connection wire."""
 
     def __init__(
@@ -81,6 +91,11 @@ class WireLine:
         self._clip_start()
         self._end_arrow: Optional[Arrow] = None
         self._clip_end()
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self._wire.description()
+        return class_str(self, content)
 
     @property
     def connection_attributes(self) -> ConnectionAttributes:
@@ -107,7 +122,8 @@ class WireLine:
         line = self._wire_line_string
         poly = self._start_polygon
         arrow: Optional[Arrow] = None
-        attrs = self._wire.connection.attributes
+        wire = self._wire
+        attrs = wire.connection.attributes
         if attrs.arrow_back:
             arrow = Arrow(attrs)
         line = self._clip(line, poly, arrow, True)
@@ -120,7 +136,8 @@ class WireLine:
         line = self._wire_line_string
         poly = self._end_polygon
         arrow: Optional[Arrow] = None
-        attrs = self._wire.connection.attributes
+        wire = self._wire
+        attrs = wire.connection.attributes
         if attrs.arrow_forward:
             arrow = Arrow(attrs)
         line = self._clip(line, poly, arrow, False)
@@ -169,9 +186,11 @@ class WireLine:
                 poly2 = buffer_rectangle(poly, arrow_length - 1.0)
                 line = line.difference(poly2)
             else:
-                temp = "No room for arrow of connection '{}' -> '{}', omitted"
                 connection = self._wire.connection
-                msg = temp.format(connection.start.name, connection.end.name)
+                start_name = connection.start.block.name
+                end_name = connection.end.block.name
+                msg = ("No room for arrow of connection" +
+                       f" '{start_name}' -> '{end_name}', omitted")
                 log_warning(msg)
         # Do not forget to reverse the result if necessary.
         if start:

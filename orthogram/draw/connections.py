@@ -1,19 +1,17 @@
 """Provides classes for arranging diagram connections."""
 
-from collections import OrderedDict
-
 from typing import (
+    Dict,
     Iterator,
     List,
-    MutableMapping,
     Optional,
     Tuple,
 )
 
-from cassowary import Variable # type: ignore
-from cassowary.expression import Constraint # type: ignore
+from cassowary import Variable  # type: ignore
+from cassowary.expression import Constraint  # type: ignore
 
-from shapely.geometry import LineString # type: ignore
+from shapely.geometry import LineString  # type: ignore
 
 from ..arrange import (
     Joint,
@@ -21,15 +19,13 @@ from ..arrange import (
     WireSegment,
 )
 
-from ..define import ConnectionAttributes
-
-from ..geometry import (
-    Axis,
-    Orientation,
-    OrientedObject,
+from ..define import (
+    Connection,
+    ConnectionAttributes,
 )
 
-from ..names import Named
+from ..geometry import Axis
+from ..util import class_str
 
 from .labels import Label
 
@@ -39,10 +35,15 @@ class DrawingWireLabel:
     """Label on a drawing wire."""
 
     def __init__(self, label: Label, cmin: Variable, cmax: Variable):
-        """Initialize for a given drawing label."""
+        """Initialize for the given drawing label."""
         self._drawing_label = label
         self._cmin = cmin
         self._cmax = cmax
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        text = repr(self._drawing_label.text)
+        return class_str(self, text)
 
     @property
     def drawing_label(self) -> Label:
@@ -64,26 +65,19 @@ class DrawingWireLabel:
 class DrawingJoint:
     """Augments a layout joint."""
 
-    def __init__(self, index: int, layout_joint: Joint):
-        """Initialize for the given layout joint.
-
-        The index is used only for naming the object.
-
-        """
-        self._index = index
+    def __init__(self, layout_joint: Joint):
+        """Initialize for the given layout joint."""
         self._layout_joint = layout_joint
         # Define default coordinate variables.  These may be replaced
         # later on from the segments.
-        name = f"joint_{index}"
-        self._x = Variable(f"{name}_x")
-        self._y = Variable(f"{name}_y")
+        name = layout_joint.name
+        self._x = Variable(f"joint_{name}_x")
+        self._y = Variable(f"joint_{name}_y")
 
     def __repr__(self) -> str:
-        """Convert to string."""
-        cls = self.__class__.__name__
-        index = self._index
-        ljoint = self._layout_joint
-        return f"{cls}({index};{ljoint})"
+        """Represent as string."""
+        content = self._layout_joint.description()
+        return class_str(self, content)
 
     @property
     def layout_joint(self) -> Joint:
@@ -112,53 +106,53 @@ class DrawingJoint:
 
 ######################################################################
 
-class DrawingWireSegment(OrientedObject):
+class DrawingWireSegment:
     """Augments a layout wire segment."""
 
     def __init__(
             self,
-            wire_index: int, segment_index: int,
             layout_segment: WireSegment,
             connection_distance: float,
             start: DrawingJoint, end: DrawingJoint,
     ):
-        """Initialize for the given layout segment.
-
-        The index is used only for naming the object.
-
-        """
+        """Initialize for the given layout segment."""
         self._layout_segment = layout_segment
         self._connection_distance = connection_distance
         self._start = start
         self._end = end
         self._wire_width = self._calculate_wire_width()
         # Variables for the constraint solver.
-        self._name = name = f"dseg_{wire_index}_{segment_index}"
+        name = layout_segment.name
         if self.is_horizontal():
             coord_name = "y"
         else:
             coord_name = "x"
-        self._cmin = Variable(f"{name}_{coord_name}min")
-        self._cmax = Variable(f"{name}_{coord_name}max")
+        self._cmin = Variable(f"seg_{name}_{coord_name}min")
+        self._cmax = Variable(f"seg_{name}_{coord_name}max")
         # This will be set later using the layers.
         self._cref: Variable
         # These will be set later during the process.
         self._label: Optional[DrawingWireLabel] = None
         self._label_margin = 0.0
 
-    def _calculate_wire_width(self) -> float:
-        """Calculate the width of the wire itself, including buffer."""
-        attrs = self.attributes
-        width = attrs.stroke_width
-        buffer_width = attrs.buffer_width
-        if buffer_width:
-            width += 2 * buffer_width
-        return width
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self._layout_segment.description()
+        return class_str(self, content)
 
     @property
     def layout_segment(self) -> WireSegment:
         """The layout wire segment wrapped by this object."""
         return self._layout_segment
+
+    def is_horizontal(self) -> bool:
+        """True if the segment is horizontal."""
+        return self._layout_segment.is_horizontal()
+
+    @property
+    def connection(self) -> Connection:
+        """Connection associated with the wire."""
+        return self._layout_segment.connection
 
     @property
     def start(self) -> DrawingJoint:
@@ -201,11 +195,6 @@ class DrawingWireSegment(OrientedObject):
         return self._cmax
 
     @property
-    def orientation(self) -> Orientation:
-        """Orientation of the segment."""
-        return self._layout_segment.orientation
-
-    @property
     def attributes(self) -> ConnectionAttributes:
         """Attributes of the underlying connection."""
         return self._layout_segment.connection.attributes
@@ -226,6 +215,29 @@ class DrawingWireSegment(OrientedObject):
         self._label = label
         self._label_margin = self._calculate_label_margin()
 
+    @property
+    def label_displacement(self) -> Tuple[float, float]:
+        """Vector from middle of segment to center of label."""
+        width = self._wire_width
+        disp = -0.5 * (width + self._label_margin)
+        if self.is_horizontal():
+            return (0.0, disp)
+        return (disp, 0.0)
+
+    def constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the segment."""
+        yield from self._joint_constraints()
+        yield from self._bounds_constraints()
+
+    def _calculate_wire_width(self) -> float:
+        """Calculate the width of the wire itself, including buffer."""
+        attrs = self.attributes
+        width = attrs.stroke_width
+        buffer_width = attrs.buffer_width
+        if buffer_width:
+            width += 2 * buffer_width
+        return width
+
     def _calculate_label_margin(self) -> float:
         """Calculate a margin large enough for the label."""
         margin = 0.0
@@ -238,27 +250,6 @@ class DrawingWireSegment(OrientedObject):
             else:
                 margin += label.box_width
         return margin
-
-    @property
-    def label_displacement(self) -> Tuple[float, float]:
-        """Vector from middle of segment to center of label."""
-        width = self._wire_width
-        disp = -0.5 * (width + self._label_margin)
-        if self.is_horizontal():
-            return (0.0, disp)
-        return (disp, 0.0)
-
-    def __repr__(self) -> str:
-        """Convert to string."""
-        cls = self.__class__.__name__
-        name = self._name
-        lseg = self._layout_segment
-        return f"{cls}({name};{lseg})"
-
-    def constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the segment."""
-        yield from self._joint_constraints()
-        yield from self._bounds_constraints()
 
     def _joint_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the joints at the two ends."""
@@ -280,23 +271,28 @@ class DrawingWireSegment(OrientedObject):
 class DrawingWire:
     """Augments a layout wire."""
 
-    def __init__(self, index: int, layout_wire: Wire) -> None:
+    def __init__(self, layout_wire: Wire) -> None:
         """Initialize an empty wire."""
-        self._index = index
         self._layout_wire = layout_wire
         self._segments: List[DrawingWireSegment] = []
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = self._layout_wire.description()
+        return class_str(self, content)
 
     @property
     def layout_wire(self) -> Wire:
         """The layout wire wrapped by this object."""
         return self._layout_wire
 
-    def append_segment(self, segment: DrawingWireSegment) -> None:
-        """Append segment to the wire."""
-        self._segments.append(segment)
+    @property
+    def connection(self) -> Connection:
+        """Associated connection."""
+        return self._layout_wire.connection
 
     def segments(self) -> Iterator[DrawingWireSegment]:
-        """Return the segments that make up this wire."""
+        """Iterate over the segments that make up this wire."""
         yield from self._segments
 
     @property
@@ -313,49 +309,58 @@ class DrawingWire:
             points.append(point_2)
         return LineString(points)
 
+    def append_segment(self, segment: DrawingWireSegment) -> None:
+        """Append segment to the wire."""
+        self._segments.append(segment)
+
 ######################################################################
 
 class DrawingNetwork:
     """Augments a layout network."""
 
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         """Initialize an empty network."""
+        self._name = name
         self._wires: List[DrawingWire] = []
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._name)
+        return class_str(self, content)
 
     def append_wire(self, wire: DrawingWire) -> None:
         """Add a wire to the network."""
         self._wires.append(wire)
 
     def wires(self) -> Iterator[DrawingWire]:
-        """Return the wires."""
+        """Iterate over the wires."""
         yield from self._wires
 
 ######################################################################
 
-class DrawingWireLayer(Named):
+class DrawingWireLayer:
     """Collection of drawing segments having the same offset."""
 
-    def __init__(self, axis: Axis, index: int, offset: int):
+    def __init__(self, struct_name: str, offset: int):
         """Initialize an empty layer."""
-        self._axis = axis
-        self._index = index
+        self._name = name = f"{struct_name}.{offset}"
         self._offset = offset
-        name = self._make_name()
-        super().__init__(name)
-        var_name = f"{name}_ref"
+        var_name = f"lay_{name}_ref"
         self._cref = Variable(var_name)
         self._segments: List[DrawingWireSegment] = []
 
-    def _make_name(self) -> str:
-        """Create a unique name for the object."""
-        axis_name = self._axis.name
-        index = self._index
-        offset = self._offset
-        return f"lay_{axis_name}_{index}_{offset}"
+    def __repr__(self) -> str:
+        """Represent as string."""
+        return class_str(self, repr(self._name))
 
     def __iter__(self) -> Iterator[DrawingWireSegment]:
-        """Yield the segments."""
+        """Iterate over the segments."""
         yield from self._segments
+
+    @property
+    def offset(self) -> int:
+        """Common offset of the segments in the layer."""
+        return self._offset
 
     @property
     def cref(self) -> Variable:
@@ -366,38 +371,28 @@ class DrawingWireLayer(Named):
         """Add a segment to the layer."""
         self._segments.append(segment)
 
-    @property
-    def offset(self) -> int:
-        """Common offset of the segments in the layer."""
-        return self._offset
-
 ######################################################################
 
-class DrawingWireStructure(Named):
+class DrawingWireStructure:
     """Collection of overlapping wire segments."""
 
-    def __init__(
-            self, axis: Axis, index: int,
-            connection_distance: float,
-    ):
-        """Initialize an empty structure for the given axis.
-
-        The index must be unique for the axis.
-
-        """
+    def __init__(self, name: str, axis: Axis, connection_distance: float):
+        """Initialize an empty structure for the given axis."""
+        self._name = name
         self._axis = axis
-        self._index = index
         self._connection_distance = connection_distance
-        name = self._make_name()
-        super().__init__(name)
-        self._layers_by_offset: MutableMapping[int, DrawingWireLayer]
-        self._layers_by_offset = OrderedDict()
+        self._layers_by_offset: Dict[int, DrawingWireLayer] = {}
 
-    def _make_name(self) -> str:
-        """Create a unique name for the object."""
-        axis_name = self._axis.name
-        index = self._index
-        return f"struct_{axis_name}_{index}"
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr(self._name)
+        return class_str(self, content)
+
+    def __iter__(self) -> Iterator[DrawingWireLayer]:
+        """Iterate over the layers by offset in ascending order."""
+        by_offset = self._layers_by_offset
+        for offset in sorted(by_offset):
+            yield by_offset[offset]
 
     @property
     def axis(self) -> Axis:
@@ -407,12 +402,6 @@ class DrawingWireStructure(Named):
     def add_layer(self, layer: DrawingWireLayer) -> None:
         """Add a layer to the structure."""
         self._layers_by_offset[layer.offset] = layer
-
-    def __iter__(self) -> Iterator[DrawingWireLayer]:
-        """Return the layers by offset in ascending order."""
-        by_offset = self._layers_by_offset
-        for offset in sorted(by_offset):
-            yield by_offset[offset]
 
     def constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the solver."""
