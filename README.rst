@@ -30,7 +30,7 @@ Installation and usage
 Install from PyPI:
 
 .. code::
-   
+
    pip install orthogram
 
 Assuming there is a diagram definition file named ``diagram.yaml`` in
@@ -38,7 +38,7 @@ your current directory, run the following command to produce a PNG
 file:
 
 .. code::
-   
+
    python -m orthogram diagram.yaml
 
 Please read the full online `documentation`_ for more.
