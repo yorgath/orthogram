@@ -676,7 +676,7 @@ class Refiner:
             bundle_1 = net_bundle_1.bundle
             for net_bundle_2 in net_bundles[i + 1:]:
                 bundle_2 = net_bundle_2.bundle
-                if net_bundle_1.overlaps_with(net_bundle_2):
+                if net_bundle_1.overlaps_with(net_bundle_2, False):
                     graph.add_edge(bundle_1, bundle_2)
         for bundles in nx.connected_components(graph):
             block = []

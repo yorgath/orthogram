@@ -366,12 +366,12 @@ class Network:
         """Return an iterator over all the joints of the network."""
         yield from self._joints.values()
 
-    def offset_bundle(self, bundle: Bundle) -> Tuple[FloatPoint, FloatPoint]:
+    def offset_bundle(self, bundle: Bundle, use_offsets: bool) -> Tuple[FloatPoint, FloatPoint]:
         """Return a pair of points suitable for overlap check."""
         joint_1 = self._joints[bundle.first_point]
-        point_1 = self._float_point(bundle, joint_1)
+        point_1 = self._float_point(bundle, joint_1, use_offsets)
         joint_2 = self._joints[bundle.last_point]
-        point_2 = self._float_point(bundle, joint_2)
+        point_2 = self._float_point(bundle, joint_2, use_offsets)
         return point_1, point_2
 
     def _init_bundles(self) -> None:
@@ -471,16 +471,17 @@ class Network:
     # converted to real numbers by multiplying with this quantity.
     _FACTOR = 0.001
 
-    def _float_point(self, bundle: Bundle, joint: Joint) -> FloatPoint:
-        """Calculated using the central integer point and the offsets.
-
-        If there is a node associated with the joint, the point is
-        moved a bit to avoid bundles interacting at the nodes.
-
-        """
+    @classmethod
+    def _float_point(
+            cls,
+            bundle: Bundle, joint: Joint,
+            use_offsets: bool,
+    ) -> FloatPoint:
+        """Calculate coordinates for the joint to be used in overlap checks."""
         point = joint.point
-        h_off = joint.horizontal_offset
-        v_off = joint.vertical_offset
+        factor = cls._FACTOR
+        # If there is a node at the joint, move the point a bit to
+        # avoid false positives.
         if joint.node:
             ori = bundle.orientation
             out = (point == bundle.first_point)
@@ -494,9 +495,11 @@ class Network:
             diffs = values[key]
         else:
             diffs = (0, 0)
-        factor = self._FACTOR
-        point_x = point.j + factor * (h_off + diffs[0])
-        point_y = point.i + factor * (v_off + diffs[1])
+        point_x = point.j + factor * diffs[0]
+        point_y = point.i + factor * diffs[1]
+        if use_offsets:
+            point_x += factor * joint.horizontal_offset
+            point_y += factor * joint.vertical_offset
         return FloatPoint(point_x, point_y)
 
 ######################################################################
@@ -507,19 +510,14 @@ class NetworkBundle:
     network: Network
     bundle: Bundle
 
-    def overlaps_with(self, other: 'NetworkBundle') -> bool:
-        """True if this bundles overlaps with the given one.
-
-        This method takes into account the offsets stored in the
-        bundles.
-
-        """
+    def overlaps_with(self, other: 'NetworkBundle', use_offsets: bool) -> bool:
+        """True if this bundle overlaps with the given one."""
         net1, bundle1 = self.network, self.bundle
         net2, bundle2 = other.network, other.bundle
         if bundle1.axis != bundle2.axis:
             return False
-        p11, p12 = net1.offset_bundle(bundle1)
-        p21, p22 = net2.offset_bundle(bundle2)
+        p11, p12 = net1.offset_bundle(bundle1, use_offsets)
+        p21, p22 = net2.offset_bundle(bundle2, use_offsets)
         horizontal = bundle1.orientation is Orientation.HORIZONTAL
         vertical = not horizontal
         if horizontal and p11.x <= p22.x and p12.x >= p21.x:
@@ -601,7 +599,7 @@ class BundleStructure:
             for i in range(n_layers - 1, -1, -1):
                 layer = layers[i]
                 for net_bundle_2 in layer:
-                    if net_bundle.overlaps_with(net_bundle_2):
+                    if net_bundle.overlaps_with(net_bundle_2, True):
                         overlap_on = i
                         break
                 if overlap_on >= 0:
