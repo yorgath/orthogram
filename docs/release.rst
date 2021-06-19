@@ -1,6 +1,11 @@
 Release history
 ===============
 
+0.5.3 (2021-06-19)
+------------------
+
+* Fixed vertex-to-vertex interaction regression.
+
 0.5.2 (2021-05-23)
 ------------------
 
