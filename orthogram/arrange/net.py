@@ -12,6 +12,11 @@ from typing import (
     Tuple,
 )
 
+from cassowary import (  # type: ignore
+    SimplexSolver,
+    Variable,
+)
+
 import networkx as nx  # type: ignore
 
 from ..define import (
@@ -87,8 +92,8 @@ class Bundle:
         # Bundle is always top-to-bottom or left-to-right.
         coord_pair = min(coords), max(coords)
         self._grid_vector = OrientedVector(bundle_axis, coord_pair)
-        # Initialize the offset.
-        self._offset = 0
+        # This is what we must calculate.
+        self._offset_var = Variable(f"bundle_{name}_offset")
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -100,14 +105,14 @@ class Bundle:
         yield from self._route_segments
 
     @property
+    def offset_var(self) -> Variable:
+        """Variable that holds the offset."""
+        return self._offset_var
+
+    @property
     def offset(self) -> int:
         """Offset of the bundle relative to the central axis."""
-        return self._offset
-
-    @offset.setter
-    def offset(self, value: int) -> None:
-        """Set the offset."""
-        self._offset = value
+        return round(self._offset_var.value)
 
     @property
     def axis(self) -> Axis:
@@ -668,7 +673,12 @@ class BundleStructure:
             index: int,
             net_bundles: Iterable[NetworkBundle],
     ):
-        """Initialize for the given bundles."""
+        """Initialize for the given bundles.
+
+        The bundles will be arranged into layers according to their
+        offsets.
+
+        """
         self._axis = axis
         self._index = index
         self._name = f"{axis.name}.{index}"
@@ -695,29 +705,52 @@ class BundleStructure:
         """Axis on which the bundles sit."""
         return self._axis
 
-    def optimize(self) -> None:
-        """Pack bundles as densely as possible.
+    def restructure(self) -> None:
+        """Rearrange bundles into new layers.
 
-        This method recreates the layers of the structure and updates
-        the offsets stored in the bundles.
+        Note that this method discards the previous layers and also
+        updates the offsets of the bundles!
+
+        The process provides two benefits:
+
+        a) On the one hand, it packs the bundles as densely as
+           possible.
+
+        b) On the other hand, it separates bundles that may overlap
+           due to the insufficient overlap checks employed by the
+           initial refining process.  Specifically, it solves problems
+           like the one depicted below:
+
+           |        |
+           ,--      | ,--
+           |    =>  | |
+           `--      `-|--
+           |          |
 
         """
-        # Recreate layers.
-        layers = self._pack_bundles()
-        by_offset = self._layers_by_offset
-        by_offset.clear()
-        for layer in layers:
-            by_offset[layer.offset] = layer
-        # Store the minimized offsets.
-        for i, net_bundles in enumerate(layers):
-            for net_bundle in net_bundles:
-                net_bundle.bundle.offset = i
+        # Calculate the new offsets starting from the existing ones.
+        # We can use a fresh constraint solver.
+        solver = SimplexSolver()
+        net_bundles = list(self._network_bundles())
+        for i, net_bundle_1 in enumerate(net_bundles):
+            bundle_1 = net_bundle_1.bundle
+            for net_bundle_2 in net_bundles[:i]:
+                bundle_2 = net_bundle_2.bundle
+                # Caution: To restructure the layers, we *do* use the
+                # offsets to calculate the overlap!
+                if net_bundle_1.overlaps_with(net_bundle_2, True):
+                    var_1 = bundle_1.offset_var
+                    var_2 = bundle_2.offset_var
+                    constraint = var_1 >= var_2 + 1
+                    solver.add_constraint(constraint)
+        # Create new layers using the new offsets.
+        self._layers_by_offset = self._make_layers(net_bundles)
 
     def _make_layers(
             self,
             net_bundles: Iterable[NetworkBundle]
     ) -> Dict[int, BundleLayer]:
-        """Group bundles into layers by offset."""
+        """Group the given bundles into layers by offset."""
         result: Dict[int, BundleLayer] = {}
         for net_bundle in net_bundles:
             offset = net_bundle.bundle.offset
@@ -725,30 +758,6 @@ class BundleStructure:
                 result[offset] = self._make_layer(offset)
             result[offset].append(net_bundle)
         return result
-
-    def _pack_bundles(self) -> List[BundleLayer]:
-        """Return a dense arrangement of the existing bundle layers."""
-        layers: List[BundleLayer] = []
-        for net_bundle in self._network_bundles():
-            overlap_on = -1
-            n_layers = len(layers)
-            for i in range(n_layers - 1, -1, -1):
-                layer = layers[i]
-                for net_bundle_2 in layer:
-                    if net_bundle.overlaps_with(net_bundle_2, True):
-                        overlap_on = i
-                        break
-                if overlap_on >= 0:
-                    break
-            if overlap_on == n_layers - 1:
-                # New layer.
-                layer = self._make_layer(overlap_on + 1)
-                layer.append(net_bundle)
-                layers.append(layer)
-            else:
-                # Append to existing layer.
-                layers[overlap_on + 1].append(net_bundle)
-        return layers
 
     def _network_bundles(self) -> Iterator[NetworkBundle]:
         """Iterate over the elements in offset order."""

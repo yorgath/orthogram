@@ -13,6 +13,9 @@ from typing import (
     Tuple,
 )
 
+from cassowary import SimplexSolver  # type: ignore
+from cassowary.error import RequiredFailure  # type: ignore
+
 import networkx as nx  # type: ignore
 
 from ..debug import Debug
@@ -320,7 +323,6 @@ class Refiner:
         # Caution: first pass of offset calculation must be completed
         # before calculating the structures!
         self._bundle_structures = self._make_bundle_structures()
-        self._optimize_bundles()
 
     @property
     def router(self) -> Router:
@@ -399,26 +401,18 @@ class Refiner:
     def _init_bundle_offsets(self) -> None:
         """Calculate the initial offsets of the bundles.
 
-        This method uses a DAG to calculate the initial values for the
-        offsets of the bundles.  It stores the results in the bundles
-        themselves.
+        This method uses a constraint solver to calculate the initial
+        values for the offsets of the bundles.  It stores the results
+        in the bundles themselves.
 
-        The calculated values are unoptimized.
+        The calculated values are not final!  The bundles should be
+        structured into layers to attain their final offsets.
 
         """
-        dag = self._bundle_dag()
-        self._calculate_offsets_from_dag(dag)
-
-    def _bundle_dag(self) -> nx.DiGraph:
-        """Create a DAG of bundles out of the route interactions."""
-        graph = nx.DiGraph()
-        interactions = list(self._interactions())
-        # The bundles are the nodes of the graph.
-        self._add_bundles_to_dag(graph, interactions)
-        # Edges represent the order of two bundles.
+        solver = SimplexSolver()
         tv_rules: List[BundleRule] = []
         s_rules: List[List[BundleRule]] = []
-        for inter in interactions:
+        for inter in self._interactions():
             pt1, pt2 = inter.passthroughs
             # Store T and V rules one by one, because we roll them
             # back individually.
@@ -432,22 +426,9 @@ class Refiner:
             for rules in self._s_rules(pt1, pt2):
                 s_rules.append(rules)
         for rule in tv_rules:
-            self._try_add_rules_to_dag(graph, [rule])
+            self._try_add_rules_to_solver(solver, [rule])
         for rules in s_rules:
-            self._try_add_rules_to_dag(graph, rules)
-        return graph
-
-    @staticmethod
-    def _add_bundles_to_dag(
-            graph: nx.DiGraph,
-            interactions: Iterable[Interaction],
-    ) -> None:
-        """Add the bundles to the DAG as nodes."""
-        for inter in interactions:
-            for passthrough in inter.passthroughs:
-                for bundle in passthrough.bundles():
-                    if bundle not in graph:
-                        graph.add_node(bundle)
+            self._try_add_rules_to_solver(solver, rules)
 
     def _interactions(self) -> Iterator[Interaction]:
         """Iterate over the interactions of the routes at each point."""
@@ -569,7 +550,7 @@ class Refiner:
 
           |
         --'
-           '--
+           ,--
            |
 
         The method returns two rules for each case; *either* one of
@@ -639,13 +620,14 @@ class Refiner:
         return []
 
     @staticmethod
-    def _try_add_rules_to_dag(
-            graph: nx.DiGraph,
+    def _try_add_rules_to_solver(
+            solver: SimplexSolver,
             rules: List[BundleRule],
     ) -> None:
-        """Try to add the rules as edges to the DAG.
+        """Try to add the rules as constraints to the solver.
 
-        It rolls back all the edges if one of them causes a cycle.
+        It rolls back all the rules if one of them leads to an
+        infeasible constraint.
 
         """
         added = []
@@ -656,61 +638,33 @@ class Refiner:
             # Do not use the bundle against itself!
             if bundle1 is bundle2:
                 continue
-            # Do not add the same rule twice.
-            if graph.has_edge(bundle1, bundle2):
-                continue
-            graph.add_edge(bundle1, bundle2)
-            added.append((bundle1, bundle2))
-            # Abort if there are cycles.
-            if not nx.is_directed_acyclic_graph(graph):
+            constraint = bundle2.offset_var >= bundle1.offset_var + 1
+            try:
+                solver.add_constraint(constraint)
+                added.append(constraint)
+            except RequiredFailure:
+                # Abort if the latest constraint is infeasible.
                 success = False
                 break
         if success:
             if Debug.is_enabled():
                 for rule in rules:
                     log_debug(f"Added {rule}")
-        if not success:
-            # Remove the edges in case of cycles.
-            for edge in added:
-                graph.remove_edge(*edge)
+        else:
+            # Remove the constraints if one of them proved infeasible.
+            for constraint in added:
+                solver.remove_constraint(constraint)
             if Debug.is_enabled():
                 for rule in rules:
                     log_debug(f"Rejected {rule}")
 
-    @staticmethod
-    def _calculate_offsets_from_dag(graph: nx.DiGraph) -> None:
-        """Calculate the offsets of the bundles using the DAG."""
-        # Assign inital depths to the nodes.
-        nodes = graph.nodes
-        for bundle in nodes:
-            is_root = True
-            for _ in graph.predecessors(bundle):
-                is_root = False
-                break
-            if is_root:
-                nodes[bundle]['depth'] = 0
-            else:
-                nodes[bundle]['depth'] = -1
-        # Calculate the depths of all the nodes.
-        while True:
-            changed = False
-            for bundle1 in nodes:
-                depth1 = nodes[bundle1]['depth']
-                if depth1 >= 0:
-                    for bundle2 in graph.successors(bundle1):
-                        depth2 = nodes[bundle2]['depth']
-                        if depth1 + 1 > depth2:
-                            nodes[bundle2]['depth'] = depth1 + 1
-                            changed = True
-            if not changed:
-                break
-        # We can now store the offsets in the bundles.
-        for bundle in nodes:
-            offset = nodes[bundle]['depth']
-            bundle.offset = offset
-
     def _make_bundle_structures(self) -> List[BundleStructure]:
-        """Group the bundles in collections of overlapping bundles."""
+        """Group the bundles in collections of overlapping bundles.
+
+        This has the side effect of updating the offsets of the
+        bundles!
+
+        """
         result: List[BundleStructure] = []
         by_axis = self._bundles_by_axis()
         for axis, axis_nbs in by_axis.items():
@@ -718,6 +672,8 @@ class Refiner:
             for over_nbs in self._overlapping_bundles(axis_nbs):
                 index = len(structs)
                 struct = BundleStructure(axis, index, over_nbs)
+                # This updates the offsets of the bundles!
+                struct.restructure()
                 structs.append(struct)
                 result.extend(structs)
         return result
@@ -761,6 +717,8 @@ class Refiner:
             bundle_1 = net_bundle_1.bundle
             for net_bundle_2 in net_bundles[i + 1:]:
                 bundle_2 = net_bundle_2.bundle
+                # Caution: To create the structures, we do *not* take
+                # into account the offsets when checking for overlap!
                 if net_bundle_1.overlaps_with(net_bundle_2, False):
                     graph.add_edge(bundle_1, bundle_2)
         for bundles in nx.connected_components(graph):
@@ -769,17 +727,6 @@ class Refiner:
                 net_bundle = graph.nodes[bundle]['nb']
                 block.append(net_bundle)
             yield block
-
-    def _optimize_bundles(self) -> None:
-        """Second pass of the bundle offset calculation.
-
-        The bundles calculated by the first pass are packed as densely
-        as possible to minimize their offsets.  The new offsets are
-        stored back in the bundles.
-
-        """
-        for struct in self._bundle_structures:
-            struct.optimize()
 
     def _wire_segments(self) -> Iterator[WireSegment]:
         """Return the wire segments."""
