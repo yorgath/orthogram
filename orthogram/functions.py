@@ -3,13 +3,11 @@
 import argparse
 import os
 
-from typing import Any, Optional
-
-import yaml
+from typing import Optional
 
 from .arrange import Layout
 from .debug import Debug
-from .define import Builder, DiagramDef
+from .define import Loader, DiagramDef
 from .draw import Drawing
 
 ######################################################################
@@ -69,15 +67,9 @@ def translate(in_file: str, out_file: Optional[str] = None) -> None:
 
 def load_ddf(file: str) -> DiagramDef:
     """Load a diagram definition from a file."""
-    definitions = _load_yaml(file)
-    builder = Builder()
-    builder.add(definitions)
-    return builder.diagram_def
-
-def _load_yaml(file: str) -> Any:
-    """Read diagram definitions from a YAML file."""
-    with open(file, encoding='utf-8') as stream:
-        return yaml.safe_load(stream)
+    loader = Loader()
+    loader.load_file(file)
+    return loader.builder.diagram_def
 
 def write_png(diagram_def: DiagramDef, file: str) -> None:
     """Produce a PNG file of the diagram."""

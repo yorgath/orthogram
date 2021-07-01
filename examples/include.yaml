@@ -1,0 +1,22 @@
+include:
+
+  - path: include/styles.yaml
+
+  - path: include/row_top.csv
+
+  # Cannot automatically determine file type here, since it does not
+  # have an extension.  We must declare the type.
+
+  - path: include/row_middle
+    type: csv
+    delimiter: "\t"
+
+  # This will not draw anything.  It just contains some tests.
+
+  - path: include/check.yaml
+
+diagram:
+  label: File Inclusion Test
+
+rows:
+  - [Bottom Left, Bottom Right]

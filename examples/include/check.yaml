@@ -1,0 +1,8 @@
+include:
+
+  # Self reference here is deliberate.  This must cause a warning.
+  - path: ./check.yaml
+
+diagram:
+
+  label: You should not see this!

@@ -9,6 +9,7 @@ from .define import (
     FontStyle,
     FontWeight,
     LabelPosition,
+    Loader,
     Side,
     TextOrientation,
 )

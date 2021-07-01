@@ -5,6 +5,9 @@ from abc import (
     abstractmethod,
 )
 
+from dataclasses import dataclass
+from enum import Enum, auto
+
 from typing import (
     Dict,
     Iterable,
@@ -450,3 +453,19 @@ class DiagramDef:
                 if tag:
                     tag_set.add(tag)
         return tag_set
+
+######################################################################
+
+class FileType(Enum):
+    """Recognized types of input files."""
+    YAML = auto()
+    CSV = auto()
+
+######################################################################
+
+@dataclass
+class IncludeDef:
+    """Include definition."""
+    path: str
+    file_type: FileType
+    delimiter: Optional[str]
