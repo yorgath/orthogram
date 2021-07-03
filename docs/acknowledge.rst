@@ -10,12 +10,13 @@ This program depends on the following excellent pieces of software:
   Implemented in pure Python, so easy to install and convenient to
   use.
 
+* `Cassowary`_: Linear constraint solver implemented in pure Python.
+  Many of the calculations Orthogram does turn eventually into
+  constraint satisfaction problems.
+
 * `Shapely`_: Python interface to the powerful `GEOS`_ geometry
   library.  A bit overkill for the simple geometry manipulations
   Orthogram does, but why reinvent the wheel?
-
-* `Cassowary`_: Linear constraint solver implemented in pure Python.
-  Orthogram uses this to calculate the layout of drawings.
 
 * `pycairo`_: Python interface to the popular `cairo`_ graphics
   library.

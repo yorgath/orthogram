@@ -12,6 +12,7 @@ keys, each one containing a different category of definitions:
 * ``connections``
 * ``styles``
 * ``groups``
+* ``include``
 
 diagram
 -------
@@ -96,6 +97,16 @@ the same number of cells, which is the length of the longest row in
 the definition.  You do not have to worry about it, though; the
 program will pad shorter rows with anonymous cells, until all rows
 have the same length.
+
+Of course, using a text editor to manipulate the layout of the diagram
+can quickly become cumbersome, especially when the diagram grows
+large.  To counter this, Orthogram provides the option to define the
+rows of the diagram in a separate CSV file.  Maintaining a CSV file is
+quite easy using a spreadsheet program, like `LibreOffice Calc`_.
+Please read the chapter on the :ref:`include` section to find out how
+you can add a reference to an external CSV file in your DDF.
+
+.. _LibreOffice Calc: https://www.libreoffice.org/
 
 blocks
 ------
@@ -329,3 +340,74 @@ A group definition may contain references to named styles.  Note that
 creating an entry in the ``groups`` section is not necessary for the
 grouping of the connections; a common ``group`` name in each
 connection definition is sufficient.
+
+include
+-------
+
+Starting with version 0.5.4, Orthogram lets you split a diagram
+definition into multiple files.  You can then compose the several
+files into a single definition using ``include`` definitions in your
+main DDF.
+
+The facility is general and can be used recursively: you can include
+other files in your included files and so on.  The program includes
+each file just *once*, thus avoiding cyclical includes.  Note,
+however, that deeply nested hierarchies can be confusing and you
+should probably avoid them.  In particular, the sequence of merging
+elements into the definition, though well defined, can lead to
+surprising results.  The facility was actually implemented with the
+following applications in mind:
+
+* Sharing styles between diagrams
+* Defining the diagram layout using CSV files
+
+Although we describe the ``include`` section last, it is probably
+better to put it at the top of the DDF.  The program merges included
+files into the definition *before* considering any other section in
+the file, so putting the ``include`` section at the top looks more
+natural.  Within the ``include`` section of a file, the program merges
+the included files in the order they appear.
+
+This is an example that shows how you can include styles and row
+definitions in your DDF:
+
+.. code-block:: yaml
+
+   include:
+
+     - path: include/styles.yaml
+     - path: include/rows.csv
+
+Note that relative paths are relative to the location of the file that
+includes them.  You may use absolute paths as well.
+
+The program determines the type of the file (YAML or CSV) from the
+extension of the file name.  If it ends in ``.csv`` or ``.txt``, the
+program thinks it is a CSV rows file; otherwise it tries to load it as
+a YAML file.  You can enforce the type using the ``type`` attribute:
+
+.. code-block:: yaml
+
+   include:
+
+     - path: styles.txt
+       type: yaml
+
+     - path: rows
+       type: csv
+
+The character that delimits the block names in the CSV file is the
+comma by default.  If you have a file with a different delimiter, you
+can declare it using the ``delimiter`` attribute.  In the following
+example, the row definitions file employs the tab character as the
+delimiter [#]_:
+
+.. code-block:: yaml
+
+   include:
+
+     - path: rows.txt
+       delimiter: "\t"
+
+.. [#] We should probably call this a *TSV* file, but people use the
+       term "CSV" for any such file, regardless of the delimiter.

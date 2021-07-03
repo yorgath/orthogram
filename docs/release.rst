@@ -1,6 +1,21 @@
 Release history
 ===============
 
+0.5.4 (2021-07-03)
+------------------
+
+* Added the ability to include files in DDFs.  Useful for sharing
+  styles between diagrams.
+* Added the ability to define the diagram layout grid using a CSV
+  file.  It is now possible to manipulate the layout using a
+  spreadsheet.
+* Internal change: using the constraint solver for refinement instead
+  of graphs.  Made code much clearer at the cost of a slight
+  performance degradation.
+* Internal change: refactored code; replaced a few convoluted
+  inheritance patterns with composition; added representation strings
+  to most objects.
+
 0.5.3 (2021-06-19)
 ------------------
 
