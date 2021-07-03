@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "orthogram"
-version = "0.5.3"
+version = "0.5.4"
 description = "Draw block diagrams."
 license = "GPL-3.0-or-later"
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
