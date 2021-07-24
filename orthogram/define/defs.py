@@ -468,4 +468,4 @@ class IncludeDef:
     """Include definition."""
     path: str
     file_type: FileType
-    delimiter: Optional[str]
+    delimiter: Optional[str] = None

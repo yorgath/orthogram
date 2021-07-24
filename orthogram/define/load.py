@@ -158,7 +158,7 @@ class Loader:
 
 def _collect_files(path: str) -> List[File]:
     """Return the sequence of all files to be loaded."""
-    # Start from the top file.
+    # Start from the top file.  This *must* be a YAML file.
     abs_path = os.path.abspath(path)
     file = YamlFile(abs_path)
     result: List[File] = [file]
@@ -228,7 +228,13 @@ def _parse_file_type(text: Optional[str]) -> Optional[FileType]:
     return None
 
 def _file_type_from_extension(path: str) -> FileType:
-    """Determine the type of the file from its name alone."""
+    """Determine the type of the file from its name alone.
+
+    If the name of the file does not have an extension or the
+    extension is unrecognizable, the program supposes that it is a
+    YAML file (i.e. YAML is the default file type).
+
+    """
     _, ext = os.path.splitext(path)
     if not ext:
         return FileType.YAML
