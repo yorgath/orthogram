@@ -98,17 +98,12 @@ class Drawing:
         height = self.ymax.value
         scale = attrs.scale
         with new_surface(width, height, scale) as surface:
-            color = attrs.fill
-            if color:
-                ctx = Context(surface)
-                ctx.set_source_rgba(*color.rgba)
-                ctx.rectangle(0, 0, width, height)
-                ctx.fill()
+            self._draw_diagram_box(surface)
+            self._draw_diagram_label(surface)
             self._draw_blocks(surface)
             self._draw_connections(surface)
             self._draw_block_labels(surface)
             self._draw_connection_labels(surface)
-            self._draw_diagram_label(surface)
             # DEBUG: Uncomment this to visualize the grid.
             # self._draw_grid(surface)
             with open(filename, "wb") as file:
@@ -195,6 +190,8 @@ class Drawing:
         attrs = self._layout.diagram.attributes
         yield self.xmax >= self.xmin + attrs.min_width
         yield self.ymax >= self.ymin + attrs.min_height
+        # Contain the label.
+        yield from self._container.label_constraints()
         # Grid must be inside drawing.
         grid = self._grid
         top = self.padding_top

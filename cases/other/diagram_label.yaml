@@ -1,0 +1,13 @@
+diagram:
+
+  min_width: 16
+  min_height: 16
+
+  stroke: [0, 0, 1]
+  stroke_width: 4
+  fill: [1, 1, 0]
+
+  label: |-
+    The dimensions of the image must be large enough
+    to fit the label of the diagram
+    both horizontally and vertically.
