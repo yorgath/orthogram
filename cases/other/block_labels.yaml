@@ -1,0 +1,30 @@
+styles:
+
+  default_block:
+    margin_top: 4
+    margin_bottom: 4
+
+diagram:
+  label: Block Label Test
+
+rows:
+  - [A]
+  - [B]
+
+blocks:
+
+  - tags: [A, B]
+    label_position: bottom
+    label: |-
+      The same must happen to this block,
+      which surrounds the two others.
+
+  - name: A
+    label: "Min. size"
+
+  - name: B
+    label: |-
+      This block must expand
+      in both directions,
+      so that it is large enough
+      for the label inside it.
