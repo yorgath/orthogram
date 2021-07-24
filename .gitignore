@@ -2,7 +2,6 @@
 *.html
 *.pyc
 *~
-poetry.lock
 cases/**/*.png
 dist
 docs/_build
