@@ -1,6 +1,13 @@
 Release history
 ===============
 
+0.5.5 (2021-07-25)
+------------------
+
+* Fixed regression: diagram box and label are now drawn properly.
+* Minor updates to loading mechanism and depedencies.
+* Reorganized cases and examples; added a couple more cases.
+
 0.5.4 (2021-07-03)
 ------------------
 
