@@ -34,12 +34,12 @@ class Track:
 
     @property
     def cmin(self) -> Variable:
-        """Variable holding the minimum coordinate along the axis."""
+        """Minimum coordinate perpendicular to the axis."""
         return self._cmin
 
     @property
     def cmax(self) -> Variable:
-        """Variable holding the maximum coordinate along the axis."""
+        """Maximum coordinate perpendicular to the axis."""
         return self._cmax
 
 ######################################################################
@@ -80,7 +80,7 @@ class Band:
 
     @property
     def cref(self) -> Variable:
-        """Variable holding the reference coordinate along the axis."""
+        """Reference coordinate perpendicular to the axis."""
         return self._cref
 
     def add_structure(self, struct: DrawingWireStructure) -> None:

@@ -427,7 +427,7 @@ class DrawingWireLayer:
 
     @property
     def cref(self) -> Variable:
-        """Coordinate along the axis."""
+        """Coordinate perpendicular to the axis."""
         return self._cref
 
     def append(self, segment: DrawingWireSegment) -> None:
