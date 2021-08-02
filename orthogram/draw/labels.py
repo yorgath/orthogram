@@ -61,8 +61,8 @@ class Label:
         self._text = text
         self._diagram_attributes = diagram_attributes
         self._orientation = orientation
-        width, height = self._calculate_dimensions()
-        self._width = width
+        length, height = self._calculate_dimensions()
+        self._length = length
         self._height = height
 
     def __repr__(self) -> str:
@@ -102,13 +102,13 @@ class Label:
         return not self.is_horizontal()
 
     @property
-    def width(self) -> float:
-        """Width of the label.
+    def length(self) -> float:
+        """length of the label.
 
         This does *not* take into account the orientation of the text!
 
         """
-        return self._width
+        return self._length
 
     @property
     def height(self) -> float:
@@ -128,7 +128,7 @@ class Label:
         """
         if self.is_vertical():
             return self._height
-        return self._width
+        return self._length
 
     @property
     def box_height(self) -> float:
@@ -138,7 +138,7 @@ class Label:
 
         """
         if self.is_vertical():
-            return self._width
+            return self._length
         return self._height
 
     def new_context(self, surface: ImageSurface) -> Context:

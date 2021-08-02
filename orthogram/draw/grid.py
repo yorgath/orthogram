@@ -195,7 +195,6 @@ class DrawingGrid:
         yield from self._wire_constraints()
         yield from self._band_constraints()
         yield from self._padding_constraints()
-        yield from self._label_constraints()
 
     def optional_constraints(self) -> Iterator[Constraint]:
         """Generate optional constraints for the solver."""
@@ -370,10 +369,18 @@ class DrawingGrid:
         # Populate the wire with segments.
         jmap = self._joint_map
         dist = self._layout.diagram.attributes.connection_distance
-        for lseg in layout_wire.segments():
+        size = len(layout_wire)
+        for i, lseg in enumerate(layout_wire.segments()):
+            is_first = bool(i == 0)
+            is_last = bool(i == size - 1)
             start = jmap[lseg.start]
             end = jmap[lseg.end]
-            dseg = DrawingWireSegment(lseg, dist, start, end)
+            dseg = DrawingWireSegment(
+                layout_segment=lseg,
+                connection_distance=dist,
+                start=start, end=end,
+                is_first=is_first, is_last=is_last,
+            )
             dwire.append_segment(dseg)
         return dwire
 
@@ -452,7 +459,10 @@ class DrawingGrid:
             attrs = lay_segment.connection.attributes
             ori = lay_segment.label_orientation
             label = Label(attrs, dia_attrs, ori)
-            draw_segment.label = DrawingWireLabel(label, cmin, cmax)
+            draw_segment.label = DrawingWireLabel(
+                lay_segment, label,
+                cmin, cmax,
+            )
 
     def _place_structures(self) -> None:
         """Associate wire structures to bands.
@@ -483,16 +493,16 @@ class DrawingGrid:
         box_map = self._block_box_map
         seg_map = self._wire_segment_map
         for lwire in self._layout_wires():
+            sides = lwire.attachment_sides()
             conn = lwire.connection
-            lsegs = list(lwire.segments())
             block_lsegs = [
-                (conn.start.block, lsegs[0]),
-                (conn.end.block, lsegs[-1]),
+                (conn.start.block, lwire[0], sides[0], True),
+                (conn.end.block, lwire[-1], sides[-1], False),
             ]
-            for block, lseg in block_lsegs:
+            for block, lseg, side, out in block_lsegs:
                 box = box_map[block]
                 dseg = seg_map[lseg]
-                box.connect_segment(dseg)
+                box.attach_segment(dseg, side, out)
 
     def _line_constraints(self) -> Iterator[Constraint]:
         """Generate the constraints between the lines of the grid."""
@@ -621,16 +631,6 @@ class DrawingGrid:
         """Return the cells, row first."""
         for cells in self._cell_rows:
             yield from cells
-
-    def _label_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints to make space for the connection labels."""
-        for seg in self._wire_segments():
-            wire_label = seg.label
-            if not wire_label:
-                continue
-            label = wire_label.drawing_label
-            dist = label.attributes.label_distance
-            yield wire_label.cmax >= wire_label.cmin + label.width + dist
 
     def _wire_segments(self) -> Iterator[DrawingWireSegment]:
         """Return the segments of all the wires."""

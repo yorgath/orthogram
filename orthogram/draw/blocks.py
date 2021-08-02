@@ -1,5 +1,7 @@
 """Provides classes for drawing blocks."""
 
+from dataclasses import dataclass
+
 from typing import (
     Iterable,
     Iterator,
@@ -12,13 +14,27 @@ from cassowary.expression import Constraint  # type: ignore
 
 from shapely.geometry import Polygon  # type: ignore
 
-from ..define import Block
+from ..define import (
+    Block,
+    Side,
+)
+
 from ..util import class_str
 
 from .bands import Band
 from .connections import DrawingWireSegment
 from .containers import Container
+from .functions import arrow_length
 from .labels import Label
+
+######################################################################
+
+@dataclass(frozen=True)
+class Attachment:
+    """Segment attached to a block."""
+    segment: DrawingWireSegment
+    side: Side
+    out: bool
 
 ######################################################################
 
@@ -42,7 +58,7 @@ class BlockBox:
         self._wire_margin = wire_margin
         var_prefix = f"block_{block.index}"
         self._container = Container(block.attributes, var_prefix, label)
-        self._connected_segments: List[DrawingWireSegment] = []
+        self._attachments: List[Attachment] = []
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -149,11 +165,17 @@ class BlockBox:
         yield self.xmin == self._left_column.cref - half_width
         yield self.xmax == self._right_column.cref + half_width
 
-    def connect_segment(self, segment: DrawingWireSegment) -> None:
-        """Connect the drawing segment to the box."""
-        segments = self._connected_segments
-        if segment not in segments:
-            segments.append(segment)
+    def attach_segment(
+            self,
+            segment: DrawingWireSegment,
+            side: Side, out: bool,
+    ) -> None:
+        """Attach the drawing segment to the box."""
+        attachments = self._attachments
+        attachment = Attachment(segment=segment, side=side, out=out)
+        if attachment in attachments:
+            return
+        attachments.append(attachment)
 
     def _ref_constraints(self) -> Iterable[Constraint]:
         """Generate constraints related to the reference lines."""
@@ -166,9 +188,10 @@ class BlockBox:
         yield self.xmax >= self._right_column.cref + half_width
 
     def _wire_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints to fit the connected wires."""
+        """Generate constraints to fit the attached wires."""
         gap = self._wire_margin
-        for seg in self._connected_segments:
+        for attachment in self._attachments:
+            seg = attachment.segment
             half_width = 0.5 * seg.wire_width + gap
             if seg.is_horizontal():
                 y_wire = seg.start.y
@@ -182,7 +205,34 @@ class BlockBox:
     def _band_constraints(self) -> Iterable[Constraint]:
         """Generate constraints to fit in the rows and columns."""
         attrs = self._block.attributes
-        yield self.ymin >= self._top_row.track.cmin + attrs.margin_top
-        yield self.ymax <= self._bottom_row.track.cmax - attrs.margin_bottom
-        yield self.xmin >= self._left_column.track.cmin + attrs.margin_left
-        yield self.xmax <= self._right_column.track.cmax - attrs.margin_right
+        # Top side.
+        margin = self._calculate_margin(Side.TOP, attrs.margin_top)
+        yield self.ymin >= self._top_row.track.cmin + margin
+        # Bottom side.
+        margin = self._calculate_margin(Side.BOTTOM, attrs.margin_bottom)
+        yield self.ymax <= self._bottom_row.track.cmax - margin
+        # Left side.
+        margin = self._calculate_margin(Side.LEFT, attrs.margin_left)
+        yield self.xmin >= self._left_column.track.cmin + margin
+        # Right side.
+        margin = self._calculate_margin(Side.RIGHT, attrs.margin_right)
+        yield self.xmax <= self._right_column.track.cmax - margin
+
+    def _calculate_margin(self, side: Side, min_margin: float) -> float:
+        """Calculate the margin on the given side of the box."""
+        margin = min_margin
+        for attachment in self._attachments_on(side):
+            seg_attrs = attachment.segment.attributes
+            out = attachment.out
+            if (
+                    (out and seg_attrs.arrow_back) or
+                    (not out and seg_attrs.arrow_forward)
+            ):
+                margin = max(margin, arrow_length(seg_attrs))
+        return margin
+
+    def _attachments_on(self, side: Side) -> Iterator[Attachment]:
+        """Iterate over the attached segments on a block side."""
+        for attachment in self._attachments:
+            if attachment.side is side:
+                yield attachment

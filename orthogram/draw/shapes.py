@@ -19,7 +19,10 @@ from ..util import (
     log_warning,
 )
 
-from .functions import buffer_rectangle
+from .functions import (
+    arrow_length,
+    buffer_rectangle,
+)
 
 ######################################################################
 
@@ -34,9 +37,8 @@ class Arrow:
 
     def __init__(self, attrs: ConnectionAttributes):
         """Initialize for the given attributes."""
-        self._aspect = aspect = attrs.arrow_aspect
-        width = attrs.stroke_width * attrs.arrow_base
-        self._length = width * aspect
+        self._length = arrow_length(attrs)
+        self._aspect = attrs.arrow_aspect
         self._geometry: Optional[LinearRing] = None
 
     @property
@@ -168,10 +170,10 @@ class WireShape:
         line = line.difference(poly)
         if arrow:
             # There is an arrow at this end.
-            arrow_length = arrow.length
+            length_arrow = arrow.length
             # The middle point of the arrow base is at a distance of
             # an arrow length from the box.
-            poly1 = buffer_rectangle(poly, arrow_length)
+            poly1 = buffer_rectangle(poly, length_arrow)
             ls1 = line.difference(poly1)
             coords = ls1.coords
             if coords:
@@ -183,7 +185,7 @@ class WireShape:
                 # of an arrow length.  Make it a bit longer so that
                 # the line and the arrow head do not appear
                 # disconnected.
-                poly2 = buffer_rectangle(poly, arrow_length - 1.0)
+                poly2 = buffer_rectangle(poly, length_arrow - 1.0)
                 line = line.difference(poly2)
             else:
                 connection = self._wire.connection

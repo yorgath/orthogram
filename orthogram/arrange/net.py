@@ -22,6 +22,7 @@ import networkx as nx  # type: ignore
 from ..define import (
     Connection,
     Node,
+    Side,
 )
 
 from ..geometry import (
@@ -372,7 +373,17 @@ class Wire:
     ):
         """Create a wire with the given segments for a route."""
         self._route = route
-        self._segments = list(segments)
+        self._segments = segments = list(segments)
+        # Must have at least one segment.
+        assert segments
+
+    def __getitem__(self, i: int) -> WireSegment:
+        """Return the i-th segment."""
+        return self._segments[i]
+
+    def __len__(self) -> int:
+        """Return the number of segments."""
+        return len(self._segments)
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -391,6 +402,30 @@ class Wire:
     def description(self) -> str:
         """Return a description of the wire."""
         return self._route.description()
+
+    def attachment_sides(self) -> Tuple[Side, Side]:
+        """Sides of the blocks to which the wire is attached."""
+        first = self[0]
+        first_dir = first.direction
+        if first_dir is Direction.DOWN:
+            first_side = Side.BOTTOM
+        elif first_dir is Direction.LEFT:
+            first_side = Side.LEFT
+        elif first_dir is Direction.RIGHT:
+            first_side = Side.RIGHT
+        elif first_dir is Direction.UP:
+            first_side = Side.TOP
+        last = self[-1]
+        last_dir = last.direction
+        if last_dir is Direction.DOWN:
+            last_side = Side.TOP
+        elif last_dir is Direction.LEFT:
+            last_side = Side.RIGHT
+        elif last_dir is Direction.RIGHT:
+            last_side = Side.LEFT
+        elif last_dir is Direction.UP:
+            last_side = Side.BOTTOM
+        return first_side, last_side
 
 ######################################################################
 

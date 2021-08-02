@@ -73,6 +73,16 @@ def line_area_attributes(attrs: LineAttributes) -> AreaAttributes:
     area_attrs.set_attributes(**attr_map)
     return area_attrs
 
+def arrow_length(attrs: ConnectionAttributes) -> float:
+    """Calculate the length of the arrow from the attributes."""
+    width = arrow_width(attrs)
+    aspect = attrs.arrow_aspect
+    return width * aspect
+
+def arrow_width(attrs: ConnectionAttributes) -> float:
+    """Calculate the width of the arrow from the attributes."""
+    return attrs.stroke_width * attrs.arrow_base
+
 def font_slant(attrs: TextAttributes) -> CairoFontSlant:
     """Return the Cairo font slant from the attributes."""
     style = attrs.font_style

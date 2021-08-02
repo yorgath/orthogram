@@ -402,13 +402,13 @@ class Drawing:
         if not label:
             return
         if segment.is_horizontal():
-            x_start = label.cmin.value
-            x_end = label.cmax.value
+            x_start = label.lmin.value
+            x_end = label.lmax.value
             y_start = segment.start.y.value
             y_end = segment.end.y.value
         else:
-            y_start = label.cmin.value
-            y_end = label.cmax.value
+            y_start = label.lmin.value
+            y_end = label.lmax.value
             x_start = segment.start.x.value
             x_end = segment.end.x.value
         x_label = 0.5 * (x_start + x_end)
@@ -520,8 +520,9 @@ class Drawing:
         ymax = self.ymax.value
         grid = self._grid
         ctx = Context(surface)
-        ctx.set_line_width(1.0)
+        ctx.set_line_width(2.0)
         grade = 0.5
+        dash_length = 8
         # Sides of rows and columns.
         ctx.set_source_rgb(grade, grade, 1.0)
         for hline in grid.horizontal_lines():
@@ -536,7 +537,7 @@ class Drawing:
             ctx.stroke()
         # Tracks.
         ctx.set_source_rgb(grade, 1.0, grade)
-        ctx.set_dash([4, 2])
+        ctx.set_dash([2 * dash_length, dash_length])
         for row in grid.rows():
             track = row.track
             variables = [track.cmin, track.cmax]
@@ -555,7 +556,7 @@ class Drawing:
                 ctx.stroke()
         # Reference lines of the rows and columns.
         ctx.set_source_rgb(1.0, grade, grade)
-        ctx.set_dash([2, 4])
+        ctx.set_dash([dash_length, 2 * dash_length])
         for row in grid.rows():
             line_y = row.cref.value
             ctx.move_to(xmin, line_y)

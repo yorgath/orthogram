@@ -25,6 +25,7 @@ blocks:
   - name: B
     label: |-
       This block must expand
-      in both directions,
+      both horizontally
+      and vertically,
       so that it is large enough
       for the label inside it.
