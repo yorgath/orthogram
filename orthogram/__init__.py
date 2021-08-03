@@ -1,6 +1,6 @@
 """Draw block diagrams."""
 
-__version__ = '0.5.5'
+__version__ = '0.6.0'
 
 from .define import (
     Builder,
