@@ -1,12 +1,9 @@
 cassowary==0.5.2 \
     --hash=sha256:5da16ceca5fd42c848d3a875f3834a7b93f2cc74dd07039ea7e5305c0fbb926d \
     --hash=sha256:d7c0d10722738eca3cd939c8f6f1a580fdfa4fad71b71d0d193c10aaa3d406dd
-decorator==4.4.2; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.2.0" and python_version >= "3.6" \
-    --hash=sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760 \
-    --hash=sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7
-networkx==2.5.1; python_version >= "3.6" \
-    --hash=sha256:0635858ed7e989f4c574c2328380b452df892ae85084144c73d8cd819f0c4e06 \
-    --hash=sha256:109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a
+networkx==2.6.2; python_version >= "3.7" \
+    --hash=sha256:5fcb7004be69e8fbdf07dcb502efa5c77cadcaad6982164134eeb9721f826c2e \
+    --hash=sha256:2306f1950ce772c5a59a57f5486d59bb9cab98497c45fc49cbc45ac0dec119bb
 pycairo==1.20.1; python_version >= "3.6" and python_version < "4" \
     --hash=sha256:736ffc618e851601e861a630293e5c910ef016b83b2d035a336f83a367bf56ab \
     --hash=sha256:261c69850d4b2ec03346c9745bad2a835bb8124e4c6961b8ceac503d744eb3b3 \
