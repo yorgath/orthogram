@@ -22,7 +22,7 @@ copyright = '2020-2021, Georgios Athanasiou'
 author = 'Georgios Athanasiou'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.5'
+release = '0.6.0'
 
 
 # -- General configuration ---------------------------------------------------

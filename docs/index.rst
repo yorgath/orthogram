@@ -48,7 +48,7 @@ The source code is hosted on `Github`_.
 .. _Github: https://github.com/yorgath/orthogram
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    install.rst

@@ -1,6 +1,18 @@
 Release history
 ===============
 
+0.6.0 (2021-08-04)
+------------------
+
+* Made changes that may affect the output of some diagrams, so bumped
+  version number appropriately.
+* Put connection arrows inside block margins to avoid overlaps.
+* Spacing between connections is now increased when necessary to avoid
+  overlaps of wide arrow heads.
+* Drawing of connection labels now takes into account arrow size to
+  avoid label - arrow overlap.
+* Added cases to visually check the above.
+
 0.5.5 (2021-07-25)
 ------------------
 
