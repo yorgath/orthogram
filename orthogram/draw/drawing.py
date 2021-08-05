@@ -105,7 +105,15 @@ class Drawing:
             self._draw_block_labels(surface)
             self._draw_connection_labels(surface)
             # DEBUG: Uncomment this to visualize the grid.
-            # self._draw_grid(surface)
+            # self._draw_grid(
+            #     surface,
+            #     draw_bands=True,
+            #     draw_tracks=True,
+            #     draw_refs=True,
+            #     line_width=1.0,
+            #     dash_length=8,
+            #     intensity=0.5,
+            # )
             with open(filename, "wb") as file:
                 surface.write_to_png(file)
 
@@ -512,58 +520,69 @@ class Drawing:
 
     ########################### Debugging ############################
 
-    def _draw_grid(self, surface: ImageSurface) -> None:
-        """Draw the outline of the grid."""
-        xmin = self.xmin.value
-        xmax = self.xmax.value
-        ymin = self.ymin.value
-        ymax = self.ymax.value
+    def _draw_grid(
+            self,
+            surface: ImageSurface,
+            draw_bands: bool = False,
+            draw_tracks: bool = False,
+            draw_refs: bool = False,
+            line_width: float = 1.0,
+            dash_length: int = 8,
+            intensity: float = 1.0,
+    ) -> None:
+        """Draw the auxiliary lines of the grid."""
         grid = self._grid
+        xmin = grid.xmin.value
+        xmax = grid.xmax.value
+        ymin = grid.ymin.value
+        ymax = grid.ymax.value
         ctx = Context(surface)
-        ctx.set_line_width(2.0)
-        grade = 0.5
-        dash_length = 8
+        ctx.set_line_width(line_width)
+        grade = 1.0 - intensity
         # Sides of rows and columns.
-        ctx.set_source_rgb(grade, grade, 1.0)
-        for hline in grid.horizontal_lines():
-            line_y = hline.value
-            ctx.move_to(xmin, line_y)
-            ctx.line_to(xmax, line_y)
-            ctx.stroke()
-        for vline in grid.vertical_lines():
-            line_x = vline.value
-            ctx.move_to(line_x, ymin)
-            ctx.line_to(line_x, ymax)
-            ctx.stroke()
-        # Tracks.
-        ctx.set_source_rgb(grade, 1.0, grade)
-        ctx.set_dash([2 * dash_length, dash_length])
-        for row in grid.rows():
-            track = row.track
-            variables = [track.cmin, track.cmax]
-            for var in variables:
-                line_y = var.value
+        if draw_bands:
+            ctx.set_source_rgb(grade, grade, 1.0)
+            for hline in grid.horizontal_lines():
+                line_y = hline.value
                 ctx.move_to(xmin, line_y)
                 ctx.line_to(xmax, line_y)
                 ctx.stroke()
-        for col in grid.columns():
-            track = col.track
-            variables = [track.cmin, track.cmax]
-            for var in variables:
-                line_x = var.value
+            for vline in grid.vertical_lines():
+                line_x = vline.value
                 ctx.move_to(line_x, ymin)
                 ctx.line_to(line_x, ymax)
                 ctx.stroke()
+        # Tracks.
+        if draw_tracks:
+            ctx.set_source_rgb(grade, 1.0, grade)
+            ctx.set_dash([2 * dash_length, dash_length])
+            for row in grid.rows():
+                track = row.track
+                variables = [track.cmin, track.cmax]
+                for var in variables:
+                    line_y = var.value
+                    ctx.move_to(xmin, line_y)
+                    ctx.line_to(xmax, line_y)
+                    ctx.stroke()
+            for col in grid.columns():
+                track = col.track
+                variables = [track.cmin, track.cmax]
+                for var in variables:
+                    line_x = var.value
+                    ctx.move_to(line_x, ymin)
+                    ctx.line_to(line_x, ymax)
+                    ctx.stroke()
         # Reference lines of the rows and columns.
-        ctx.set_source_rgb(1.0, grade, grade)
-        ctx.set_dash([dash_length, 2 * dash_length])
-        for row in grid.rows():
-            line_y = row.cref.value
-            ctx.move_to(xmin, line_y)
-            ctx.line_to(xmax, line_y)
-            ctx.stroke()
-        for col in grid.columns():
-            line_x = col.cref.value
-            ctx.move_to(line_x, ymin)
-            ctx.line_to(line_x, ymax)
-            ctx.stroke()
+        if draw_refs:
+            ctx.set_source_rgb(1.0, grade, grade)
+            ctx.set_dash([dash_length, 2 * dash_length])
+            for row in grid.rows():
+                line_y = row.cref.value
+                ctx.move_to(xmin, line_y)
+                ctx.line_to(xmax, line_y)
+                ctx.stroke()
+            for col in grid.columns():
+                line_x = col.cref.value
+                ctx.move_to(line_x, ymin)
+                ctx.line_to(line_x, ymax)
+                ctx.stroke()
