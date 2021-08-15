@@ -171,6 +171,7 @@ class Attributes(Mapping[str, Any]):
         'buffer_width',
         'collapse_connections',
         'connection_distance',
+        'end_label',
         'entrances',
         'exits',
         'fill',
@@ -193,9 +194,10 @@ class Attributes(Mapping[str, Any]):
         'padding_top',
         'pass_through',
         'scale',
+        'start_label',
+        'stroke',
         'stroke_dasharray',
         'stroke_width',
-        'stroke',
         'text_fill',
         'text_line_height',
         'text_orientation',
@@ -554,9 +556,11 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         self._arrow_forward = True
         self._buffer_fill: Optional[Color] = None
         self._buffer_width = 0.0
+        self._end_label: Optional[str] = None
         self._entrances = self._collect_sides(all_sides)
         self._exits = self._collect_sides(all_sides)
         self._label_distance = 4.0
+        self._start_label: Optional[str] = None
         self._text_orientation = TextOrientation.FOLLOW
         self.set_attributes(**attrs)
 
@@ -601,6 +605,11 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         return self._buffer_width
 
     @property
+    def end_label(self) -> Optional[str]:
+        """Text to draw near the start of the connection."""
+        return self._end_label
+
+    @property
     def entrances(self) -> List[Side]:
         """Sides to enter into the destination block."""
         return list(self._entrances)
@@ -609,6 +618,11 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
     def exits(self) -> List[Side]:
         """Sides to exit from the source block."""
         return list(self._exits)
+
+    @property
+    def start_label(self) -> Optional[str]:
+        """Text to draw near the start of the connection."""
+        return self._start_label
 
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
@@ -625,10 +639,14 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
             self._buffer_fill = cast(Optional[Color], attrs['buffer_fill'])
         if 'buffer_width' in attrs:
             self._buffer_width = cast(float, attrs['buffer_width'])
+        if 'end_label' in attrs:
+            self._end_label = cast(Optional[str], attrs['end_label'])
         if 'entrances' in attrs:
             self._entrances = self._collect_sides(attrs['entrances'])
         if 'exits' in attrs:
             self._exits = self._collect_sides(attrs['exits'])
+        if 'start_label' in attrs:
+            self._start_label = cast(Optional[str], attrs['start_label'])
 
 ######################################################################
 

@@ -415,6 +415,8 @@ def _collect_connection_attributes(
         attrs['buffer_fill'] = _parse_color(any_def['buffer_fill'])
     if 'buffer_width' in any_def:
         attrs['buffer_width'] = float(any_def['buffer_width'])
+    if 'end_label' in any_def:
+        attrs['end_label'] = str(any_def['end_label'])
     if 'entrances' in any_def:
         entrances = _parse_sides(any_def['entrances'])
         if entrances:
@@ -423,6 +425,8 @@ def _collect_connection_attributes(
         exits = _parse_sides(any_def['exits'])
         if exits:
             attrs['exits'] = exits
+    if 'start_label' in any_def:
+        attrs['start_label'] = str(any_def['start_label'])
 
 def _collect_diagram_attributes(
         attrs: Attributes,
