@@ -2,7 +2,11 @@
 
 from datetime import datetime
 from enum import Enum, auto
-from typing import Iterator
+
+from typing import (
+    Iterator,
+    Optional,
+)
 
 import math
 
@@ -73,10 +77,13 @@ class Drawing:
         time_start = datetime.now()
         self._layout = layout
         # Diagram label.
+        label: Optional[Label] = None
         dia = layout.diagram
         attrs = dia.attributes
-        ori = dia.label_orientation
-        label = Label(attrs, attrs, ori)
+        text = attrs.label
+        if text:
+            ori = dia.label_orientation
+            label = Label(attrs, attrs, ori, text)
         self._container = Container(attrs, "drawing", label)
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)
@@ -406,28 +413,26 @@ class Drawing:
             segment: DrawingWireSegment,
     ) -> None:
         """Draw the label of a wire segment."""
-        label = segment.label
-        if not label:
-            return
-        if segment.is_horizontal():
-            x_start = label.lmin.value
-            x_end = label.lmax.value
-            y_start = segment.start.y.value
-            y_end = segment.end.y.value
-        else:
-            y_start = label.lmin.value
-            y_end = label.lmax.value
-            x_start = segment.start.x.value
-            x_end = segment.end.x.value
-        x_label = 0.5 * (x_start + x_end)
-        y_label = 0.5 * (y_start + y_end)
-        disp = segment.label_displacement
-        x_label += disp[0]
-        y_label += disp[1]
-        self._draw_label(
-            surface, label.drawing_label,
-            x_label, y_label, Anchor.MIDDLE
-        )
+        for label in segment.labels():
+            if segment.is_horizontal():
+                x_start = label.lmin.value
+                x_end = label.lmax.value
+                y_start = segment.start.y.value
+                y_end = segment.end.y.value
+            else:
+                y_start = label.lmin.value
+                y_end = label.lmax.value
+                x_start = segment.start.x.value
+                x_end = segment.end.x.value
+            x_label = 0.5 * (x_start + x_end)
+            y_label = 0.5 * (y_start + y_end)
+            disp = label.displacement
+            x_label += disp[0]
+            y_label += disp[1]
+            self._draw_label(
+                surface, label.drawing_label,
+                x_label, y_label, Anchor.MIDDLE
+            )
 
     @classmethod
     def _draw_label(

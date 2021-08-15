@@ -23,7 +23,7 @@ class Track:
     def __init__(self, name: str, coord_name: str):
         """Initialize an empty track."""
         self._name = name
-        var_prefix = f"{name}_{coord_name}"
+        var_prefix = f"{name}_track_{coord_name}"
         self._cmin = Variable(f"{var_prefix}min")
         self._cmax = Variable(f"{var_prefix}max")
 

@@ -231,6 +231,11 @@ class RouteSegment:
         return self._index
 
     @property
+    def grid_vector(self) -> OrientedVector:
+        """Vector of the segment in grid space."""
+        return self._grid_vector
+
+    @property
     def axis(self) -> Axis:
         """Axis on which the segment lies."""
         return self._grid_vector.axis

@@ -8,6 +8,8 @@ styles:
     arrow_base: 10
     arrow_aspect: 3
     label: A long connection label
+    start_label: START
+    end_label: END
 
   text_block:
     stroke_width: 1

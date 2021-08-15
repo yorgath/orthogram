@@ -22,12 +22,22 @@ class Orientation(Enum):
     HORIZONTAL = auto()
     VERTICAL = auto()
 
+######################################################################
+
 class Direction(Enum):
     """Direction of a vector-like object."""
     DOWN = auto()
     LEFT = auto()
     RIGHT = auto()
     UP = auto()
+
+    def is_ascending(self) -> bool:
+        """True if the direction goes from low coordinates to high ones."""
+        return self in (Direction.DOWN, Direction.RIGHT)
+
+    def is_descending(self) -> bool:
+        """True if the direction goes from high coordinates to low ones."""
+        return not self.is_ascending()
 
 ######################################################################
 
@@ -189,10 +199,23 @@ class OrientedVector:
     @property
     def min_max_coordinates(self) -> Tuple[int, int]:
         """Coordinates in increasing order."""
-        first, second = self.coordinates
-        if first > second:
-            return second, first
-        return first, second
+        return self.min_coord, self.max_coord
+
+    @property
+    def min_coord(self) -> int:
+        """Minimum coordinate along the axis."""
+        return min(self._coords)
+
+    @property
+    def max_coord(self) -> int:
+        """Maximum coordinate along the axis."""
+        return max(self._coords)
+
+    @property
+    def length(self) -> int:
+        """Length of the vector."""
+        coords = self._coords
+        return abs(coords[1] - coords[0])
 
     @property
     def direction(self) -> Direction:

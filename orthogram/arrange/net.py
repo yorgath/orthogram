@@ -222,11 +222,14 @@ class WireSegment:
             self,
             route_segment: RouteSegment,
             start: Joint, end: Joint,
+            is_first: bool, is_last: bool,
     ):
         """Initialize for the given route segment."""
         self._route_segment = route_segment
         self._start = start
         self._end = end
+        self._is_first = is_first
+        self._is_last = is_last
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -249,6 +252,11 @@ class WireSegment:
         return self._route_segment.index
 
     @property
+    def grid_vector(self) -> OrientedVector:
+        """Vector of the segment in grid space."""
+        return self._route_segment.grid_vector
+
+    @property
     def label_orientation(self) -> Orientation:
         """Orientation of the label, horizontal of vertical.
 
@@ -256,6 +264,10 @@ class WireSegment:
 
         """
         return self._route_segment.label_orientation
+
+    def follows_label(self) -> bool:
+        """True if the orientation matches that of the label."""
+        return self._route_segment.follows_label()
 
     @property
     def joints(self) -> Tuple[Joint, Joint]:
@@ -271,6 +283,14 @@ class WireSegment:
     def end(self) -> Joint:
         """Second joint of the segment."""
         return self._end
+
+    def is_first(self) -> bool:
+        """True if this is the first segment of the wire."""
+        return self._is_first
+
+    def is_last(self) -> bool:
+        """True if this is the last segment of the wire."""
+        return self._is_last
 
     @property
     def offset(self) -> int:
@@ -583,13 +603,21 @@ class Network:
         wires: List[Wire] = []
         jmap = self._joint_map
         for route in self._routes:
-            segments: List[WireSegment] = []
-            for rseg in route.segments():
+            wire_segments: List[WireSegment] = []
+            route_segments = list(route.segments())
+            last_index = len(route_segments) - 1
+            for i, rseg in enumerate(route_segments):
                 joint_1 = jmap[rseg.first_point]
                 joint_2 = jmap[rseg.last_point]
-                cseg = WireSegment(rseg, joint_1, joint_2)
-                segments.append(cseg)
-            wire = Wire(route, segments)
+                is_first = i == 0
+                is_last = i == last_index
+                cseg = WireSegment(
+                    route_segment=rseg,
+                    start=joint_1, end=joint_2,
+                    is_first=is_first, is_last=is_last,
+                )
+                wire_segments.append(cseg)
+            wire = Wire(route, wire_segments)
             wires.append(wire)
         return wires
 

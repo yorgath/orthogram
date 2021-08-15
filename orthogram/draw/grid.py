@@ -20,6 +20,7 @@ from cassowary import Variable  # type: ignore
 from cassowary.expression import Constraint  # type: ignore
 
 from ..arrange import (
+    ConnectionLabelPosition,
     Joint,
     Layout,
     RouteSegment,
@@ -46,8 +47,10 @@ from .connections import (
     DrawingJoint,
     DrawingNetwork,
     DrawingWire,
+    DrawingWireEndLabel,
     DrawingWireLabel,
     DrawingWireLayer,
+    DrawingWireMiddleLabel,
     DrawingWireSegment,
     DrawingWireStructure,
 )
@@ -439,7 +442,7 @@ class DrawingGrid:
                     seg.cref = cref
 
     def _add_labels_to_wires(self) -> None:
-        """Add the labels to the wires that have one."""
+        """Add the labels to the wires that have ones."""
         layout = self._layout
         dia_attrs = layout.diagram.attributes
         rows = self._rows
@@ -447,8 +450,7 @@ class DrawingGrid:
         draw_segments = self._wire_segment_map
         for lay_label in layout.wire_labels():
             lay_segment = lay_label.segment
-            lay_min = lay_label.min_coord
-            lay_max = lay_label.max_coord
+            lay_min, lay_max = lay_label.grid_vector.min_max_coordinates
             draw_segment = draw_segments[lay_segment]
             if draw_segment.is_horizontal():
                 side_bands = cols
@@ -456,13 +458,16 @@ class DrawingGrid:
                 side_bands = rows
             cmin = side_bands[lay_min].track.cmax
             cmax = side_bands[lay_max].track.cmin
-            attrs = lay_segment.connection.attributes
+            attrs = lay_label.attributes
             ori = lay_segment.label_orientation
-            label = Label(attrs, dia_attrs, ori)
-            draw_segment.label = DrawingWireLabel(
-                lay_segment, label,
-                cmin, cmax,
-            )
+            label = Label(attrs, dia_attrs, ori, lay_label.text)
+            draw_label: DrawingWireLabel
+            if lay_label.position is ConnectionLabelPosition.MIDDLE:
+                draw_label = DrawingWireMiddleLabel(
+                    lay_label, label, cmin, cmax)
+            else:
+                draw_label = DrawingWireEndLabel(lay_label, label)
+            draw_segment.add_label(draw_label)
 
     def _place_structures(self) -> None:
         """Associate wire structures to bands.

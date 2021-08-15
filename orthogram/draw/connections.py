@@ -1,5 +1,7 @@
 """Provides classes for arranging diagram connections."""
 
+from abc import ABC
+
 from typing import (
     Dict,
     Iterator,
@@ -14,9 +16,11 @@ from cassowary.expression import Constraint  # type: ignore
 from shapely.geometry import LineString  # type: ignore
 
 from ..arrange import (
+    ConnectionLabelPosition,
     Joint,
     Wire,
     WireSegment,
+    WireLabel,
 )
 
 from ..define import (
@@ -27,6 +31,7 @@ from ..define import (
 from ..geometry import (
     Axis,
     Direction,
+    OrientedVector,
 )
 
 from ..util import class_str
@@ -36,26 +41,32 @@ from .labels import Label
 
 ######################################################################
 
-class DrawingWireLabel:
+class DrawingWireLabel(ABC):
     """Label on a drawing wire."""
 
-    def __init__(
-            self,
-            layout_segment: WireSegment, label: Label,
-            track_cmin: Variable, track_cmax: Variable
-    ):
+    def __init__(self, layout_label: WireLabel, label: Label):
         """Initialize for the given drawing label."""
+        self._layout_label = layout_label
         self._drawing_label = label
-        self._lmin = track_cmin
-        self._lmax = track_cmax
-        self._name = layout_segment.name
+        self._displacement = self._calculate_displacement()
+        name = layout_label.name
+        if layout_label.segment.is_horizontal():
+            coord_name = "x"
+        else:
+            coord_name = "y"
+        prefix = f"label_{name}_{coord_name}"
+        self._lmin = Variable(f"{prefix}min")
+        self._lmax = Variable(f"{prefix}max")
 
     def __repr__(self) -> str:
         """Represent as string."""
-        name = self._name
-        text = repr(self._drawing_label.text)
-        content = f"{name}, {text}"
+        content = self._layout_label.description()
         return class_str(self, content)
+
+    @property
+    def grid_vector(self) -> OrientedVector:
+        """Vector of the segment to which the label is attached."""
+        return self._layout_label.segment.grid_vector
 
     @property
     def drawing_label(self) -> Label:
@@ -72,11 +83,137 @@ class DrawingWireLabel:
         """Maximum coordinate along the segment."""
         return self._lmax
 
+    @property
+    def position(self) -> ConnectionLabelPosition:
+        """Position of the label along the connection."""
+        return self._layout_label.position
+
+    @property
+    def displacement(self) -> Tuple[float, float]:
+        """Distance of label center from connection axis."""
+        return self._displacement
+
+    def follows_segment(self) -> bool:
+        """True if the orientation of the label matches that of the segment."""
+        return self._layout_label.follows_segment()
+
+    def perpendicular_coverage(self) -> float:
+        """Distance from 'highest' point to axis."""
+        label = self._drawing_label
+        segment = self._layout_label.segment
+        attrs = segment.connection.attributes
+        gap = attrs.label_distance
+        return self._bump() + gap + label.height
+
+    def constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the solver.
+
+        This implementation generates constraints for the length of
+        the label only.  Override to add further constraints.
+
+        """
+        yield from self._length_constraints()
+
+    def _calculate_displacement(self) -> Tuple[float, float]:
+        """Calculate the displacement."""
+        label = self._drawing_label
+        segment = self._layout_label.segment
+        attrs = segment.connection.attributes
+        gap = attrs.label_distance
+        dist = self._bump() + gap
+        if segment.is_horizontal():
+            dist += 0.5 * label.box_height
+            return 0.0, -dist
+        dist += 0.5 * label.box_width
+        return -dist, 0.0
+
+    def _bump(self) -> float:
+        """Length needed to avoid overlapping with other elements.
+
+        The default implementation takes only the width of the wire
+        into account.  Override to alter this behavior.
+
+        """
+        return self._wire_bump()
+
+    def _wire_bump(self) -> float:
+        """Length needed to avoid overlapping with the connection line."""
+        segment = self._layout_label.segment
+        wire_width = _wire_width(segment.connection.attributes)
+        return 0.5 * wire_width
+
+    def _arrow_bump(self) -> float:
+        """Length needed to avoid overlapping with the arrows."""
+        segment = self._layout_label.segment
+        arr_width = arrow_width(segment.connection.attributes)
+        return 0.5 * arr_width
+
+    def _length_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the length of the label."""
+        label = self._drawing_label
+        if self.follows_segment():
+            length = label.length
+        else:
+            length = label.height
+        yield self._lmax - self._lmin == length
+
+######################################################################
+
+class DrawingWireEndLabel(DrawingWireLabel):
+    """Label near the end of a drawing wire."""
+
+    def _bump(self) -> float:
+        """Length needed to avoid overlapping with other elements.
+
+        We have to override this, because the label may be over an
+        arrow.
+
+        """
+        attrs = self._layout_label.segment.connection.attributes
+        position = self.position
+        if (
+                (position.is_start() and attrs.arrow_back) or
+                (position.is_end() and attrs.arrow_forward)
+        ):
+            return self._arrow_bump()
+        return self._wire_bump()
+
+######################################################################
+
+class DrawingWireMiddleLabel(DrawingWireLabel):
+    """Label near the middle of a drawing wire."""
+
+    def __init__(
+            self,
+            layout_label: WireLabel,
+            label: Label,
+            track_cmin: Variable, track_cmax: Variable
+    ):
+        """Initialize for the given drawing label.
+
+        This label will be drawn between the coordinates given by the
+        two variables, which define the empty space between two
+        consecutive tracks.
+
+        """
+        assert layout_label.position.is_middle()
+        super().__init__(layout_label, label)
+        self._track_cmin = track_cmin
+        self._track_cmax = track_cmax
+
     def constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the label."""
+        yield from self._length_constraints()
+        yield from self._track_constraints()
+
+    def _track_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the tracks on each side of the label."""
         label = self._drawing_label
         dist = label.attributes.label_distance
-        yield self._lmax - self._lmin >= label.length + 2 * dist
+        yield self._lmin - self._track_cmin >= dist
+        yield self._track_cmax - self._lmax >= dist
+        # Center between the tracks.
+        yield self._lmin + self._lmax == self._track_cmin + self._track_cmax
 
 ######################################################################
 
@@ -141,7 +278,7 @@ class DrawingWireSegment:
         self._end = end
         self._is_first = is_first
         self._is_last = is_last
-        self._wire_width = self._calculate_wire_width()
+        self._wire_width = _wire_width(layout_segment.connection.attributes)
         self._arrow_margin = self._calculate_arrow_margin()
         # Variables for the constraint solver.
         name = layout_segment.name
@@ -154,8 +291,9 @@ class DrawingWireSegment:
         # This will be set later using the layers.
         self._cref: Variable
         # These will be set later during the process.
-        self._label: Optional[DrawingWireLabel] = None
-        self._label_margin = 0.0
+        self._start_label: Optional[DrawingWireLabel] = None
+        self._middle_label: Optional[DrawingWireLabel] = None
+        self._end_label: Optional[DrawingWireLabel] = None
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -174,6 +312,10 @@ class DrawingWireSegment:
     def is_vertical(self) -> bool:
         """True if the segment is vertical."""
         return not self.is_horizontal()
+
+    def follows_label(self) -> bool:
+        """True if the orientation matches that of the label."""
+        return self._layout_segment.follows_label()
 
     @property
     def connection(self) -> Connection:
@@ -235,52 +377,31 @@ class DrawingWireSegment:
         """Width of the connection wire."""
         return self._wire_width
 
-    @property
-    def label(self) -> Optional[DrawingWireLabel]:
-        """The label attached to the segment."""
-        return self._label
+    def labels(self) -> Iterator[DrawingWireLabel]:
+        """Iterate over the labels attached to the segment."""
+        labels = [
+            self._start_label,
+            self._middle_label,
+            self._end_label,
+        ]
+        for label in labels:
+            if label:
+                yield label
 
-    @label.setter
-    def label(self, label: DrawingWireLabel) -> None:
-        """Set the label."""
-        self._label = label
-        self._label_margin = self._calculate_label_margin()
-
-    @property
-    def label_displacement(self) -> Tuple[float, float]:
-        """Vector from middle of segment to center of label."""
-        width = self._wire_width
-        disp = -0.5 * (width + self._label_margin)
-        if self.is_horizontal():
-            return (0.0, disp)
-        return (disp, 0.0)
+    def add_label(self, label: DrawingWireLabel) -> None:
+        """Add the label at the appropriate position."""
+        position = label.position
+        if position is ConnectionLabelPosition.START:
+            self._start_label = label
+        elif position is ConnectionLabelPosition.END:
+            self._end_label = label
+        else:
+            self._middle_label = label
 
     def constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the segment."""
         yield from self._label_constraints()
         yield from self._across_constraints()
-
-    def _calculate_wire_width(self) -> float:
-        """Calculate the width of the wire itself, including buffer."""
-        attrs = self.attributes
-        width = attrs.stroke_width
-        buffer_width = attrs.buffer_width
-        if buffer_width:
-            width += 2 * buffer_width
-        return width
-
-    def _calculate_label_margin(self) -> float:
-        """Calculate a margin large enough for the label."""
-        margin = 0.0
-        wire_label = self._label
-        if wire_label:
-            label = wire_label.drawing_label
-            margin += self.attributes.label_distance
-            if self.is_horizontal():
-                margin += label.box_height
-            else:
-                margin += label.box_width
-        return margin
 
     def _calculate_arrow_margin(self) -> float:
         """Calculate a margin large enough for half an arrow.
@@ -302,9 +423,8 @@ class DrawingWireSegment:
 
     def _label_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the labels."""
-        wire_label = self._label
-        if wire_label:
-            yield from wire_label.constraints()
+        for label in self.labels():
+            yield from label.constraints()
 
     def _across_constraints(self) -> Iterator[Constraint]:
         """Generate constraints across the segment."""
@@ -321,11 +441,10 @@ class DrawingWireSegment:
     def _width_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the width of the occupied area."""
         # Must contain the arrows and the label.
-        arrow_margin = self._arrow_margin
         line_half_width = 0.5 * self._wire_width
-        label_margin = self._label_margin
-        before = max(arrow_margin, line_half_width + label_margin)
-        after = max(arrow_margin, line_half_width)
+        before = after = max(line_half_width, self._arrow_margin)
+        for label in self.labels():
+            before = max(before, label.perpendicular_coverage())
         yield self._cref - self._cmin >= before
         yield self._cmax - self._cref >= after
 
@@ -476,3 +595,13 @@ class DrawingWireStructure:
                 for lay2 in layers[i + 1:]:
                     for seg2 in lay2:
                         yield seg2.cmin >= seg1.cmax + dist
+
+######################################################################
+
+def _wire_width(attrs: ConnectionAttributes) -> float:
+    """Return the width of the wire, including the margin."""
+    width = attrs.stroke_width
+    buffer_width = attrs.buffer_width
+    if buffer_width:
+        width += 2 * buffer_width
+    return width

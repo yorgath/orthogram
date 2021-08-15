@@ -37,12 +37,9 @@ class Label:
             text_attributes: TextAttributes,
             diagram_attributes: DiagramAttributes,
             orientation: Orientation,
-            text: Optional[str] = None,
+            text: str,
     ):
         """Initialize the label.
-
-        It derives the text for the label from the text attributes,
-        unless an explicit text is provided.
 
         The attributes of the diagram are used to calculate the
         dimensions of the label.
@@ -53,11 +50,7 @@ class Label:
 
         """
         self._text_attributes = text_attributes
-        if not text:
-            text = text_attributes.label
-        self._lines: List[str] = []
-        if text:
-            self._lines = text.split("\n")
+        self._lines = text.split("\n")
         self._text = text
         self._diagram_attributes = diagram_attributes
         self._orientation = orientation
