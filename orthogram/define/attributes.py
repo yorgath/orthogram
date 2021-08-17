@@ -559,7 +559,7 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         self._end_label: Optional[str] = None
         self._entrances = self._collect_sides(all_sides)
         self._exits = self._collect_sides(all_sides)
-        self._label_distance = 4.0
+        self._label_distance = 2.0
         self._start_label: Optional[str] = None
         self._text_orientation = TextOrientation.FOLLOW
         self.set_attributes(**attrs)
