@@ -63,8 +63,8 @@ class BlockBox:
         self._left_column = left_column
         self._right_column = right_column
         self._wire_margin = wire_margin
-        var_prefix = f"block_{block.index}"
-        self._container = Container(block.attributes, var_prefix, label)
+        block_name = f"block_{block.index}"
+        self._container = Container(block.attributes, block_name, label)
         self._attachments: List[Attachment] = []
 
     def __repr__(self) -> str:
@@ -153,11 +153,11 @@ class BlockBox:
 
     def constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the solver."""
+        yield from self._container.constraints()
         yield from self._ref_constraints()
-        yield from self._container.label_constraints()
         yield from self._wire_constraints()
+        yield from self._margin_constraints()
         yield from self._connection_label_constraints()
-        yield from self._band_constraints()
 
     def optional_constraints(self) -> Iterator[Constraint]:
         """Generate optional constraints for the solver."""
@@ -207,31 +207,13 @@ class BlockBox:
                 yield self.xmin <= x_wire - half_width
                 yield self.xmax >= x_wire + half_width
 
-    def _connection_label_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the attached connection labels."""
-        # Top side.
-        for wire_label in self._labels_on(Side.TOP):
-            dist = wire_label.drawing_label.attributes.label_distance
-            yield wire_label.lmin >= self._top_row.track.cmin
-            yield wire_label.lmax == self.ymin - dist
-        # Bottom side.
-        for wire_label in self._labels_on(Side.BOTTOM):
-            dist = wire_label.drawing_label.attributes.label_distance
-            yield wire_label.lmin == self.ymax + dist
-            yield wire_label.lmax <= self._bottom_row.track.cmax
-        # Left side.
-        for wire_label in self._labels_on(Side.LEFT):
-            dist = wire_label.drawing_label.attributes.label_distance
-            yield wire_label.lmin >= self._left_column.track.cmin
-            yield wire_label.lmax == self.xmin - dist
-        # Right side.
-        for wire_label in self._labels_on(Side.RIGHT):
-            dist = wire_label.drawing_label.attributes.label_distance
-            yield wire_label.lmin == self.xmax + dist
-            yield wire_label.lmax <= self._right_column.track.cmax
+    def _margin_constraints(self) -> Iterable[Constraint]:
+        """Generate constraints for the margins.
 
-    def _band_constraints(self) -> Iterable[Constraint]:
-        """Generate constraints to fit in the rows and columns."""
+        These include the arrows, since they are drawn inside the
+        margins.
+
+        """
         attrs = self._block.attributes
         # Top side.
         margin = self._calculate_margin(Side.TOP, attrs.margin_top)
@@ -259,18 +241,30 @@ class BlockBox:
                     (not out and seg_attrs.arrow_forward)
             ):
                 margin = max(margin, arrow_length(seg_attrs))
-            # Make room for the connection label, if any.
-            # segment_is_horizontal = attachment.segment.is_horizontal()
-            # wire_label = self._attached_label(attachment)
-            # if wire_label:
-            #     label = wire_label.drawing_label
-            #     label_margin = label.attributes.label_distance
-            #     if segment_is_horizontal:
-            #         label_margin += label.box_width
-            #     else:
-            #         label_margin += label.box_height
-            #     margin = max(margin, label_margin)
         return margin
+
+    def _connection_label_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the attached connection labels."""
+        # Top side.
+        for wire_label in self._labels_on(Side.TOP):
+            dist = wire_label.attributes.label_distance
+            yield self.ymin - wire_label.lmax == dist
+            yield wire_label.lmin - self._top_row.track.cmin >= dist
+        # Bottom side.
+        for wire_label in self._labels_on(Side.BOTTOM):
+            dist = wire_label.attributes.label_distance
+            yield wire_label.lmin - self.ymax == dist
+            yield self._bottom_row.track.cmax - wire_label.lmax >= dist
+        # Left side.
+        for wire_label in self._labels_on(Side.LEFT):
+            dist = wire_label.attributes.label_distance
+            yield self.xmin - wire_label.lmax == dist
+            yield wire_label.lmin - self._left_column.track.cmin >= dist
+        # Right side.
+        for wire_label in self._labels_on(Side.RIGHT):
+            dist = wire_label.attributes.label_distance
+            yield wire_label.lmin - self.xmax == dist
+            yield self._right_column.track.cmax - wire_label.lmax >= dist
 
     def _labels_on(self, side: Side) -> Iterator[DrawingWireLabel]:
         """Iterate over the connection labels on a block side."""
@@ -285,10 +279,8 @@ class BlockBox:
             if attachment.side is side:
                 yield attachment
 
-    def _attached_label(
-            self,
-            attachment: Attachment,
-    ) -> Optional[DrawingWireLabel]:
+    @staticmethod
+    def _attached_label(attachment: Attachment) -> Optional[DrawingWireLabel]:
         """Return the connection label next to the block."""
         Pos = ConnectionLabelPosition
         out = attachment.out

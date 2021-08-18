@@ -47,15 +47,17 @@ from .connections import (
     DrawingJoint,
     DrawingNetwork,
     DrawingWire,
-    DrawingWireEndLabel,
-    DrawingWireLabel,
     DrawingWireLayer,
-    DrawingWireMiddleLabel,
     DrawingWireSegment,
     DrawingWireStructure,
 )
 
-from .labels import Label
+from .labels import (
+    DrawingWireEndLabel,
+    DrawingWireLabel,
+    DrawingWireMiddleLabel,
+    Label,
+)
 
 ######################################################################
 
@@ -295,7 +297,7 @@ class DrawingGrid:
             if text:
                 attrs = block.attributes
                 ori = block.label_orientation
-                label = Label(attrs, dia_attrs, ori, text)
+                label = Label(text, ori, attrs, dia_attrs)
             box = BlockBox(
                 block, top, bottom, left, right,
                 wire_margin,
@@ -460,7 +462,7 @@ class DrawingGrid:
             cmax = side_bands[lay_max].track.cmin
             attrs = lay_label.attributes
             ori = lay_segment.label_orientation
-            label = Label(attrs, dia_attrs, ori, lay_label.text)
+            label = Label(lay_label.text, ori, attrs, dia_attrs)
             draw_label: DrawingWireLabel
             if lay_label.position is ConnectionLabelPosition.MIDDLE:
                 draw_label = DrawingWireMiddleLabel(

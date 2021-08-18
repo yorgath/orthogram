@@ -1,7 +1,7 @@
 """Provides classes for container drawing elements."""
 
 from typing import (
-    Iterable,
+    Iterator,
     Optional,
 )
 
@@ -23,21 +23,21 @@ class Container:
     def __init__(
             self,
             attrs: ContainerAttributes,
-            var_prefix: str,
+            name: str,
             label: Optional[Label] = None,
     ):
         """Initialize a container with the given name."""
         self._attributes = attrs
-        self._var_prefix = var_prefix
+        self._name = name
         self._label = label
-        self._xmin = Variable(f"{var_prefix}_xmin")
-        self._xmax = Variable(f"{var_prefix}_xmax")
-        self._ymin = Variable(f"{var_prefix}_ymin")
-        self._ymax = Variable(f"{var_prefix}_ymax")
+        self._xmin = Variable(f"{name}_xmin")
+        self._xmax = Variable(f"{name}_xmax")
+        self._ymin = Variable(f"{name}_ymin")
+        self._ymax = Variable(f"{name}_ymax")
 
     def __repr__(self) -> str:
         """Represent as string."""
-        content = repr(self._var_prefix)
+        content = repr(self._name)
         return class_str(self, content)
 
     @property
@@ -120,17 +120,21 @@ class Container:
         ]
         return Polygon(points)
 
-    def label_constraints(self) -> Iterable[Constraint]:
-        """Generate constraints to fit the label."""
-        yield self._xmax >= self._xmin + self._width_for_label()
-        yield self._ymax >= self._ymin + self._height_for_label()
+    def constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the solver."""
+        attrs = self._attributes
+        width = max(attrs.min_width, self._width_for_label())
+        height = max(attrs.min_height, self._height_for_label())
+        yield self._xmax - self._xmin >= width
+        yield self._ymax - self._ymin >= height
 
     def _width_for_label(self) -> float:
         """Width necessary for the label."""
         label = self._label
         if label:
-            attrs = self.attributes
-            sides = 2 * (attrs.stroke_width + attrs.label_distance)
+            my_attrs = self.attributes
+            label_attrs = label.attributes
+            sides = 2 * (my_attrs.stroke_width + label_attrs.label_distance)
             width = label.box_width + sides
             return width
         return 0.0
@@ -139,8 +143,9 @@ class Container:
         """Height necessary for the label."""
         label = self._label
         if label:
-            attrs = self.attributes
-            sides = 2 * (attrs.stroke_width + attrs.label_distance)
+            my_attrs = self.attributes
+            label_attrs = label.attributes
+            sides = 2 * (my_attrs.stroke_width + label_attrs.label_distance)
             height = label.box_height + sides
             return height
         return 0.0

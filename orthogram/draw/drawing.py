@@ -83,7 +83,7 @@ class Drawing:
         text = attrs.label
         if text:
             ori = dia.label_orientation
-            label = Label(attrs, attrs, ori, text)
+            label = Label(text, ori, attrs, attrs)
         self._container = Container(attrs, "drawing", label)
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)
@@ -201,12 +201,8 @@ class Drawing:
 
     def _own_required_constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the drawing itself."""
-        # Satisfy minimum requested dimensions.
-        attrs = self._layout.diagram.attributes
-        yield self.xmax >= self.xmin + attrs.min_width
-        yield self.ymax >= self.ymin + attrs.min_height
-        # Contain the label.
-        yield from self._container.label_constraints()
+        # Container constraints.
+        yield from self._container.constraints()
         # Grid must be inside drawing.
         grid = self._grid
         top = self.padding_top

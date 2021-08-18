@@ -128,7 +128,7 @@ class Band:
             yield from struct.constraints()
 
     def _segments(self) -> Iterator[DrawingWireSegment]:
-        """Return the wire segments in the band."""
+        """Iterate over the wire segments in the band."""
         for struct in self._wire_structures:
             for layer in struct:
                 yield from layer

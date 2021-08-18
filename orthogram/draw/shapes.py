@@ -27,7 +27,7 @@ from .functions import (
 ######################################################################
 
 class Arrow:
-    """Represents an arrow at the end of a connection line.
+    """Holds the geometry for an arrow at the end of a connection line.
 
     Note that the geometry of the arrow is a linear ring, not a
     polygon, which means that the arrow cannot have holes in it.  This
@@ -70,7 +70,7 @@ class Arrow:
 ######################################################################
 
 class WireShape:
-    """Encapsulates the geometry for a connection wire."""
+    """Holds the geometry for a connection wire."""
 
     def __init__(
             self,
@@ -111,12 +111,12 @@ class WireShape:
 
     @property
     def start_arrow(self) -> Optional[Arrow]:
-        """Arrow at the start of the line."""
+        """Arrow shape at the start of the line."""
         return self._start_arrow
 
     @property
     def end_arrow(self) -> Optional[Arrow]:
-        """Arrow at the end of the line."""
+        """Arrow shape at the end of the line."""
         return self._end_arrow
 
     def _clip_start(self) -> None:
@@ -144,7 +144,7 @@ class WireShape:
             arrow = Arrow(attrs)
         line = self._clip(line, poly, arrow, False)
         self._wire_line_string = line
-        if arrow and arrow.geometry:
+        if arrow and arrow.is_valid():
             self._end_arrow = arrow
 
     def _clip(
@@ -188,6 +188,8 @@ class WireShape:
                 poly2 = buffer_rectangle(poly, length_arrow - 1.0)
                 line = line.difference(poly2)
             else:
+                # Since the program now makes the lines long enough
+                # for the arrows, we should not be able to reach here.
                 connection = self._wire.connection
                 start_name = connection.start.block.name
                 end_name = connection.end.block.name

@@ -73,6 +73,14 @@ def line_area_attributes(attrs: LineAttributes) -> AreaAttributes:
     area_attrs.set_attributes(**attr_map)
     return area_attrs
 
+def wire_width(attrs: ConnectionAttributes) -> float:
+    """Return the width of the wire, including the margin."""
+    width = attrs.stroke_width
+    buffer_width = attrs.buffer_width
+    if buffer_width:
+        width += 2 * buffer_width
+    return width
+
 def arrow_length(attrs: ConnectionAttributes) -> float:
     """Calculate the length of the arrow from the attributes."""
     width = arrow_width(attrs)
