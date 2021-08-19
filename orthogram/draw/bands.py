@@ -17,50 +17,21 @@ from .connections import (
 
 ######################################################################
 
-class Track:
-    """Contains the boxes and lines of a band."""
-
-    def __init__(self, name: str, coord_name: str):
-        """Initialize an empty track."""
-        self._name = name
-        var_prefix = f"{name}_track_{coord_name}"
-        self._cmin = Variable(f"{var_prefix}min")
-        self._cmax = Variable(f"{var_prefix}max")
-
-    def __repr__(self) -> str:
-        """Represent as string."""
-        content = repr(self._name)
-        return class_str(self, content)
-
-    @property
-    def cmin(self) -> Variable:
-        """Minimum coordinate perpendicular to the axis."""
-        return self._cmin
-
-    @property
-    def cmax(self) -> Variable:
-        """Maximum coordinate perpendicular to the axis."""
-        return self._cmax
-
-######################################################################
-
 class Band:
     """Row or column in the grid."""
 
     def __init__(
             self,
             index: int,
-            min_line: Variable, max_line: Variable,
             name_prefix: str, coord_name: str,
     ):
         """Initialize the band with the given index number."""
         self._index = index
-        self._cmin = min_line
-        self._cmax = max_line
         self._name = name = f"{name_prefix}_{index}"
-        var_name = f"{name}_{coord_name}ref"
-        self._cref = Variable(var_name)
-        self._track = Track(name, coord_name)
+        var_prefix = f"{name}_{coord_name}"
+        self._cmin = Variable(f"{var_prefix}min")
+        self._cref = Variable(f"{var_prefix}ref")
+        self._cmax = Variable(f"{var_prefix}max")
         self._wire_structures: List[DrawingWireStructure] = []
 
     def __repr__(self) -> str:
@@ -74,14 +45,19 @@ class Band:
         return self._index
 
     @property
-    def track(self) -> Track:
-        """Track containing the contents of the band."""
-        return self._track
+    def cmin(self) -> Variable:
+        """Minimum coordinate perpendicular to the axis."""
+        return self._cmin
 
     @property
     def cref(self) -> Variable:
         """Reference coordinate perpendicular to the axis."""
         return self._cref
+
+    @property
+    def cmax(self) -> Variable:
+        """Maximum coordinate perpendicular to the axis."""
+        return self._cmax
 
     def add_structure(self, struct: DrawingWireStructure) -> None:
         """Associate a wire structure with the band."""
@@ -108,19 +84,15 @@ class Band:
 
     def _line_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the lines."""
-        track = self._track
-        yield self._cmin <= track.cmin
-        yield track.cmin <= self._cref
-        yield self._cref <= track.cmax
-        yield track.cmax <= self._cmax
+        yield self._cmin <= self._cref
+        yield self._cref <= self._cmax
 
     def _wire_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the connection wires."""
-        # Segments must be inside the track of the band.
-        track = self._track
+        # Segments must be inside the band.
         for seg in self._segments():
-            yield seg.cmin >= track.cmin
-            yield seg.cmax <= track.cmax
+            yield seg.cmin >= self._cmin
+            yield seg.cmax <= self._cmax
 
     def _structure_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the wire structures."""

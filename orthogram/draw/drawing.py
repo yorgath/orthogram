@@ -115,7 +115,6 @@ class Drawing:
             # self._draw_grid(
             #     surface,
             #     draw_bands=True,
-            #     draw_tracks=True,
             #     draw_refs=True,
             #     line_width=1.0,
             #     dash_length=8,
@@ -411,17 +410,15 @@ class Drawing:
         """Draw the label of a wire segment."""
         for label in segment.labels():
             if segment.is_horizontal():
-                x_start = label.lmin.value
-                x_end = label.lmax.value
+                x_label = label.lmid.value
                 y_start = segment.start.y.value
                 y_end = segment.end.y.value
+                y_label = 0.5 * (y_start + y_end)
             else:
-                y_start = label.lmin.value
-                y_end = label.lmax.value
+                y_label = label.lmid.value
                 x_start = segment.start.x.value
                 x_end = segment.end.x.value
-            x_label = 0.5 * (x_start + x_end)
-            y_label = 0.5 * (y_start + y_end)
+                x_label = 0.5 * (x_start + x_end)
             disp = label.displacement
             x_label += disp[0]
             y_label += disp[1]
@@ -525,7 +522,6 @@ class Drawing:
             self,
             surface: ImageSurface,
             draw_bands: bool = False,
-            draw_tracks: bool = False,
             draw_refs: bool = False,
             line_width: float = 1.0,
             dash_length: int = 8,
@@ -543,31 +539,15 @@ class Drawing:
         # Sides of rows and columns.
         if draw_bands:
             ctx.set_source_rgb(grade, grade, 1.0)
-            for hline in grid.horizontal_lines():
-                line_y = hline.value
-                ctx.move_to(xmin, line_y)
-                ctx.line_to(xmax, line_y)
-                ctx.stroke()
-            for vline in grid.vertical_lines():
-                line_x = vline.value
-                ctx.move_to(line_x, ymin)
-                ctx.line_to(line_x, ymax)
-                ctx.stroke()
-        # Tracks.
-        if draw_tracks:
-            ctx.set_source_rgb(grade, 1.0, grade)
-            ctx.set_dash([2 * dash_length, dash_length])
             for row in grid.rows():
-                track = row.track
-                variables = [track.cmin, track.cmax]
+                variables = [row.cmin, row.cmax]
                 for var in variables:
                     line_y = var.value
                     ctx.move_to(xmin, line_y)
                     ctx.line_to(xmax, line_y)
                     ctx.stroke()
             for col in grid.columns():
-                track = col.track
-                variables = [track.cmin, track.cmax]
+                variables = [col.cmin, col.cmax]
                 for var in variables:
                     line_x = var.value
                     ctx.move_to(line_x, ymin)
@@ -575,8 +555,8 @@ class Drawing:
                     ctx.stroke()
         # Reference lines of the rows and columns.
         if draw_refs:
-            ctx.set_source_rgb(1.0, grade, grade)
-            ctx.set_dash([dash_length, 2 * dash_length])
+            ctx.set_source_rgb(grade, 1.0, grade)
+            ctx.set_dash([2 * dash_length, dash_length])
             for row in grid.rows():
                 line_y = row.cref.value
                 ctx.move_to(xmin, line_y)

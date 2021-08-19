@@ -9,7 +9,11 @@ from typing import (
 )
 
 from cassowary import Variable  # type: ignore
-from cassowary.expression import Constraint  # type: ignore
+
+from cassowary.expression import (  # type: ignore
+    Constraint,
+    Expression,
+)
 
 from shapely.geometry import LineString  # type: ignore
 
@@ -44,11 +48,9 @@ class DrawingJoint:
     def __init__(self, layout_joint: Joint):
         """Initialize for the given layout joint."""
         self._layout_joint = layout_joint
-        # Define default coordinate variables.  These may be replaced
-        # later on from the segments.
-        name = layout_joint.name
-        self._x = Variable(f"joint_{name}_x")
-        self._y = Variable(f"joint_{name}_y")
+        # These will be set later from the blocks and segments.
+        self._x: Variable
+        self._y: Variable
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -100,20 +102,14 @@ class DrawingWireSegment:
         self._is_first = is_first
         self._is_last = is_last
         self._wire_width = wire_width(layout_segment.connection.attributes)
-        # Variables for the constraint solver.
-        name = layout_segment.name
-        coord_along = "x"
-        coord_across = "y"
-        if self.is_vertical():
-            coord_along, coord_across = coord_across, coord_along
-        self._cmin = Variable(f"seg_{name}_{coord_across}min")
-        self._cmax = Variable(f"seg_{name}_{coord_across}max")
-        # This will be set later using the layers.
-        self._cref: Variable
-        # These may be set later during the process.
+        # Labels may be set later during the process.
         self._start_label: Optional[DrawingWireLabel] = None
         self._middle_label: Optional[DrawingWireLabel] = None
         self._end_label: Optional[DrawingWireLabel] = None
+        # These will be set later from the layers.
+        self._cref: Variable
+        self._cmin: Expression
+        self._cmax: Expression
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -182,6 +178,8 @@ class DrawingWireSegment:
             self._end_label = label
         else:
             self._middle_label = label
+        # After adding labels the dimensions may have to change.
+        self._update_dimensions()
 
     @property
     def cmin(self) -> Variable:
@@ -197,10 +195,12 @@ class DrawingWireSegment:
     def cref(self, var: Variable) -> None:
         """Set the variable.
 
-        This updates the variables in the joints as well.
+        This updates the coverage of the segment and the variables in
+        the joints.
 
         """
         self._cref = var
+        self._update_dimensions()
         if self.is_horizontal():
             self._start.y = var
             self._end.y = var
@@ -216,39 +216,37 @@ class DrawingWireSegment:
     def constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the segment."""
         yield from self._label_constraints()
-        yield from self._across_constraints()
 
     def _label_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the labels."""
         for label in self.labels():
             yield from label.constraints()
 
-    def _across_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints across the segment."""
-        yield from self._orientation_constraints()
-        yield from self._height_constraints()
+    def _update_dimensions(self) -> None:
+        """Recalculate the distances relative to the reference line."""
+        self._cmin = self._cref - self._height_before()
+        self._cmax = self._cref + self._height_after()
 
-    def _orientation_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints according to the orientation."""
-        if self.is_horizontal():
-            yield self._start.y == self._end.y
-        else:
-            yield self._start.x == self._end.x
+    def _height_before(self) -> float:
+        """Distance from minimum coordinate to reference line."""
+        height = self._height_with_arrows()
+        dist = self._connection_distance
+        for label in self.labels():
+            height = max(height, label.perpendicular_coverage() + dist)
+        return height
 
-    def _height_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the height of the occupied area."""
-        # Must contain the arrows and the label.
+    def _height_after(self) -> float:
+        """Distance from reference line to maximum coordinate."""
+        return self._height_with_arrows()
+
+    def _height_with_arrows(self) -> float:
+        """Distance from reference line to arrow base included."""
         line_half_height = 0.5 * self._wire_width
         distance = self._connection_distance
         half_distance = 0.5 * distance
         min_half_height = line_half_height + half_distance
         arrow_half_height = 0.5 * self._height_for_arrows()
-        before = after = max(min_half_height, arrow_half_height)
-        # Consider labels on one side.
-        for label in self.labels():
-            before = max(before, label.perpendicular_coverage() + distance)
-        yield self._cref - self._cmin >= before
-        yield self._cmax - self._cref >= after
+        return max(min_half_height, arrow_half_height)
 
     def _height_for_arrows(self) -> float:
         """Height necessary to contain the arrows of the segment."""

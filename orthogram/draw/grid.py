@@ -120,8 +120,6 @@ class DrawingGrid:
     def __init__(self, layout: Layout):
         """Initialize for a diagram layout."""
         self._layout = layout
-        self._horizontal_lines = self._make_horizontal_lines()
-        self._vertical_lines = self._make_vertical_lines()
         self._rows = self._make_rows()
         self._columns = self._make_columns()
         self._cell_rows = self._make_cells()
@@ -132,6 +130,7 @@ class DrawingGrid:
         self._wire_segment_map = self._make_wire_segment_map()
         self._route_segment_map = self._make_route_segment_map()
         self._axis_structures = self._make_axis_structures()
+        self._apply_band_variables()
         self._apply_layer_variables()
         self._add_labels_to_wires()
         self._place_structures()
@@ -144,14 +143,6 @@ class DrawingGrid:
         content = grid_str(height, width)
         return class_str(self, content)
 
-    def horizontal_lines(self) -> Sequence[Variable]:
-        """Return the horizontal lines top to bottom."""
-        return list(self._horizontal_lines)
-
-    def vertical_lines(self) -> Sequence[Variable]:
-        """Return the vertical lines left to right."""
-        return list(self._vertical_lines)
-
     def rows(self) -> Iterator[Band]:
         """Iterate over the rows top to bottom."""
         yield from self._rows
@@ -163,22 +154,22 @@ class DrawingGrid:
     @property
     def xmin(self) -> Variable:
         """Minimum coordinate along the X axis."""
-        return self._vertical_lines[0]
+        return self._columns[0].cmin
 
     @property
     def xmax(self) -> Variable:
         """Maximum coordinate along the X axis."""
-        return self._vertical_lines[-1]
+        return self._columns[-1].cmax
 
     @property
     def ymin(self) -> Variable:
         """Minimum coordinate along the Y axis."""
-        return self._horizontal_lines[0]
+        return self._rows[0].cmin
 
     @property
     def ymax(self) -> Variable:
         """Maximum coordinate along the Y axis."""
-        return self._horizontal_lines[-1]
+        return self._rows[-1].cmax
 
     def block_boxes(self) -> Iterator[BlockBox]:
         """Iterate over the boxes of the diagram blocks."""
@@ -194,9 +185,7 @@ class DrawingGrid:
 
     def constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the solver."""
-        yield from self._line_constraints()
         yield from self._block_box_constraints()
-        yield from self._joint_constraints()
         yield from self._wire_constraints()
         yield from self._band_constraints()
         yield from self._padding_constraints()
@@ -206,51 +195,26 @@ class DrawingGrid:
         yield from self._block_box_optional_constraints()
         yield from self._band_optional_constraints()
 
-    def _make_horizontal_lines(self) -> Sequence[Variable]:
-        """Create the horizontal lines."""
-        n_rows = self._layout.grid.height
-        return self._make_lines(n_rows, "hline", "x")
-
-    def _make_vertical_lines(self) -> Sequence[Variable]:
-        """Create the vertical lines."""
-        n_cols = self._layout.grid.width
-        return self._make_lines(n_cols, "vline", "y")
-
-    @staticmethod
-    def _make_lines(
-            count: int,
-            name_prefix: str, coord_name: str,
-    ) -> Sequence[Variable]:
-        """Create parallel lines."""
-        variables = []
-        for i in range(count + 1):
-            var_name = f"{name_prefix}_{i}_{coord_name}"
-            var = Variable(var_name)
-            variables.append(var)
-        return variables
-
     def _make_rows(self) -> Sequence[Band]:
         """Create the rows."""
-        return self._make_bands(self._horizontal_lines, "row", "y")
+        n_rows = self._layout.grid.height
+        return self._make_bands(n_rows, "row", "y")
 
     def _make_columns(self) -> Sequence[Band]:
         """Create the columns."""
-        return self._make_bands(self._vertical_lines, "col", "x")
+        n_cols = self._layout.grid.width
+        return self._make_bands(n_cols, "col", "x")
 
     @staticmethod
     def _make_bands(
-            lines: Sequence[Variable],
+            n_bands: int,
             name_prefix: str, coord_name: str,
     ) -> Sequence[Band]:
         """Create rows or columns."""
         bands: List[Band] = []
-        last = None
-        for i, line in enumerate(lines):
-            if last:
-                index = i - 1
-                band = Band(index, last, line, name_prefix, coord_name)
-                bands.append(band)
-            last = line
+        for i in range(n_bands):
+            band = Band(i, name_prefix, coord_name)
+            bands.append(band)
         return bands
 
     def _make_cells(self) -> Sequence[Sequence[DrawingCell]]:
@@ -435,6 +399,27 @@ class DrawingGrid:
             dstructs.append(dstruct)
         return result
 
+    def _apply_band_variables(self) -> None:
+        """Use row and column reference lines for joint coordinates."""
+        rows = self._rows
+        cols = self._columns
+        for wire in self._wires():
+            segments = list(wire.segments())
+            first_seg = segments[0]
+            last_seg = segments[-1]
+            seg_joints = [
+                (first_seg, first_seg.start),
+                (last_seg, last_seg.end),
+            ]
+            for seg, joint in seg_joints:
+                point = joint.layout_joint.point
+                if seg.is_horizontal():
+                    col = cols[point.j]
+                    joint.x = col.cref
+                else:
+                    row = rows[point.i]
+                    joint.y = row.cref
+
     def _apply_layer_variables(self) -> None:
         """Use layer variables in segments."""
         for struct in self._structures():
@@ -458,8 +443,8 @@ class DrawingGrid:
                 side_bands = cols
             else:
                 side_bands = rows
-            cmin = side_bands[lay_min].track.cmax
-            cmax = side_bands[lay_max].track.cmin
+            cmin = side_bands[lay_min].cmax
+            cmax = side_bands[lay_max].cmin
             attrs = lay_label.attributes
             ori = lay_segment.label_orientation
             label = Label(lay_label.text, ori, attrs, dia_attrs)
@@ -511,19 +496,6 @@ class DrawingGrid:
                 dseg = seg_map[lseg]
                 box.attach_segment(dseg, side, out)
 
-    def _line_constraints(self) -> Iterator[Constraint]:
-        """Generate the constraints between the lines of the grid."""
-        parallels = [
-            self._horizontal_lines,
-            self._vertical_lines,
-        ]
-        for lines in parallels:
-            last = None
-            for line in lines:
-                if last:
-                    yield line >= last
-                last = line
-
     def _block_box_constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the block boxes."""
         for box in self._block_boxes:
@@ -534,31 +506,6 @@ class DrawingGrid:
         for box in self._block_boxes:
             yield from box.optional_constraints()
 
-    def _joint_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the joints.
-
-        These constraints cannot be derived from the segments alone.
-
-        """
-        rows = self._rows
-        cols = self._columns
-        for wire in self._wires():
-            segments = list(wire.segments())
-            first_seg = segments[0]
-            last_seg = segments[-1]
-            seg_joints = [
-                (first_seg, first_seg.start),
-                (last_seg, last_seg.end),
-            ]
-            for seg, joint in seg_joints:
-                point = joint.layout_joint.point
-                if seg.is_horizontal():
-                    col = cols[point.j]
-                    yield joint.x == col.cref
-                else:
-                    row = rows[point.i]
-                    yield joint.y == row.cref
-
     def _wire_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the connection wires."""
         for seg in self._wire_segments():
@@ -566,8 +513,17 @@ class DrawingGrid:
 
     def _band_constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the rows and columns."""
-        for band in self._bands():
-            yield from band.constraints()
+        band_seqs = [
+            self._rows,
+            self._columns,
+        ]
+        for band_seq in band_seqs:
+            previous = None
+            for current in band_seq:
+                yield from current.constraints()
+                if previous:
+                    yield current.cmin >= previous.cmax
+                previous = current
 
     def _band_optional_constraints(self) -> Iterator[Constraint]:
         """Generate optional constraints for the rows and columns."""

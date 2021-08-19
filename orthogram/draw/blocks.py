@@ -217,16 +217,16 @@ class BlockBox:
         attrs = self._block.attributes
         # Top side.
         margin = self._calculate_margin(Side.TOP, attrs.margin_top)
-        yield self.ymin >= self._top_row.track.cmin + margin
+        yield self.ymin >= self._top_row.cmin + margin
         # Bottom side.
         margin = self._calculate_margin(Side.BOTTOM, attrs.margin_bottom)
-        yield self.ymax <= self._bottom_row.track.cmax - margin
+        yield self.ymax <= self._bottom_row.cmax - margin
         # Left side.
         margin = self._calculate_margin(Side.LEFT, attrs.margin_left)
-        yield self.xmin >= self._left_column.track.cmin + margin
+        yield self.xmin >= self._left_column.cmin + margin
         # Right side.
         margin = self._calculate_margin(Side.RIGHT, attrs.margin_right)
-        yield self.xmax <= self._right_column.track.cmax - margin
+        yield self.xmax <= self._right_column.cmax - margin
 
     def _calculate_margin(self, side: Side, min_margin: float) -> float:
         """Calculate the margin on the given side of the box."""
@@ -249,22 +249,22 @@ class BlockBox:
         for wire_label in self._labels_on(Side.TOP):
             dist = wire_label.attributes.label_distance
             yield self.ymin - wire_label.lmax == dist
-            yield wire_label.lmin - self._top_row.track.cmin >= dist
+            yield wire_label.lmin - self._top_row.cmin >= dist
         # Bottom side.
         for wire_label in self._labels_on(Side.BOTTOM):
             dist = wire_label.attributes.label_distance
             yield wire_label.lmin - self.ymax == dist
-            yield self._bottom_row.track.cmax - wire_label.lmax >= dist
+            yield self._bottom_row.cmax - wire_label.lmax >= dist
         # Left side.
         for wire_label in self._labels_on(Side.LEFT):
             dist = wire_label.attributes.label_distance
             yield self.xmin - wire_label.lmax == dist
-            yield wire_label.lmin - self._left_column.track.cmin >= dist
+            yield wire_label.lmin - self._left_column.cmin >= dist
         # Right side.
         for wire_label in self._labels_on(Side.RIGHT):
             dist = wire_label.attributes.label_distance
             yield wire_label.lmin - self.xmax == dist
-            yield self._right_column.track.cmax - wire_label.lmax >= dist
+            yield self._right_column.cmax - wire_label.lmax >= dist
 
     def _labels_on(self, side: Side) -> Iterator[DrawingWireLabel]:
         """Iterate over the connection labels on a block side."""

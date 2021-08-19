@@ -14,7 +14,11 @@ from cairo import (
 )
 
 from cassowary import Variable  # type: ignore
-from cassowary.expression import Constraint  # type: ignore
+
+from cassowary.expression import (  # type: ignore
+    Constraint,
+    Expression,
+)
 
 from ..arrange import (
     ConnectionLabelPosition,
@@ -201,15 +205,15 @@ class DrawingWireLabel(ABC):
         self._connection_attributes = segment.connection.attributes
         self._drawing_label = label
         self._text_attributes = label.attributes
+        self._width_along, self._height_across = self._relative_dimensions()
         self._displacement = self._calculate_displacement()
         name = layout_label.name
         if layout_label.segment.is_horizontal():
             coord_name = "x"
         else:
             coord_name = "y"
-        prefix = f"label_{name}_{coord_name}"
-        self._lmin = Variable(f"{prefix}min")
-        self._lmax = Variable(f"{prefix}max")
+        var_name = f"label_{name}_{coord_name}"
+        self._lmid = Variable(var_name)
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -243,23 +247,37 @@ class DrawingWireLabel(ABC):
         return self._bump() + gap + label.height
 
     @property
-    def lmin(self) -> Variable:
-        """Minimum coordinate along the segment."""
-        return self._lmin
+    def lmid(self) -> Variable:
+        """Variable holding the middle coordinate along the axis."""
+        return self._lmid
 
     @property
-    def lmax(self) -> Variable:
-        """Maximum coordinate along the segment."""
-        return self._lmax
+    def lmin(self) -> Expression:
+        """Expression giving the minimum coordinate along the segment."""
+        return self._lmid - 0.5 * self._width_along
+
+    @property
+    def lmax(self) -> Expression:
+        """Expression giving the maximum coordinate along the segment."""
+        return self._lmid + 0.5 * self._width_along
 
     def constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the solver.
+        """Override this to generate constraints for the solver."""
+        yield from []
 
-        This implementation generates constraints for the size of the
-        label along the segment.  Override to add further constraints.
+    def _relative_dimensions(self) -> Tuple[float, float]:
+        """Dimensions relative to the orientation of the segment.
+
+        Returns:
+
+          1. Width parallel to the segment.
+          2. Height perpendicular to the segment.
 
         """
-        yield from self._along_constraints()
+        label = self._drawing_label
+        if self._layout_segment.follows_label():
+            return label.width, label.height
+        return label.height, label.width
 
     def _calculate_displacement(self) -> Tuple[float, float]:
         """Calculate the displacement."""
@@ -285,15 +303,6 @@ class DrawingWireLabel(ABC):
     def _wire_bump(self) -> float:
         """Offset needed to avoid the connection line."""
         return 0.5 * wire_width(self._connection_attributes)
-
-    def _along_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints along the segment."""
-        label = self._drawing_label
-        if self._layout_segment.follows_label():
-            length = label.width
-        else:
-            length = label.height
-        yield self._lmax - self._lmin == length
 
 ######################################################################
 
@@ -334,29 +343,29 @@ class DrawingWireMiddleLabel(DrawingWireLabel):
             self,
             layout_label: WireLabel,
             label: Label,
-            track_cmin: Variable, track_cmax: Variable
+            band_cmin: Variable, band_cmax: Variable
     ):
         """Initialize for the given layout label.
 
         This label will be drawn between the coordinates given by the
         two variables, which define the empty space between two
-        consecutive tracks.
+        consecutive bands.
 
         """
         assert layout_label.position.is_middle()
         super().__init__(layout_label, label)
-        self._track_cmin = track_cmin
-        self._track_cmax = track_cmax
+        self._band_cmin = band_cmin
+        self._band_cmax = band_cmax
 
     def constraints(self) -> Iterator[Constraint]:
         """Generate constraints for the label."""
-        yield from self._along_constraints()
-        yield from self._track_constraints()
+        yield from self._band_constraints()
 
-    def _track_constraints(self) -> Iterator[Constraint]:
-        """Generate constraints for the tracks on each side of the label."""
+    def _band_constraints(self) -> Iterator[Constraint]:
+        """Generate constraints for the bands on each side of the label."""
+        # Center label between bands.
+        yield self._lmid == 0.5 * (self._band_cmin + self._band_cmax)
+        # Separate bands to fit the label.
         dist = self._text_attributes.label_distance
-        yield self._lmin - self._track_cmin >= dist
-        yield self._track_cmax - self._lmax >= dist
-        # Center between the tracks for aesthetic reasons.
-        yield self._lmin + self._lmax == self._track_cmin + self._track_cmax
+        total = self._width_along + 2 * dist
+        yield self._band_cmax - self._band_cmin >= total
