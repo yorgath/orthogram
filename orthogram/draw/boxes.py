@@ -1,4 +1,4 @@
-"""Provides classes for container drawing elements."""
+"""Provides classes for rectangular drawing elements."""
 
 from typing import (
     Iterator,
@@ -17,8 +17,8 @@ from .labels import Label
 
 ######################################################################
 
-class Container:
-    """Rectangular object that contains other objects."""
+class Box:
+    """Rectangular object that may contain other objects."""
 
     def __init__(
             self,
@@ -26,7 +26,7 @@ class Container:
             name: str,
             label: Optional[Label] = None,
     ):
-        """Initialize a container with the given name."""
+        """Initialize a box with the given name."""
         self._attributes = attrs
         self._name = name
         self._label = label
@@ -67,7 +67,7 @@ class Container:
 
     @property
     def attributes(self) -> ContainerAttributes:
-        """Attributes of the container."""
+        """Attributes of the box."""
         return self._attributes
 
     @property

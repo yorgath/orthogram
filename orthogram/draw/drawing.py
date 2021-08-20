@@ -34,7 +34,7 @@ from ..define import (
     LineAttributes,
 )
 
-from .blocks import BlockBox
+from .blocks import DrawingBlock
 
 from .connections import (
     DrawingNetwork,
@@ -42,7 +42,7 @@ from .connections import (
     DrawingWireSegment,
 )
 
-from .containers import Container
+from .boxes import Box
 
 from .functions import (
     line_area_attributes,
@@ -84,7 +84,7 @@ class Drawing:
         if text:
             ori = dia.label_orientation
             label = Label(text, ori, attrs, attrs)
-        self._container = Container(attrs, "drawing", label)
+        self._box = Box(attrs, "drawing", label)
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)
         # The coordinates of the elements are calculated by creating
@@ -101,8 +101,9 @@ class Drawing:
     def write_png(self, filename: str) -> None:
         """Write the drawing to a PNG file."""
         attrs = self._layout.diagram.attributes
-        width = self.xmax.value
-        height = self.ymax.value
+        box = self._box
+        width = box.xmax.value
+        height = box.ymax.value
         scale = attrs.scale
         with new_surface(width, height, scale) as surface:
             self._draw_diagram_box(surface)
@@ -123,48 +124,6 @@ class Drawing:
             with open(filename, "wb") as file:
                 surface.write_to_png(file)
 
-    ###################### Container delegates #######################
-
-    @property
-    def xmin(self) -> Variable:
-        """Minimum coordinate along the X axis."""
-        return self._container.xmin
-
-    @property
-    def xmax(self) -> Variable:
-        """Maximum coordinate along the X axis."""
-        return self._container.xmax
-
-    @property
-    def ymin(self) -> Variable:
-        """Minimum coordinate along the Y axis."""
-        return self._container.ymin
-
-    @property
-    def ymax(self) -> Variable:
-        """Maximum coordinate along the Y axis."""
-        return self._container.ymax
-
-    @property
-    def padding_top(self) -> float:
-        """Padding over the contents."""
-        return self._container.padding_top
-
-    @property
-    def padding_bottom(self) -> float:
-        """Padding under the contents."""
-        return self._container.padding_bottom
-
-    @property
-    def padding_left(self) -> float:
-        """Padding left of the contents."""
-        return self._container.padding_left
-
-    @property
-    def padding_right(self) -> float:
-        """Padding right of the contents."""
-        return self._container.padding_right
-
     ######################### Initialization #########################
 
     def _configure_variables(self) -> None:
@@ -173,10 +132,11 @@ class Drawing:
         # Shape coordinates are calculated relative to the start of
         # the drawing.  Fix the top left corner at zero and calculate
         # from there.
-        xmin = self.xmin
+        box = self._box
+        xmin = box.xmin
         xmin.value = 0.0
         solver.add_stay(xmin, strength=REQUIRED)
-        ymin = self.ymin
+        ymin = box.ymin
         ymin.value = 0.0
         solver.add_stay(ymin, strength=REQUIRED)
 
@@ -200,18 +160,19 @@ class Drawing:
 
     def _own_required_constraints(self) -> Iterator[Constraint]:
         """Generate required constraints for the drawing itself."""
-        # Container constraints.
-        yield from self._container.constraints()
+        box = self._box
+        # Box constraints.
+        yield from box.constraints()
         # Grid must be inside drawing.
         grid = self._grid
-        top = self.padding_top
-        bot = self.padding_bottom
-        lef = self.padding_left
-        rig = self.padding_right
-        yield grid.xmin >= self.xmin + lef
-        yield grid.xmax <= self.xmax - rig
-        yield grid.ymin >= self.ymin + top
-        yield grid.ymax <= self.ymax - bot
+        top = box.padding_top
+        bot = box.padding_bottom
+        lef = box.padding_left
+        rig = box.padding_right
+        yield grid.xmin >= box.xmin + lef
+        yield grid.xmax <= box.xmax - rig
+        yield grid.ymin >= box.ymin + top
+        yield grid.ymax <= box.ymax - bot
 
     def _own_optional_constraints(self) -> Iterator[Constraint]:
         """Generate optional constraints for the drawing itself."""
@@ -220,26 +181,27 @@ class Drawing:
         yield grid.xmax == grid.xmin
         yield grid.ymax == grid.ymin
         # Center grid on drawing.
-        top = self.padding_top
-        bot = self.padding_bottom
-        lef = self.padding_left
-        rig = self.padding_right
-        yield grid.xmin - self.xmin - lef == self.xmax - grid.xmax - rig
-        yield grid.ymin - self.ymin - top == self.ymax - grid.ymax - bot
+        box = self._box
+        top = box.padding_top
+        bot = box.padding_bottom
+        lef = box.padding_left
+        rig = box.padding_right
+        yield grid.xmin - box.xmin - lef == box.xmax - grid.xmax - rig
+        yield grid.ymin - box.ymin - top == box.ymax - grid.ymax - bot
 
     ######################### Image creation #########################
 
     def _draw_diagram_box(self, surface: ImageSurface) -> None:
         """Draw the box around the diagram."""
-        self._draw_container(surface, self._container)
+        self._draw_box(surface, self._box)
 
     def _draw_blocks(self, surface: ImageSurface) -> None:
         """Draw the diagram blocks."""
-        for box in self._block_boxes():
-            self._draw_container(surface, box.container)
+        for bbox in self._block_boxes():
+            self._draw_box(surface, bbox.box)
 
-    def _draw_container(self, surface: ImageSurface, box: Container) -> None:
-        """Draw the box of a container."""
+    def _draw_box(self, surface: ImageSurface, box: Box) -> None:
+        """Draw the box."""
         ctx = Context(surface)
         x_start = box.xmin.value
         y_start = box.ymin.value
@@ -264,8 +226,8 @@ class Drawing:
 
     def _draw_block_labels(self, surface: ImageSurface) -> None:
         """Draw the labels of the blocks."""
-        for box in self._block_boxes():
-            self._draw_container_label(surface, box.container)
+        for bbox in self._block_boxes():
+            self._draw_box_label(surface, bbox.box)
 
     def _draw_connections(self, surface: ImageSurface) -> None:
         """Draw the connections."""
@@ -296,9 +258,9 @@ class Drawing:
         grid = self._grid
         lwire = wire.layout_wire
         connection = lwire.connection
-        box1 = grid.block_box(connection.start.block)
-        box2 = grid.block_box(connection.end.block)
-        return WireShape(lwire, box1.polygon, box2.polygon, line)
+        block1 = grid.block(connection.start.block)
+        block2 = grid.block(connection.end.block)
+        return WireShape(lwire, block1.box.polygon, block2.box.polygon, line)
 
     @classmethod
     def _draw_wire_buffer(cls, surface: ImageSurface, shape: WireShape) -> None:
@@ -358,15 +320,15 @@ class Drawing:
 
     def _draw_diagram_label(self, surface: ImageSurface) -> None:
         """Draw the label of the diagram."""
-        self._draw_container_label(surface, self._container)
+        self._draw_box_label(surface, self._box)
 
     @classmethod
-    def _draw_container_label(
+    def _draw_box_label(
             cls,
             surface: ImageSurface,
-            box: Container,
+            box: Box,
     ) -> None:
-        """Draw the label of a container box."""
+        """Draw the label of a box."""
         label = box.label
         if not label:
             return
@@ -499,9 +461,9 @@ class Drawing:
         ctx.set_source_rgba(*color.rgba)
         return True
 
-    def _block_boxes(self) -> Iterator[BlockBox]:
+    def _block_boxes(self) -> Iterator[DrawingBlock]:
         """Return the boxes of the diagram blocks."""
-        yield from self._grid.block_boxes()
+        yield from self._grid.blocks()
 
     def _wire_segments(self) -> Iterator[DrawingWireSegment]:
         """Return the segments of all the wires."""
