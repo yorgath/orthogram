@@ -304,7 +304,7 @@ class DrawingGrid:
         index = 0
         for net in self._layout.networks():
             for wire in net.wires():
-                for seg in wire.segments():
+                for seg in wire:
                     for ljoint in seg.joints:
                         if ljoint not in result:
                             result[ljoint] = DrawingJoint(ljoint)
@@ -314,7 +314,7 @@ class DrawingGrid:
     def _layout_wire_segments(self) -> Iterator[WireSegment]:
         """Return the connection wire segments of the layout."""
         for wire in self._layout_wires():
-            yield from wire.segments()
+            yield from wire
 
     def _layout_wires(self) -> Iterator[Wire]:
         """Return the connection wires of the layout."""
@@ -328,7 +328,7 @@ class DrawingGrid:
             dnet = DrawingNetwork(lnet.name)
             for lwire in lnet.wires():
                 dwire = self._make_drawing_wire(lwire)
-                dnet.append_wire(dwire)
+                dnet.append(dwire)
             result.append(dnet)
         return result
 
@@ -339,7 +339,7 @@ class DrawingGrid:
         jmap = self._joint_map
         dist = self._layout.diagram.attributes.connection_distance
         size = len(layout_wire)
-        for i, lseg in enumerate(layout_wire.segments()):
+        for i, lseg in enumerate(layout_wire):
             is_first = bool(i == 0)
             is_last = bool(i == size - 1)
             start = jmap[lseg.start]
@@ -350,7 +350,7 @@ class DrawingGrid:
                 start=start, end=end,
                 is_first=is_first, is_last=is_last,
             )
-            dwire.append_segment(dseg)
+            dwire.append(dseg)
         return dwire
 
     def _make_wire_segment_map(self) -> Mapping[WireSegment,
@@ -395,7 +395,7 @@ class DrawingGrid:
                     for rseg in net_bundle.bundle.route_segments():
                         dseg = segmap[rseg]
                         dlayer.append(dseg)
-                dstruct.add_layer(dlayer)
+                dstruct.add(dlayer)
             dstructs.append(dstruct)
         return result
 
@@ -404,7 +404,7 @@ class DrawingGrid:
         rows = self._rows
         cols = self._columns
         for wire in self._wires():
-            segments = list(wire.segments())
+            segments = list(wire)
             first_seg = segments[0]
             last_seg = segments[-1]
             seg_joints = [
@@ -413,7 +413,7 @@ class DrawingGrid:
             ]
             for seg, joint in seg_joints:
                 point = joint.layout_joint.point
-                if seg.is_horizontal():
+                if seg.grid_vector.is_horizontal():
                     col = cols[point.j]
                     joint.x = col.cref
                 else:
@@ -439,7 +439,7 @@ class DrawingGrid:
             lay_segment = lay_label.segment
             lay_min, lay_max = lay_label.grid_vector.min_max_coordinates
             draw_segment = draw_segments[lay_segment]
-            if draw_segment.is_horizontal():
+            if draw_segment.grid_vector.is_horizontal():
                 side_bands = cols
             else:
                 side_bands = rows
@@ -598,9 +598,9 @@ class DrawingGrid:
     def _wire_segments(self) -> Iterator[DrawingWireSegment]:
         """Return the segments of all the wires."""
         for wire in self._wires():
-            yield from wire.segments()
+            yield from wire
 
     def _wires(self) -> Iterator[DrawingWire]:
         """Return the wires."""
         for net in self._networks:
-            yield from net.wires()
+            yield from net

@@ -5,8 +5,6 @@ from enum import Enum, auto
 from typing import (
     Iterable,
     Iterator,
-    List,
-    Optional,
     Tuple,
 )
 
@@ -55,7 +53,7 @@ class WireSegmentSpan:
         """Initialize given the segment and the coordinates on it."""
         self._segment = segment
         self._index = index
-        self._grid_vector = OrientedVector(segment.axis, coords)
+        self._grid_vector = OrientedVector(segment.grid_vector.axis, coords)
         self._is_first = is_first
         self._is_last = is_last
         self._name = f"{segment.name}.{index}"
@@ -64,7 +62,7 @@ class WireSegmentSpan:
         """Represent as string."""
         name = self._name
         desc = self.internals_description()
-        content = "f{name}, {desc}"
+        content = f"{name}, {desc}"
         return class_str(self, content)
 
     @property
@@ -144,10 +142,6 @@ class WireLabel:
         """Vector between the two grid points."""
         return self._span.grid_vector
 
-    def follows_segment(self) -> bool:
-        """True if the orientation of the label matches that of the segment."""
-        return self.segment.follows_label()
-
     @property
     def name(self) -> str:
         """A name for the object."""
@@ -203,7 +197,7 @@ class Labeler:
 
     def _wire_spans_for_labels(self, wire: Wire) -> Iterator[WireSegmentSpan]:
         """Return the sub-segments on which labels can be placed."""
-        for seg in wire.segments():
+        for seg in wire:
             yield from self._segment_spans_for_labels(seg)
 
     def _segment_spans_for_labels(
@@ -216,13 +210,13 @@ class Labeler:
         where the labels are going to be placed.
 
         """
-        axis = segment.axis
-        stops_set = set(segment.min_max_coordinates)
+        vec = segment.grid_vector
+        stops_set = set(vec.min_max_coordinates)
         cuts = self._refiner.segment_intersections(segment)
         stops_set.update(cuts)
         stops = sorted(stops_set)
         # Create the spans along the direction of the segment.
-        if segment.direction.is_descending():
+        if vec.direction.is_descending():
             stops.reverse()
         segment_is_first = segment.is_first()
         segment_is_last = segment.is_last()
@@ -233,7 +227,7 @@ class Labeler:
             is_last = segment_is_last and k == last_index
             span = WireSegmentSpan(
                 segment=segment, index=k,
-                coords = (coord_1, coord_2),
+                coords=(coord_1, coord_2),
                 is_first=is_first, is_last=is_last
             )
             yield span

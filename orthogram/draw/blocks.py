@@ -198,7 +198,7 @@ class BlockBox:
         for attachment in self._attachments:
             seg = attachment.segment
             half_width = 0.5 * seg.wire_width + gap
-            if seg.is_horizontal():
+            if seg.grid_vector.is_horizontal():
                 y_wire = seg.start.y
                 yield self.ymin <= y_wire - half_width
                 yield self.ymax >= y_wire + half_width

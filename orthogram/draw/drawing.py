@@ -272,7 +272,7 @@ class Drawing:
         for net in self._networks():
             # Collect the shapes necessary for the drawing.
             shapes = []
-            for wire in net.wires():
+            for wire in net:
                 shape = self._wire_shape(wire)
                 shapes.append(shape)
             # Draw the background of the network to cover the other
@@ -408,8 +408,9 @@ class Drawing:
             segment: DrawingWireSegment,
     ) -> None:
         """Draw the label of a wire segment."""
+        segment_is_horizontal = segment.grid_vector.is_horizontal()
         for label in segment.labels():
-            if segment.is_horizontal():
+            if segment_is_horizontal:
                 x_label = label.lmid.value
                 y_start = segment.start.y.value
                 y_end = segment.end.y.value
@@ -505,12 +506,12 @@ class Drawing:
     def _wire_segments(self) -> Iterator[DrawingWireSegment]:
         """Return the segments of all the wires."""
         for wire in self._wires():
-            yield from wire.segments()
+            yield from wire
 
     def _wires(self) -> Iterator[DrawingWire]:
         """Return the wires."""
         for net in self._networks():
-            yield from net.wires()
+            yield from net
 
     def _networks(self) -> Iterator[DrawingNetwork]:
         """Return the networks of drawing wires."""

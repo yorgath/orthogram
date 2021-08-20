@@ -78,14 +78,14 @@ class Bundle:
         assert seg_list
         self._route_segments = seg_list
         a_segment = seg_list[0]
-        bundle_axis = a_segment.axis
+        bundle_axis = a_segment.grid_vector.axis
         # Calculate the coordinate range.
         horizontal = bundle_axis.orientation is Orientation.HORIZONTAL
         coords = set()
         for seg in seg_list:
             # All segments must be collinear.
-            assert seg.axis == bundle_axis
-            for point in seg.through_points():
+            assert seg.grid_vector.axis == bundle_axis
+            for point in seg.grid_vector.through_points():
                 if horizontal:
                     coords.add(point.j)
                 else:
@@ -106,6 +106,11 @@ class Bundle:
         yield from self._route_segments
 
     @property
+    def grid_vector(self) -> OrientedVector:
+        """Vector between the two ends of the bundle on the grid."""
+        return self._grid_vector
+
+    @property
     def offset_var(self) -> Variable:
         """Variable that holds the offset."""
         return self._offset_var
@@ -114,30 +119,6 @@ class Bundle:
     def offset(self) -> int:
         """Offset of the bundle relative to the central axis."""
         return round(self._offset_var.value)
-
-    @property
-    def axis(self) -> Axis:
-        """Axis on which the bundle lies."""
-        return self._grid_vector.axis
-
-    @property
-    def orientation(self) -> Orientation:
-        """Orientation of the bundle."""
-        return self._grid_vector.orientation
-
-    @property
-    def min_point(self) -> IntPoint:
-        """First grid point of the bundle."""
-        return self._grid_vector.first_point
-
-    @property
-    def max_point(self) -> IntPoint:
-        """Last grid point of the bundle."""
-        return self._grid_vector.last_point
-
-    def through_points(self) -> Iterator[IntPoint]:
-        """Iterate over all the points along the axis."""
-        yield from self._grid_vector.through_points()
 
     def description(self) -> str:
         """Return a description of the bundle."""
@@ -242,14 +223,14 @@ class WireSegment:
         return self._route_segment
 
     @property
-    def connection(self) -> Connection:
-        """Connection associated with the wire."""
-        return self._route_segment.connection
-
-    @property
     def index(self) -> int:
         """Index number of the segment along the wire."""
         return self._route_segment.index
+
+    @property
+    def connection(self) -> Connection:
+        """Connection associated with the wire."""
+        return self._route_segment.connection
 
     @property
     def grid_vector(self) -> OrientedVector:
@@ -296,33 +277,9 @@ class WireSegment:
     def offset(self) -> int:
         """Offset relative to the central axis."""
         joint = self._start
-        if self.is_horizontal():
+        if self.grid_vector.is_horizontal():
             return joint.vertical_offset
         return joint.horizontal_offset
-
-    @property
-    def axis(self) -> Axis:
-        """Axis on which the segment lies."""
-        return self._route_segment.axis
-
-    def is_horizontal(self) -> bool:
-        """True if the segment is horizontal."""
-        return self._route_segment.is_horizontal()
-
-    @property
-    def coordinates(self) -> Tuple[int, int]:
-        """First and last coordinates along the axis."""
-        return self._route_segment.coordinates
-
-    @property
-    def min_max_coordinates(self) -> Tuple[int, int]:
-        """Coordinates in increasing order."""
-        return self._route_segment.min_max_coordinates
-
-    @property
-    def direction(self) -> Direction:
-        """Direction of the segment."""
-        return self._route_segment.direction
 
     @property
     def name(self) -> str:
@@ -335,21 +292,23 @@ class WireSegment:
 
     def cut_by(self, other: 'WireSegment') -> Optional[int]:
         """Return the coordinate at which the other segment cuts this."""
-        axis_self = self.axis
+        vec_self = self.grid_vector
+        axis_self = vec_self.axis
         ori_self = axis_self.orientation
-        axis_other = other.axis
+        vec_other = other.grid_vector
+        axis_other = vec_other.axis
         ori_other = axis_other.orientation
         if ori_other is ori_self:
             # Parallel segments do not interset.
             return None
-        min_self, max_self = self.min_max_coordinates
+        min_self, max_self = vec_self.min_max_coordinates
         base_other = axis_other.coordinate
         if base_other <= min_self or base_other >= max_self:
             return None
         base_self = axis_self.coordinate
         off_self = self.offset
-        min_other, max_other = other.min_max_coordinates
-        dir_other = other.direction
+        min_other, max_other = vec_other.min_max_coordinates
+        dir_other = vec_other.direction
         if dir_other is Direction.DOWN:
             off_1_other = other.start.vertical_offset
             off_2_other = other.end.vertical_offset
@@ -401,6 +360,10 @@ class Wire:
         """Return the i-th segment."""
         return self._segments[i]
 
+    def __iter__(self) -> Iterator[WireSegment]:
+        """Iterate over the segments."""
+        yield from self._segments
+
     def __len__(self) -> int:
         """Return the number of segments."""
         return len(self._segments)
@@ -415,10 +378,6 @@ class Wire:
         """Associated connection."""
         return self._route.connection
 
-    def segments(self) -> Iterator[WireSegment]:
-        """Iterate over the segments."""
-        yield from self._segments
-
     def description(self) -> str:
         """Return a description of the wire."""
         return self._route.description()
@@ -426,7 +385,7 @@ class Wire:
     def attachment_sides(self) -> Tuple[Side, Side]:
         """Sides of the blocks to which the wire is attached."""
         first = self[0]
-        first_dir = first.direction
+        first_dir = first.grid_vector.direction
         if first_dir is Direction.DOWN:
             first_side = Side.BOTTOM
         elif first_dir is Direction.LEFT:
@@ -436,7 +395,7 @@ class Wire:
         elif first_dir is Direction.UP:
             first_side = Side.TOP
         last = self[-1]
-        last_dir = last.direction
+        last_dir = last.grid_vector.direction
         if last_dir is Direction.DOWN:
             last_side = Side.TOP
         elif last_dir is Direction.LEFT:
@@ -494,9 +453,10 @@ class Network:
     ) -> Tuple[FloatPoint, FloatPoint]:
         """Return a pair of points suitable for overlap check."""
         jmap = self._joint_map
-        joint_1 = jmap[bundle.min_point]
+        vec = bundle.grid_vector
+        joint_1 = jmap[vec.first_point]
         point_1 = self._float_point(bundle, joint_1, use_offsets)
-        joint_2 = jmap[bundle.max_point]
+        joint_2 = jmap[vec.last_point]
         point_2 = self._float_point(bundle, joint_2, use_offsets)
         return point_1, point_2
 
@@ -506,7 +466,7 @@ class Network:
         graph = nx.Graph()
         segments = []
         for route in self._routes:
-            for seg in route.segments():
+            for seg in route:
                 segments.append(seg)
                 graph.add_node(seg)
         n_segments = len(segments)
@@ -543,10 +503,10 @@ class Network:
         """
         if segment_1 is segment_2:
             return False
-        if segment_1.axis != segment_2.axis:
+        if segment_1.grid_vector.axis != segment_2.grid_vector.axis:
             return False
-        points_1 = set(segment_1.through_points())
-        points_2 = set(segment_2.through_points())
+        points_1 = set(segment_1.grid_vector.through_points())
+        points_2 = set(segment_2.grid_vector.through_points())
         for _ in points_1.intersection(points_2):
             return True
         return False
@@ -562,9 +522,8 @@ class Network:
         jmap: Dict[IntPoint, Joint] = {}
         my_name = self._name
         for route in self._routes:
-            for seg in route.segments():
-                points = [seg.first_point, seg.last_point]
-                for point in points:
+            for seg in route:
+                for point in seg.grid_vector.points:
                     if point not in jmap:
                         hor = horizontal.get(point)
                         ver = vertical.get(point)
@@ -586,9 +545,10 @@ class Network:
             Orientation.VERTICAL: vertical,
         }
         for bundle in self._bundles:
-            ori = bundle.orientation
+            vec = bundle.grid_vector
+            ori = vec.orientation
             col = collections[ori]
-            for point in bundle.through_points():
+            for point in vec.through_points():
                 col[point] = bundle
 
     def _map_points_to_joints(self) -> Dict[IntPoint, Joint]:
@@ -604,11 +564,12 @@ class Network:
         jmap = self._joint_map
         for route in self._routes:
             wire_segments: List[WireSegment] = []
-            route_segments = list(route.segments())
+            route_segments = list(route)
             last_index = len(route_segments) - 1
             for i, rseg in enumerate(route_segments):
-                joint_1 = jmap[rseg.first_point]
-                joint_2 = jmap[rseg.last_point]
+                vec = rseg.grid_vector
+                joint_1 = jmap[vec.first_point]
+                joint_2 = jmap[vec.last_point]
                 is_first = i == 0
                 is_last = i == last_index
                 cseg = WireSegment(
@@ -633,8 +594,9 @@ class Network:
         # If there is a node at the joint, move the point a bit to
         # avoid false positives.
         if joint.node:
-            ori = bundle.orientation
-            out = (point == bundle.min_point)
+            vec = bundle.grid_vector
+            ori = vec.orientation
+            out = (point == vec.first_point)
             key = (ori, out)
             values = {
                 (Orientation.VERTICAL, False): (0, -1),
@@ -685,11 +647,13 @@ class NetworkBundle:
         """True if this bundle overlaps with the given one."""
         net1, bundle1 = self.network, self.bundle
         net2, bundle2 = other.network, other.bundle
-        if bundle1.axis != bundle2.axis:
+        vec1 = bundle1.grid_vector
+        vec2 = bundle2.grid_vector
+        if vec1.axis != vec2.axis:
             return False
         p11, p12 = net1.offset_bundle(bundle1, use_offsets)
         p21, p22 = net2.offset_bundle(bundle2, use_offsets)
-        horizontal = bundle1.orientation is Orientation.HORIZONTAL
+        horizontal = vec1.orientation.is_horizontal()
         vertical = not horizontal
         if horizontal and p11.x <= p22.x and p12.x >= p21.x:
             return True

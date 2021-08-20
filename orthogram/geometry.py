@@ -22,6 +22,14 @@ class Orientation(Enum):
     HORIZONTAL = auto()
     VERTICAL = auto()
 
+    def is_horizontal(self) -> bool:
+        """True if the orientation is horizontal."""
+        return self is Orientation.HORIZONTAL
+
+    def is_vertical(self) -> bool:
+        """True if the orientation is vertical."""
+        return self is Orientation.VERTICAL
+
 ######################################################################
 
 class Direction(Enum):
@@ -228,6 +236,11 @@ class OrientedVector:
         if coords[0] < coords[1]:
             return Direction.DOWN
         return Direction.UP
+
+    @property
+    def points(self) -> Tuple[IntPoint, IntPoint]:
+        """First and last points of the vector."""
+        return self.first_point, self.last_point
 
     @property
     def first_point(self) -> IntPoint:

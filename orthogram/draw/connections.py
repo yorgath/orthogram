@@ -29,6 +29,7 @@ from ..define import ConnectionAttributes
 from ..geometry import (
     Axis,
     Direction,
+    OrientedVector,
 )
 
 from ..util import class_str
@@ -121,18 +122,10 @@ class DrawingWireSegment:
         """The layout wire segment wrapped by this object."""
         return self._layout_segment
 
-    def is_horizontal(self) -> bool:
-        """True if the segment is horizontal."""
-        return self._layout_segment.is_horizontal()
-
-    def is_vertical(self) -> bool:
-        """True if the segment is vertical."""
-        return not self.is_horizontal()
-
     @property
-    def direction(self) -> Direction:
-        """Direction of the segment."""
-        return self._layout_segment.direction
+    def grid_vector(self) -> OrientedVector:
+        """Vector of the segment in grid space."""
+        return self._layout_segment.grid_vector
 
     def follows_label(self) -> bool:
         """True if the orientation matches that of the label."""
@@ -201,7 +194,7 @@ class DrawingWireSegment:
         """
         self._cref = var
         self._update_dimensions()
-        if self.is_horizontal():
+        if self.grid_vector.is_horizontal():
             self._start.y = var
             self._end.y = var
         else:
@@ -273,16 +266,16 @@ class DrawingWire:
         content = self._layout_wire.description()
         return class_str(self, content)
 
+    def __iter__(self) -> Iterator[DrawingWireSegment]:
+        """Iterate over the segments that make up this wire."""
+        yield from self._segments
+
     @property
     def layout_wire(self) -> Wire:
         """The layout wire wrapped by this object."""
         return self._layout_wire
 
-    def segments(self) -> Iterator[DrawingWireSegment]:
-        """Iterate over the segments that make up this wire."""
-        yield from self._segments
-
-    def append_segment(self, segment: DrawingWireSegment) -> None:
+    def append(self, segment: DrawingWireSegment) -> None:
         """Append segment to the wire."""
         self._segments.append(segment)
 
@@ -315,13 +308,13 @@ class DrawingNetwork:
         content = repr(self._name)
         return class_str(self, content)
 
-    def append_wire(self, wire: DrawingWire) -> None:
-        """Add a wire to the network."""
-        self._wires.append(wire)
-
-    def wires(self) -> Iterator[DrawingWire]:
+    def __iter__(self) -> Iterator[DrawingWire]:
         """Iterate over the wires."""
         yield from self._wires
+
+    def append(self, wire: DrawingWire) -> None:
+        """Add a wire to the network."""
+        self._wires.append(wire)
 
 ######################################################################
 
@@ -386,7 +379,7 @@ class DrawingWireStructure:
         """Axis on which the segments sit."""
         return self._axis
 
-    def add_layer(self, layer: DrawingWireLayer) -> None:
+    def add(self, layer: DrawingWireLayer) -> None:
         """Add a layer to the structure."""
         self._layers_by_offset[layer.offset] = layer
 

@@ -23,7 +23,6 @@ from ..define import (
 
 from ..geometry import (
     Axis,
-    Direction,
     IntBounds,
     IntPoint,
     Orientation,
@@ -236,46 +235,8 @@ class RouteSegment:
         return self._grid_vector
 
     @property
-    def axis(self) -> Axis:
-        """Axis on which the segment lies."""
-        return self._grid_vector.axis
-
-    def is_horizontal(self) -> bool:
-        """True if the segment is horizontal."""
-        return self._grid_vector.is_horizontal()
-
-    @property
-    def coordinates(self) -> Tuple[int, int]:
-        """First and last coordinates along the axis."""
-        return self._grid_vector.coordinates
-
-    @property
-    def min_max_coordinates(self) -> Tuple[int, int]:
-        """Coordinates in increasing order."""
-        return self._grid_vector.min_max_coordinates
-
-    @property
-    def direction(self) -> Direction:
-        """Direction of the segment."""
-        return self._grid_vector.direction
-
-    @property
-    def first_point(self) -> IntPoint:
-        """First point of the segment."""
-        return self._grid_vector.first_point
-
-    @property
-    def last_point(self) -> IntPoint:
-        """Last point of the segment."""
-        return self._grid_vector.last_point
-
-    def through_points(self) -> Iterator[IntPoint]:
-        """Iterate over all the points along the axis."""
-        yield from self._grid_vector.through_points()
-
-    @property
     def label_orientation(self) -> Orientation:
-        """Orientation of the label, horizontal of vertical.
+        """Orientation of the label, horizontal or vertical.
 
         This is derived from the orientation of text in the
         attributes.  If it is FOLLOW, it returns the orientation of
@@ -327,6 +288,10 @@ class Route:
         self._connection = connection
         self._segments = list(segments)
 
+    def __iter__(self) -> Iterator[RouteSegment]:
+        """Iterate over the segments that make up the route."""
+        yield from self._segments
+
     def __repr__(self) -> str:
         """Represent as string."""
         content = self.description()
@@ -336,10 +301,6 @@ class Route:
     def connection(self) -> Connection:
         """Associated diagram connection."""
         return self._connection
-
-    def segments(self) -> Iterator[RouteSegment]:
-        """Iterate over the segments that make up the route."""
-        yield from self._segments
 
     @property
     def name(self) -> str:
@@ -384,10 +345,11 @@ class Router:
         """Return a map that maps grid points to the segments on them."""
         result: Dict[IntPoint, List[RouteSegment]] = {}
         for route in self._routes:
-            for seg in route.segments():
-                is_hor = seg.is_horizontal()
-                seg_coord = seg.axis.coordinate
-                start, end = seg.coordinates
+            for seg in route:
+                vec = seg.grid_vector
+                is_hor = vec.is_horizontal()
+                seg_coord = vec.axis.coordinate
+                start, end = vec.coordinates
                 if start > end:
                     start, end = end, start
                 for coord in range(start, end + 1):

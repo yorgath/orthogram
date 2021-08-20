@@ -24,7 +24,6 @@ from ..geometry import (
     Axis,
     Direction,
     IntPoint,
-    Orientation,
 )
 
 from ..util import (
@@ -142,7 +141,7 @@ class Passthrough:
         return self._bundle_top
 
     def bundles(self) -> Iterator[Bundle]:
-        """Return the bundles passing through the point."""
+        """Iterate over the bundles passing through the point."""
         bundles = [
             self._bundle_bottom,
             self._bundle_left,
@@ -172,7 +171,7 @@ class Passthrough:
         if bundle_segment:
             bundle = bundle_segment.bundle
             segment = bundle_segment.segment
-            direc = segment.direction
+            direc = segment.grid_vector.direction
             if direc is Dir.DOWN:
                 top = bundle
             elif direc is Dir.LEFT:
@@ -185,7 +184,7 @@ class Passthrough:
         if bundle_segment:
             bundle = bundle_segment.bundle
             segment = bundle_segment.segment
-            direc = segment.direction
+            direc = segment.grid_vector.direction
             if direc is Dir.DOWN:
                 bottom = bundle
             elif direc is Dir.LEFT:
@@ -258,7 +257,7 @@ class BundleRule:
     ):
         """Initialize the rule between the two bundles."""
         # Ensure that the two bundles are collinear.
-        assert first.orientation is second.orientation
+        assert first.grid_vector.orientation is second.grid_vector.orientation
         self._category = category
         self._first = first
         self._second = second
@@ -286,7 +285,7 @@ class BundleRule:
     def description(self) -> str:
         """Return a description of the rule."""
         cat = repr(self._category.name)
-        if self.first.orientation is Orientation.HORIZONTAL:
+        if self.first.grid_vector.orientation.is_horizontal():
             adverb = "OVER"
         else:
             adverb = "LEFT OF"
@@ -464,9 +463,9 @@ class Refiner:
         bundle_segments = self._bundle_segments
         seg1: Optional[RouteSegment] = None
         bseg1: Optional[BundleSegment] = None
-        for seg2 in route.segments():
+        for seg2 in route:
             bseg2 = bundle_segments[seg2]
-            points = list(seg2.through_points())
+            points = list(seg2.grid_vector.through_points())
             n_points = len(points)
             for i in range(n_points - 1):
                 point = points[i]
@@ -481,7 +480,7 @@ class Refiner:
                 bseg1 = bundle_segments[seg1]
         # Last point of route.
         if seg1 and bseg1:
-            points = list(seg1.through_points())
+            points = list(seg1.grid_vector.through_points())
             yield Passthrough(
                 route=route,
                 point=points[-1],
@@ -683,7 +682,7 @@ class Refiner:
         result: Dict[Axis, List[NetworkBundle]] = {}
         for net in self._networks:
             for bundle in net.bundles():
-                axis = bundle.axis
+                axis = bundle.grid_vector.axis
                 if not axis in result:
                     result[axis] = []
                 net_bundle = NetworkBundle(net, bundle)
@@ -732,7 +731,7 @@ class Refiner:
         """Return the wire segments."""
         for net in self._networks:
             for wire in net.wires():
-                yield from wire.segments()
+                yield from wire
 
     def _bundles(self) -> Iterator[Bundle]:
         """Return the bundles."""
