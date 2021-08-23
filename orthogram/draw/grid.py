@@ -256,16 +256,18 @@ class DrawingGrid:
             bottom = rows[bounds.imax]
             left = cols[bounds.jmin]
             right = cols[bounds.jmax]
-            label: Optional[DrawingLabel] = None
-            text = dia_block.label()
-            if text:
-                attrs = dia_block.attributes
-                ori = dia_block.label_orientation
-                label = DrawingLabel(text, ori, attrs, dia_attrs)
+            draw_label: Optional[DrawingLabel] = None
+            dia_label = dia_block.label
+            if dia_label:
+                text = dia_label.attributes.label
+                if text:
+                    attrs = dia_label.attributes
+                    ori = dia_block.label_orientation
+                    draw_label = DrawingLabel(text, ori, attrs, dia_attrs)
             draw_block = DrawingBlock(
                 dia_block, top, bottom, left, right,
                 wire_margin,
-                label
+                draw_label
             )
             self._associate_block_with_cells(draw_block)
             draw_blocks.append(draw_block)

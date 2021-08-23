@@ -23,6 +23,7 @@ from ..util import (
 
 from .attributes import (
     AttributeMap,
+    Attributes,
     BlockAttributes,
     ConnectionAttributes,
     DiagramAttributes,
@@ -229,6 +230,20 @@ class Node:
 
 ######################################################################
 
+class Label:
+    """Text on a diagram element."""
+
+    def __init__(self, attrs: TextAttributes):
+        """Initialize with the given attributes."""
+        self._attributes = attrs
+
+    @property
+    def attributes(self) -> TextAttributes:
+        """Attributes of the label."""
+        return self._attributes
+
+######################################################################
+
 class Block:
     """Represents a block of the diagram."""
 
@@ -240,7 +255,8 @@ class Block:
         """Initialize the block (with optional attributes)."""
         self._index = index
         self._name = name
-        self._attributes = BlockAttributes(**attrs)
+        self._attributes = self._make_attributes(**attrs)
+        self._label = self._make_label()
         self._nodes: List[Node] = []
         self._bounds: Optional[IntBounds] = None
 
@@ -281,20 +297,14 @@ class Block:
         return None
 
     @property
+    def label(self) -> Optional[Label]:
+        """Label to draw on the block."""
+        return self._label
+
+    @property
     def label_orientation(self) -> Orientation:
         """Orientation of the label."""
         return _container_label_orientation(self._attributes)
-
-    def label(self) -> Optional[str]:
-        """Return a label to draw on the block."""
-        label = self._attributes.label
-        # If the label is not defined, use the name of the block.  If
-        # we want a named block with an empty label, we have to use an
-        # empty string for the label.  Thus, the empty string is valid
-        # as a label.  Be specific here and compare with None.
-        if label is None:
-            return self._name
-        return label
 
     def nodes(self) -> Iterator[Node]:
         """Iterate over the nodes."""
@@ -327,9 +337,22 @@ class Block:
             points.append(node.point)
         self._bounds = IntBounds.containing(points)
 
-    def _text_attributes(self) -> TextAttributes:
-        """Return the text attributes of the object."""
-        return self._attributes
+    def _make_attributes(self, **attrs: AttributeMap) -> BlockAttributes:
+        """Create the attributes held in the object."""
+        attributes = Attributes(**attrs)
+        # Use the name if the label is not defined.
+        if 'label' not in attributes:
+            attributes['label'] = self._name
+        return BlockAttributes(**attributes)
+
+    def _make_label(self) -> Optional[Label]:
+        """Create the label of the block."""
+        attrs = self._attributes
+        # Do not create a label if the text in the attributes is
+        # undefined.
+        if not self._attributes.label:
+            return None
+        return Label(attrs)
 
 ######################################################################
 
@@ -621,10 +644,6 @@ class Diagram:
         if not block:
             log_warning(f"Block '{name}' does not exist")
         return block
-
-    def _text_attributes(self) -> TextAttributes:
-        """Return the text attributes of the object."""
-        return self._attributes
 
     def _pretty_print(self) -> None:
         """Print the diagram for debugging purposes."""
