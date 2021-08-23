@@ -13,7 +13,7 @@ from shapely.geometry import Polygon  # type: ignore
 from ..define import ContainerAttributes
 from ..util import class_str
 
-from .labels import Label
+from .labels import DrawingLabel
 
 ######################################################################
 
@@ -24,7 +24,7 @@ class Box:
             self,
             attrs: ContainerAttributes,
             name: str,
-            label: Optional[Label] = None,
+            label: Optional[DrawingLabel] = None,
     ):
         """Initialize a box with the given name."""
         self._attributes = attrs
@@ -61,7 +61,7 @@ class Box:
         return self._ymax
 
     @property
-    def label(self) -> Optional[Label]:
+    def label(self) -> Optional[DrawingLabel]:
         """The label to draw on the box."""
         return self._label
 

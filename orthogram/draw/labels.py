@@ -44,7 +44,7 @@ from .functions import (
 
 ######################################################################
 
-class Label:
+class DrawingLabel:
     """Piece of text drawn on the diagram."""
 
     def __init__(
@@ -197,14 +197,14 @@ class Label:
 class DrawingWireLabel(ABC):
     """Label on a drawing wire."""
 
-    def __init__(self, layout_label: WireLabel, label: Label):
+    def __init__(self, layout_label: WireLabel, drawing_label: DrawingLabel):
         """Initialize for the given layout label."""
         self._layout_label = layout_label
         self._position = layout_label.position
         self._layout_segment = segment = layout_label.segment
         self._connection_attributes = segment.connection.attributes
-        self._drawing_label = label
-        self._text_attributes = label.attributes
+        self._drawing_label = drawing_label
+        self._text_attributes = drawing_label.attributes
         self._width_along, self._height_across = self._relative_dimensions()
         self._displacement = self._calculate_displacement()
         name = layout_label.name
@@ -221,7 +221,7 @@ class DrawingWireLabel(ABC):
         return class_str(self, content)
 
     @property
-    def drawing_label(self) -> Label:
+    def drawing_label(self) -> DrawingLabel:
         """The label to draw on the diagram."""
         return self._drawing_label
 
@@ -309,10 +309,10 @@ class DrawingWireLabel(ABC):
 class DrawingWireEndLabel(DrawingWireLabel):
     """Label at one end of a drawing wire."""
 
-    def __init__(self, layout_label: WireLabel, label: Label):
+    def __init__(self, layout_label: WireLabel, drawing_label: DrawingLabel):
         """Initialize for the given layout label."""
         assert not layout_label.position.is_middle()
-        super().__init__(layout_label, label)
+        super().__init__(layout_label, drawing_label)
 
     def _bump(self) -> float:
         """Offset needed to avoid other elements.
@@ -342,7 +342,7 @@ class DrawingWireMiddleLabel(DrawingWireLabel):
     def __init__(
             self,
             layout_label: WireLabel,
-            label: Label,
+            drawing_label: DrawingLabel,
             band_cmin: Variable, band_cmax: Variable
     ):
         """Initialize for the given layout label.
@@ -353,7 +353,7 @@ class DrawingWireMiddleLabel(DrawingWireLabel):
 
         """
         assert layout_label.position.is_middle()
-        super().__init__(layout_label, label)
+        super().__init__(layout_label, drawing_label)
         self._band_cmin = band_cmin
         self._band_cmax = band_cmax
 

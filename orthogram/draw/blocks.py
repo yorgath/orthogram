@@ -32,7 +32,7 @@ from .connections import (
 
 from .boxes import Box
 from .functions import arrow_length
-from .labels import Label
+from .labels import DrawingLabel
 
 ######################################################################
 
@@ -54,7 +54,7 @@ class DrawingBlock:
             top_row: Band, bottom_row: Band,
             left_column: Band, right_column: Band,
             wire_margin: float = 0.0,
-            label: Optional[Label] = None,
+            label: Optional[DrawingLabel] = None,
     ):
         """Initialize for a diagram block inside the given grid lines."""
         self._diagram_block = diagram_block

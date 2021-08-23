@@ -53,10 +53,10 @@ from .connections import (
 )
 
 from .labels import (
+    DrawingLabel,
     DrawingWireEndLabel,
     DrawingWireLabel,
     DrawingWireMiddleLabel,
-    Label,
 )
 
 ######################################################################
@@ -256,12 +256,12 @@ class DrawingGrid:
             bottom = rows[bounds.imax]
             left = cols[bounds.jmin]
             right = cols[bounds.jmax]
-            label: Optional[Label] = None
+            label: Optional[DrawingLabel] = None
             text = dia_block.label()
             if text:
                 attrs = dia_block.attributes
                 ori = dia_block.label_orientation
-                label = Label(text, ori, attrs, dia_attrs)
+                label = DrawingLabel(text, ori, attrs, dia_attrs)
             draw_block = DrawingBlock(
                 dia_block, top, bottom, left, right,
                 wire_margin,
@@ -447,14 +447,14 @@ class DrawingGrid:
             cmax = side_bands[lay_max].cmin
             attrs = lay_label.attributes
             ori = lay_segment.label_orientation
-            label = Label(lay_label.text, ori, attrs, dia_attrs)
-            draw_label: DrawingWireLabel
+            label = DrawingLabel(lay_label.text, ori, attrs, dia_attrs)
+            wire_label: DrawingWireLabel
             if lay_label.position is ConnectionLabelPosition.MIDDLE:
-                draw_label = DrawingWireMiddleLabel(
+                wire_label = DrawingWireMiddleLabel(
                     lay_label, label, cmin, cmax)
             else:
-                draw_label = DrawingWireEndLabel(lay_label, label)
-            draw_segment.add_label(draw_label)
+                wire_label = DrawingWireEndLabel(lay_label, label)
+            draw_segment.add_label(wire_label)
 
     def _place_structures(self) -> None:
         """Associate wire structures with bands.

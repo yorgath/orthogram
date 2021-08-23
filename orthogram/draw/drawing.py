@@ -51,7 +51,7 @@ from .functions import (
 )
 
 from .grid import DrawingGrid
-from .labels import Label
+from .labels import DrawingLabel
 
 from .shapes import (
     Arrow,
@@ -77,13 +77,13 @@ class Drawing:
         time_start = datetime.now()
         self._layout = layout
         # Diagram label.
-        label: Optional[Label] = None
+        label: Optional[DrawingLabel] = None
         dia = layout.diagram
         attrs = dia.attributes
         text = attrs.label
         if text:
             ori = dia.label_orientation
-            label = Label(text, ori, attrs, attrs)
+            label = DrawingLabel(text, ori, attrs, attrs)
         self._box = Box(attrs, "drawing", label)
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)
@@ -394,7 +394,7 @@ class Drawing:
     def _draw_label(
             cls,
             surface: ImageSurface,
-            label: Label,
+            label: DrawingLabel,
             x_center: float, y_center: float,
             anchor: Anchor,
     ) -> None:
