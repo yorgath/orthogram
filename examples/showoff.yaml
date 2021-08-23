@@ -26,6 +26,8 @@ styles:
     buffer_width: 2
     buffer_fill: [1.0, 0.9, 1.0]
     text_fill: [0.5, 0.0, 0.5]
+    start_label: Start
+    end_label: End
 
 groups:
 
@@ -67,6 +69,12 @@ blocks:
       Connections
       try to avoid
       each other.
+
+  - name: B3
+    label: |-
+      You can put labels
+      on connection
+      ends as well.
 
   - name: B4
     label: |-
@@ -134,10 +142,10 @@ connections:
     stroke_dasharray: [4, 4]
     stroke_width: 3
     text_fill: [0.0, 0.3, 0.0]
-    text_orientation: vertical
-    label: |-
-      You can have arrows
-      both ways.
+    text_orientation: horizontal
+    label: You can have arrows both ways.
+    start_label: "Start\narrow"
+    end_label: "End\narrow"
 
   - start: {D: Dc}
     end: [A, B, C]
