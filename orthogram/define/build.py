@@ -368,7 +368,7 @@ def _collect_text_attributes(
         if weight:
             attrs['font_weight'] = weight
     if 'label' in any_def:
-        attrs['label'] = str(any_def['label'])
+        attrs['label'] = _parse_label(any_def['label'])
     if 'label_distance' in any_def:
         attrs['label_distance'] = float(any_def['label_distance'])
     if 'text_fill' in any_def:
@@ -456,6 +456,12 @@ def _collect_diagram_attributes(
 
 ######################################################################
 # The following functions are used to parse the attribute definitions.
+
+def _parse_label(text: Any) -> Optional[str]:
+    """Parse the value of a label attribute."""
+    if text is None:
+        return None
+    return str(text)
 
 def _parse_color(numbers: Optional[Sequence[float]]) -> Optional[Color]:
     """Parse the value of a color attribute.
