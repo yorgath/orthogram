@@ -18,6 +18,7 @@ from typing import (
     Sequence,
     Tuple,
     Union,
+    cast,
 )
 
 from ..util import (
@@ -90,6 +91,29 @@ class RowDef:
     def __iter__(self) -> Iterator[Optional[str]]:
         """Iterate over the tags for the cells."""
         yield from self._tags
+
+######################################################################
+
+class LabelDef:
+    """Definition of a label.
+
+    Holds the information necessary to create a label.
+
+    """
+
+    def __init__(self, **attrs: AttributeMap):
+        """Initialize with the given attributes."""
+        self._attributes = attrs
+
+    def __repr__(self) -> str:
+        """Represent as string."""
+        text = self._attributes.get('label')
+        return class_str(self, repr(text))
+
+    @property
+    def attributes(self) -> AttributeMap:
+        """Attributes of the label."""
+        return self._attributes
 
 ######################################################################
 
@@ -237,6 +261,10 @@ class ConnectionDef:
         self._end = end
         self._group = group
         self._attributes = attrs
+        self._start_label: Optional[LabelDef] = None
+        self._middle_label: Optional[LabelDef] = None
+        self._end_label: Optional[LabelDef] = None
+        self._init_labels()
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -266,6 +294,86 @@ class ConnectionDef:
     def attributes(self) -> AttributeMap:
         """Attributes to create the connection with."""
         return self._attributes
+
+    @property
+    def start_label(self) -> Optional[LabelDef]:
+        """Definition of the label at the start of the connection."""
+        return self._start_label
+
+    @property
+    def middle_label(self) -> Optional[LabelDef]:
+        """Definition of the label near the middle of the connection."""
+        return self._middle_label
+
+    @property
+    def end_label(self) -> Optional[LabelDef]:
+        """Definition of the label at the end of the connection."""
+        return self._end_label
+
+    def set_start_label(
+            self,
+            text: Optional[str],
+            **attrs: AttributeMap,
+    ) -> Optional[LabelDef]:
+        """Set the label at the start of the connection."""
+        label_def = self._make_label(text, **attrs)
+        self._start_label = label_def
+        return label_def
+
+    def set_middle_label(
+            self,
+            text: Optional[str],
+            **attrs: AttributeMap,
+    ) -> Optional[LabelDef]:
+        """Set the label near the middle of the connection."""
+        label_def = self._make_label(text, **attrs)
+        self._middle_label = label_def
+        return label_def
+
+    def set_end_label(
+            self,
+            text: Optional[str],
+            **attrs: AttributeMap,
+    ) -> Optional[LabelDef]:
+        """Set the label at the end of the connection."""
+        label_def = self._make_label(text, **attrs)
+        self._end_label = label_def
+        return label_def
+
+    def _init_labels(self) -> None:
+        """Create the label definitions from the attributes."""
+        attrs = self._attributes
+        if 'start_label' in attrs:
+            label_attrs = attrs['start_label']
+            self.set_start_label(None, **label_attrs)
+        if 'end_label' in attrs:
+            label_attrs = attrs['end_label']
+            self.set_end_label(None, **label_attrs)
+        if 'middle_label' in attrs:
+            label_attrs = attrs['middle_label']
+            self.set_middle_label(None, **label_attrs)
+        else:
+            # If there is label text in the attributes, assume that
+            # the user wants to create a middle label with it.
+            text = attrs.get('label')
+            if text:
+                self.set_middle_label(cast(str, text), **attrs)
+
+    @staticmethod
+    def _make_label(
+            text: Optional[str],
+            **attrs: AttributeMap,
+    ) -> Optional[LabelDef]:
+        """Create a label for the connection."""
+        if not text:
+            attr_text = attrs.get('label')
+            if attr_text:
+                text = cast(str, attr_text)
+        if not text:
+            return None
+        attributes = Attributes(**attrs)
+        attributes['label'] = text
+        return LabelDef(**attrs)
 
 ######################################################################
 

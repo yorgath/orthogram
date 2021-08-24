@@ -21,6 +21,7 @@ import networkx as nx  # type: ignore
 
 from ..define import (
     Connection,
+    ConnectionLabelPosition,
     Node,
     Side,
 )
@@ -237,18 +238,19 @@ class WireSegment:
         """Vector of the segment in grid space."""
         return self._route_segment.grid_vector
 
-    @property
-    def label_orientation(self) -> Orientation:
+    def label_orientation(
+            self, position: ConnectionLabelPosition,
+    ) -> Orientation:
         """Orientation of the label, horizontal of vertical.
 
-        See RouteSegment property of the same name.
+        See RouteSegment method of the same name.
 
         """
-        return self._route_segment.label_orientation
+        return self._route_segment.label_orientation(position)
 
-    def follows_label(self) -> bool:
+    def follows_label(self, position: ConnectionLabelPosition) -> bool:
         """True if the orientation matches that of the label."""
-        return self._route_segment.follows_label()
+        return self._route_segment.follows_label(position)
 
     @property
     def joints(self) -> Tuple[Joint, Joint]:

@@ -18,12 +18,22 @@ from .attributes import (
 )
 
 from .build import Builder
-from .defs import DiagramDef
+
+from .defs import (
+    ConnectionDef,
+    DiagramDef,
+    LabelDef,
+    RowDef,
+    UserBlockDef,
+)
+
 from .load import Loader
 
 from .diagram import (
     Block,
     Connection,
+    ConnectionLabelPosition,
     Diagram,
+    Label,
     Node,
 )

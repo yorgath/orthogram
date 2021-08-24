@@ -20,7 +20,6 @@ from cassowary import Variable  # type: ignore
 from cassowary.expression import Constraint  # type: ignore
 
 from ..arrange import (
-    ConnectionLabelPosition,
     Joint,
     Layout,
     RouteSegment,
@@ -28,7 +27,10 @@ from ..arrange import (
     WireSegment,
 )
 
-from ..define import Block
+from ..define import (
+    Block,
+    ConnectionLabelPosition,
+)
 
 from ..geometry import (
     Axis,
@@ -259,11 +261,9 @@ class DrawingGrid:
             draw_label: Optional[DrawingLabel] = None
             dia_label = dia_block.label
             if dia_label:
-                text = dia_label.attributes.label
-                if text:
-                    attrs = dia_label.attributes
-                    ori = dia_block.label_orientation
-                    draw_label = DrawingLabel(text, ori, attrs, dia_attrs)
+                attrs = dia_label.attributes
+                ori = dia_block.label_orientation
+                draw_label = DrawingLabel(attrs, dia_attrs, ori)
             draw_block = DrawingBlock(
                 dia_block, top, bottom, left, right,
                 wire_margin,
@@ -448,8 +448,8 @@ class DrawingGrid:
             cmin = side_bands[lay_min].cmax
             cmax = side_bands[lay_max].cmin
             attrs = lay_label.attributes
-            ori = lay_segment.label_orientation
-            label = DrawingLabel(lay_label.text, ori, attrs, dia_attrs)
+            ori = lay_segment.label_orientation(lay_label.position)
+            label = DrawingLabel(attrs, dia_attrs, ori)
             wire_label: DrawingWireLabel
             if lay_label.position is ConnectionLabelPosition.MIDDLE:
                 wire_label = DrawingWireMiddleLabel(

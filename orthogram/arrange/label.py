@@ -1,14 +1,17 @@
 """Arrange labels on the diagram."""
 
-from enum import Enum, auto
-
 from typing import (
     Iterable,
     Iterator,
     Tuple,
 )
 
-from ..define import TextAttributes
+from ..define import (
+    ConnectionLabelPosition,
+    Label,
+    TextAttributes,
+)
+
 from ..geometry import OrientedVector
 from ..util import class_str
 
@@ -18,26 +21,6 @@ from .net import (
 )
 
 from .refine import Refiner
-
-######################################################################
-
-class ConnectionLabelPosition(Enum):
-    """Position of a connection label relative to the connection."""
-    START = auto()
-    MIDDLE = auto()
-    END = auto()
-
-    def is_start(self) -> bool:
-        """True if this is at the start of the connection."""
-        return self is ConnectionLabelPosition.START
-
-    def is_middle(self) -> bool:
-        """True if this is at the middle of the connection."""
-        return self is ConnectionLabelPosition.MIDDLE
-
-    def is_end(self) -> bool:
-        """True if this is at the end of the connection."""
-        return self is ConnectionLabelPosition.END
 
 ######################################################################
 
@@ -102,14 +85,14 @@ class WireLabel:
 
     def __init__(
             self,
+            diagram_label: Label,
             span: WireSegmentSpan,
             position: ConnectionLabelPosition,
-            text: str,
     ):
         """Initialize for a given segment span."""
+        self._diagram_label = diagram_label
         self._span = span
         self._position = position
-        self._text = text
         self._name = f"{span.name}.{position.name}"
 
     def __repr__(self) -> str:
@@ -128,14 +111,9 @@ class WireLabel:
         return self._position
 
     @property
-    def text(self) -> str:
-        """Text of the label."""
-        return self._text
-
-    @property
     def attributes(self) -> TextAttributes:
         """Attributes of the label."""
-        return self.segment.connection.attributes
+        return self._diagram_label.attributes
 
     @property
     def grid_vector(self) -> OrientedVector:
@@ -151,7 +129,7 @@ class WireLabel:
         """Description of the label object."""
         name = repr(self._name)
         span = self._span.internals_description()
-        text = repr(self._text)
+        text = repr(self.attributes.label)
         return f"{name}, {span}, text={text}"
 
 ######################################################################
@@ -182,18 +160,20 @@ class Labeler:
     def _make_labels_for_wire(self, wire: Wire) -> Iterator[WireLabel]:
         """Create the labels for the given wire."""
         spans = list(self._wire_spans_for_labels(wire))
-        attrs = wire.connection.attributes
         Pos = ConnectionLabelPosition
-        text = attrs.start_label
-        if text:
-            yield WireLabel(spans[0], Pos.START, text)
-        text = attrs.label
-        if text:
+        # Start.
+        dia_label = wire.connection.start_label
+        if dia_label:
+            yield WireLabel(dia_label, spans[0], Pos.START)
+        # Middle.
+        dia_label = wire.connection.middle_label
+        if dia_label:
             span = self._span_for_middle_label(spans)
-            yield WireLabel(span, Pos.MIDDLE, text)
-        text = attrs.end_label
-        if text:
-            yield WireLabel(spans[-1], Pos.END, text)
+            yield WireLabel(dia_label, span, Pos.MIDDLE)
+        # End.
+        dia_label = wire.connection.end_label
+        if dia_label:
+            yield WireLabel(dia_label, spans[-1], Pos.END)
 
     def _wire_spans_for_labels(self, wire: Wire) -> Iterator[WireSegmentSpan]:
         """Return the sub-segments on which labels can be placed."""
@@ -238,7 +218,10 @@ class Labeler:
     ) -> WireSegmentSpan:
         """Return the optimal sub-segment for the middle label."""
         # Prefer segments with the same orientation as the label.
-        spans = [span for span in wire_spans if span.segment.follows_label()]
+        pos = ConnectionLabelPosition.MIDDLE
+        def pred(span: WireSegmentSpan) -> bool:
+            return span.segment.follows_label(pos)
+        spans = [span for span in wire_spans if pred(span)]
         # However, we will take any segment if we have to.
         if not spans:
             spans = list(wire_spans)

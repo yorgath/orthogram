@@ -20,12 +20,10 @@ from cassowary.expression import (  # type: ignore
     Expression,
 )
 
-from ..arrange import (
-    ConnectionLabelPosition,
-    WireLabel,
-)
+from ..arrange import WireLabel
 
 from ..define import (
+    ConnectionLabelPosition,
     DiagramAttributes,
     TextAttributes,
 )
@@ -49,10 +47,9 @@ class DrawingLabel:
 
     def __init__(
             self,
-            text: str,
-            orientation: Orientation,
             text_attributes: TextAttributes,
             diagram_attributes: DiagramAttributes,
+            orientation: Orientation,
     ):
         """Initialize the label.
 
@@ -64,11 +61,16 @@ class DrawingLabel:
         dimensions of the label.
 
         """
-        self._text = text
-        self._orientation = orientation
         self._text_attributes = text_attributes
         self._diagram_attributes = diagram_attributes
-        self._lines = text.split("\n")
+        self._orientation = orientation
+        text = text_attributes.label
+        if text:
+            lines = text.split("\n")
+        else:
+            lines = []
+        self._text = text
+        self._lines = lines
         width, height = self._calculate_dimensions()
         self._width = width
         self._height = height
@@ -275,7 +277,7 @@ class DrawingWireLabel(ABC):
 
         """
         label = self._drawing_label
-        if self._layout_segment.follows_label():
+        if self._layout_segment.follows_label(self.position):
             return label.width, label.height
         return label.height, label.width
 

@@ -15,6 +15,7 @@ import networkx as nx  # type: ignore
 from ..define import (
     Block,
     Connection,
+    ConnectionLabelPosition,
     Diagram,
     Node,
     Side,
@@ -234,8 +235,9 @@ class RouteSegment:
         """Vector of the segment in grid space."""
         return self._grid_vector
 
-    @property
-    def label_orientation(self) -> Orientation:
+    def label_orientation(
+            self, position: ConnectionLabelPosition
+    ) -> Orientation:
         """Orientation of the label, horizontal or vertical.
 
         This is derived from the orientation of text in the
@@ -243,21 +245,25 @@ class RouteSegment:
         the segment itself.
 
         """
-        tori = self._connection.attributes.text_orientation
+        label = self._connection.label(position)
+        assert label
+        tori = label.attributes.text_orientation
         if tori is TextOrientation.HORIZONTAL:
             return Orientation.HORIZONTAL
         if tori is TextOrientation.VERTICAL:
             return Orientation.VERTICAL
         return self._grid_vector.orientation
 
-    def follows_label(self) -> bool:
+    def follows_label(self, position: ConnectionLabelPosition) -> bool:
         """True if the orientation matches that of the label.
 
         Segments whose orientation matches the orientation of the wire
         label may be preferable when arranging the labels.
 
         """
-        return self._grid_vector.orientation is self.label_orientation
+        vec_ori = self._grid_vector.orientation
+        label_ori = self.label_orientation(position)
+        return vec_ori is label_ori
 
     @property
     def name(self) -> str:

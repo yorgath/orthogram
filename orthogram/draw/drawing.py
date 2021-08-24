@@ -18,7 +18,6 @@ from cairo import (
 from cassowary import (  # type: ignore
     REQUIRED,
     SimplexSolver,
-    Variable,
     WEAK,
 )
 
@@ -83,7 +82,7 @@ class Drawing:
         text = attrs.label
         if text:
             ori = dia.label_orientation
-            label = DrawingLabel(text, ori, attrs, attrs)
+            label = DrawingLabel(attrs, attrs, ori)
         self._box = Box(attrs, "drawing", label)
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)

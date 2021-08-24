@@ -18,17 +18,18 @@ from cassowary.expression import (  # type: ignore
 from shapely.geometry import LineString  # type: ignore
 
 from ..arrange import (
-    ConnectionLabelPosition,
     Joint,
     Wire,
     WireSegment,
 )
 
-from ..define import ConnectionAttributes
+from ..define import (
+    ConnectionAttributes,
+    ConnectionLabelPosition,
+)
 
 from ..geometry import (
     Axis,
-    Direction,
     OrientedVector,
 )
 
@@ -127,9 +128,9 @@ class DrawingWireSegment:
         """Vector of the segment in grid space."""
         return self._layout_segment.grid_vector
 
-    def follows_label(self) -> bool:
+    def follows_label(self, position: ConnectionLabelPosition) -> bool:
         """True if the orientation matches that of the label."""
-        return self._layout_segment.follows_label()
+        return self._layout_segment.follows_label(position)
 
     @property
     def start(self) -> DrawingJoint:

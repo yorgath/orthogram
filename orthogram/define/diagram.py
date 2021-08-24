@@ -1,5 +1,7 @@
 """Provides the elements of a diagram."""
 
+from enum import Enum, auto
+
 from typing import (
     Dict,
     Iterable,
@@ -27,6 +29,7 @@ from .attributes import (
     BlockAttributes,
     ConnectionAttributes,
     DiagramAttributes,
+    LabelAttributes,
     TextAttributes,
     TextOrientation,
 )
@@ -37,6 +40,26 @@ from .defs import (
     DiagramDef,
     SubBlockDef,
 )
+
+######################################################################
+
+class ConnectionLabelPosition(Enum):
+    """Position of a connection label relative to the connection."""
+    START = auto()
+    MIDDLE = auto()
+    END = auto()
+
+    def is_start(self) -> bool:
+        """True if this is at the start of the connection."""
+        return self is ConnectionLabelPosition.START
+
+    def is_middle(self) -> bool:
+        """True if this is at the middle of the connection."""
+        return self is ConnectionLabelPosition.MIDDLE
+
+    def is_end(self) -> bool:
+        """True if this is at the end of the connection."""
+        return self is ConnectionLabelPosition.END
 
 ######################################################################
 
@@ -439,6 +462,9 @@ class Connection:
         self._end = end
         self._group = group
         self._attributes = ConnectionAttributes(**attrs)
+        self._start_label: Optional[Label] = None
+        self._middle_label: Optional[Label] = None
+        self._end_label: Optional[Label] = None
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -469,6 +495,51 @@ class Connection:
     def attributes(self) -> ConnectionAttributes:
         """Attributes attached to the connection."""
         return self._attributes
+
+    @property
+    def start_label(self) -> Optional[Label]:
+        """Label at the start of the connection."""
+        return self._start_label
+
+    @property
+    def middle_label(self) -> Optional[Label]:
+        """Label near the middle of the connection."""
+        return self._middle_label
+
+    @property
+    def end_label(self) -> Optional[Label]:
+        """Label at the end of the connection."""
+        return self._end_label
+
+    def label(self, position: ConnectionLabelPosition) -> Optional[Label]:
+        """Return the label at the given position."""
+        if position is ConnectionLabelPosition.START:
+            return self._start_label
+        if position is ConnectionLabelPosition.MIDDLE:
+            return self._middle_label
+        if position is ConnectionLabelPosition.END:
+            return self._end_label
+        return None
+
+    def set_start_label(self, **attrs: AttributeMap) -> None:
+        """Set the label at the start of the connection."""
+        self._start_label = self._make_label(**attrs)
+
+    def set_middle_label(self, **attrs: AttributeMap) -> None:
+        """Set the label near the middle of the connection."""
+        self._middle_label = self._make_label(**attrs)
+
+    def set_end_label(self, **attrs: AttributeMap) -> None:
+        """Set the label at the end of the connection."""
+        self._end_label = self._make_label(**attrs)
+
+    def _make_label(self, **attrs: AttributeMap) -> Label:
+        """Create a label for the connection."""
+        attributes = Attributes()
+        attributes.merge(self._attributes.text_attributes_as_map())
+        attributes.merge(attrs)
+        text_attributes = LabelAttributes(**attributes)
+        return Label(text_attributes)
 
     def description(self) -> str:
         """Return a description of the connection."""
@@ -620,6 +691,13 @@ class Diagram:
         # Everything seems OK, let's make the connection.
         connection = Connection(
             index, start, end, cdef.group, **cdef.attributes)
+        # Add the labels.
+        if cdef.start_label:
+            connection.set_start_label(**cdef.start_label.attributes)
+        if cdef.middle_label:
+            connection.set_middle_label(**cdef.middle_label.attributes)
+        if cdef.end_label:
+            connection.set_end_label(**cdef.end_label.attributes)
         return connection
 
     def _sub_block(self, ndef: SubBlockDef) -> Optional[SubBlock]:

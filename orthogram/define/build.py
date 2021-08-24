@@ -306,8 +306,25 @@ def _collect_attributes(any_def: Definition) -> Attributes:
     _collect_container_attributes(attrs, any_def)
     _collect_block_attributes(attrs, any_def)
     _collect_connection_attributes(attrs, any_def)
+    _collect_label_attributes(attrs, any_def)
     _collect_diagram_attributes(attrs, any_def)
     return attrs
+
+def _collect_label_attributes(
+        attrs: Attributes,
+        any_def: Definition
+) -> None:
+    """Collect the attributes that are relevant to labels."""
+    keys = ('start_label', 'middle_label', 'end_label')
+    for key in keys:
+        label_def = any_def.get(key)
+        if label_def:
+            label_attrs = Attributes()
+            if isinstance(label_def, str):
+                label_attrs['label'] = label_def
+            else:
+                _collect_text_attributes(label_attrs, label_def)
+            attrs[key] = label_attrs
 
 def _collect_line_attributes(
         attrs: Attributes,
@@ -415,8 +432,6 @@ def _collect_connection_attributes(
         attrs['buffer_fill'] = _parse_color(any_def['buffer_fill'])
     if 'buffer_width' in any_def:
         attrs['buffer_width'] = float(any_def['buffer_width'])
-    if 'end_label' in any_def:
-        attrs['end_label'] = str(any_def['end_label'])
     if 'entrances' in any_def:
         entrances = _parse_sides(any_def['entrances'])
         if entrances:
@@ -425,8 +440,6 @@ def _collect_connection_attributes(
         exits = _parse_sides(any_def['exits'])
         if exits:
             attrs['exits'] = exits
-    if 'start_label' in any_def:
-        attrs['start_label'] = str(any_def['start_label'])
 
 def _collect_diagram_attributes(
         attrs: Attributes,

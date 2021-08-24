@@ -14,6 +14,8 @@ from typing import (
     cast,
 )
 
+from ..util import class_str
+
 ######################################################################
 
 # Attributes are key-value pairs, where the key is a string.
@@ -171,7 +173,6 @@ class Attributes(Mapping[str, Any]):
         'buffer_width',
         'collapse_connections',
         'connection_distance',
-        'end_label',
         'entrances',
         'exits',
         'fill',
@@ -194,13 +195,19 @@ class Attributes(Mapping[str, Any]):
         'padding_top',
         'pass_through',
         'scale',
-        'start_label',
         'stroke',
         'stroke_dasharray',
         'stroke_width',
         'text_fill',
         'text_line_height',
         'text_orientation',
+    ]
+
+    # Names of nested attributes.
+    _nested_attribute_names = [
+        'end_label',
+        'middle_label',
+        'start_label',
     ]
 
     def __init__(self, **attrs: AttributeMap):
@@ -227,19 +234,47 @@ class Attributes(Mapping[str, Any]):
         """Return the number of attributes in the collection."""
         return len(self._attributes)
 
+    def __repr__(self) -> str:
+        """Represent as string."""
+        content = repr({**self})
+        return class_str(self, content)
+
     def merge(self, src: AttributeMap) -> None:
         """Merge attributes to this instance."""
         dest = self._attributes
+        # Top level attributes.
         for name in self._attribute_names:
             if name in src:
                 dest[name] = src[name]
+        # Nested attributes (one level only).
+        for parent_name in self._nested_attribute_names:
+            if parent_name in src:
+                child_src = src[parent_name]
+                dest_src = dest.get(parent_name)
+                if not dest_src:
+                    dest_src = dest[parent_name] = Attributes()
+                for name in self._attribute_names:
+                    if name in child_src:
+                        dest_src[name] = child_src[name]
 
     def _pretty_print(self) -> None:
         """Print the attributes for debugging purposes."""
         print("Attributes:")
-        for name in sorted(self._attribute_names):
+        top_names = self._attribute_names
+        nested_names = self._nested_attribute_names
+        names = top_names + nested_names
+        for name in sorted(names):
             if name in self:
-                print(f"\t{name}: {self[name]}")
+                if name in nested_names:
+                    print(f"\t{name}:")
+                    child_attrs = self[name]
+                    for child_name in sorted(top_names):
+                        if child_name in child_attrs:
+                            value = child_attrs[child_name]
+                            print(f"\t\t{child_name}: {value}")
+                else:
+                    value = self[name]
+                    print(f"\t{name}: {value}")
 
 ######################################################################
 
@@ -418,6 +453,30 @@ class TextAttributes(AttributesBackstop):
             self._text_orientation = cast(
                 TextOrientation, attrs['text_orientation'])
 
+    def text_attributes_as_map(self) -> AttributeMap:
+        """Return the text attributes as a mapping."""
+        return {
+            'font_family': self._font_family,
+            'font_size': self._font_size,
+            'font_style': self._font_style,
+            'font_weight': self._font_weight,
+            'label': self._label,
+            'label_distance': self._label_distance,
+            'text_fill': self._text_fill,
+            'text_line_height': self._text_line_height,
+            'text_orientation': self._text_orientation,
+        }
+
+######################################################################
+
+class LabelAttributes(TextAttributes):
+    """Collection of attributes relevant to labels."""
+
+    def __init__(self, **attrs: AttributeMap):
+        """Initialize the attributes with the given values."""
+        super().__init__()
+        self.set_attributes(**attrs)
+
 ######################################################################
 
 class ContainerAttributes(AreaAttributes, TextAttributes):
@@ -556,11 +615,9 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         self._arrow_forward = True
         self._buffer_fill: Optional[Color] = None
         self._buffer_width = 0.0
-        self._end_label: Optional[str] = None
         self._entrances = self._collect_sides(all_sides)
         self._exits = self._collect_sides(all_sides)
         self._label_distance = 2.0
-        self._start_label: Optional[str] = None
         self._text_orientation = TextOrientation.FOLLOW
         self.set_attributes(**attrs)
 
@@ -605,11 +662,6 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
         return self._buffer_width
 
     @property
-    def end_label(self) -> Optional[str]:
-        """Text to draw near the start of the connection."""
-        return self._end_label
-
-    @property
     def entrances(self) -> List[Side]:
         """Sides to enter into the destination block."""
         return list(self._entrances)
@@ -618,11 +670,6 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
     def exits(self) -> List[Side]:
         """Sides to exit from the source block."""
         return list(self._exits)
-
-    @property
-    def start_label(self) -> Optional[str]:
-        """Text to draw near the start of the connection."""
-        return self._start_label
 
     def set_attributes(self, **attrs: AttributeMap) -> None:
         """Set the attributes to the given values."""
@@ -639,14 +686,10 @@ class ConnectionAttributes(LineAttributes, TextAttributes):
             self._buffer_fill = cast(Optional[Color], attrs['buffer_fill'])
         if 'buffer_width' in attrs:
             self._buffer_width = cast(float, attrs['buffer_width'])
-        if 'end_label' in attrs:
-            self._end_label = cast(Optional[str], attrs['end_label'])
         if 'entrances' in attrs:
             self._entrances = self._collect_sides(attrs['entrances'])
         if 'exits' in attrs:
             self._exits = self._collect_sides(attrs['exits'])
-        if 'start_label' in attrs:
-            self._start_label = cast(Optional[str], attrs['start_label'])
 
 ######################################################################
 

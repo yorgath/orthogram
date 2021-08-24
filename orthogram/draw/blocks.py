@@ -9,15 +9,11 @@ from typing import (
     Optional,
 )
 
-from cassowary import Variable  # type: ignore
 from cassowary.expression import Constraint  # type: ignore
-
-from shapely.geometry import Polygon  # type: ignore
-
-from ..arrange import ConnectionLabelPosition
 
 from ..define import (
     Block,
+    ConnectionLabelPosition,
     Side,
 )
 
