@@ -203,13 +203,6 @@ class Attributes(Mapping[str, Any]):
         'text_orientation',
     ]
 
-    # Names of nested attributes.
-    _nested_attribute_names = [
-        'end_label',
-        'middle_label',
-        'start_label',
-    ]
-
     def __init__(self, **attrs: AttributeMap):
         """Initialize the collection with the given values."""
         attributes: Dict[str, Any] = {}
@@ -242,39 +235,17 @@ class Attributes(Mapping[str, Any]):
     def merge(self, src: AttributeMap) -> None:
         """Merge attributes to this instance."""
         dest = self._attributes
-        # Top level attributes.
         for name in self._attribute_names:
             if name in src:
                 dest[name] = src[name]
-        # Nested attributes (one level only).
-        for parent_name in self._nested_attribute_names:
-            if parent_name in src:
-                child_src = src[parent_name]
-                dest_src = dest.get(parent_name)
-                if not dest_src:
-                    dest_src = dest[parent_name] = Attributes()
-                for name in self._attribute_names:
-                    if name in child_src:
-                        dest_src[name] = child_src[name]
 
     def _pretty_print(self) -> None:
         """Print the attributes for debugging purposes."""
         print("Attributes:")
-        top_names = self._attribute_names
-        nested_names = self._nested_attribute_names
-        names = top_names + nested_names
-        for name in sorted(names):
+        for name in sorted(self._attribute_names):
             if name in self:
-                if name in nested_names:
-                    print(f"\t{name}:")
-                    child_attrs = self[name]
-                    for child_name in sorted(top_names):
-                        if child_name in child_attrs:
-                            value = child_attrs[child_name]
-                            print(f"\t\t{child_name}: {value}")
-                else:
-                    value = self[name]
-                    print(f"\t{name}: {value}")
+                value = self[name]
+                print(f"\t{name}: {value}")
 
 ######################################################################
 

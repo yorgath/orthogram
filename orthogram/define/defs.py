@@ -359,16 +359,21 @@ class ConnectionDef:
             if text:
                 self.set_middle_label(cast(str, text), **attrs)
 
-    @staticmethod
     def _make_label(
+            self,
             text: Optional[str],
             **attrs: AttributeMap,
     ) -> Optional[LabelDef]:
         """Create a label for the connection."""
         if not text:
-            attr_text = attrs.get('label')
-            if attr_text:
-                text = cast(str, attr_text)
+            if 'label' in attrs:
+                own_text = attrs.get('label')
+                if own_text:
+                    text = cast(str, own_text)
+            else:
+                parent_text = self._attributes.get('label')
+                if parent_text:
+                    text = cast(str, parent_text)
         if not text:
             return None
         attributes = Attributes(**attrs)

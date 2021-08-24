@@ -24,7 +24,10 @@ from .attributes import (
     TextOrientation,
 )
 
-from .diagram import DiagramDef
+from .diagram import (
+    ConnectionDef,
+    DiagramDef,
+)
 
 ######################################################################
 
@@ -260,7 +263,34 @@ class Builder:
         own_attrs = _collect_attributes(connection_def)
         attrs.merge(own_attrs)
         # Create the object(s).
-        self._diagram_def.add_connections(start, end, group=group, **attrs)
+        cdefs = self._diagram_def.add_connections(
+        start, end, group=group, **attrs)
+        # Add the labels.
+        methods = {
+            'start_label': ConnectionDef.set_start_label,
+            'middle_label': ConnectionDef.set_middle_label,
+            'end_label': ConnectionDef.set_end_label,
+        }
+        for key, func in methods.items():
+            if key in connection_def:
+                label_def = connection_def[key]
+                label_attrs = self._collect_label_attributes(label_def)
+                for cdef in cdefs:
+                    func(cdef, None, **label_attrs)
+
+    def _collect_label_attributes(self, label_def: Definition) -> Attributes:
+        """Collect the attributes from the label definition."""
+        attrs = Attributes()
+        if label_def is None or isinstance(label_def, str):
+            # Simple string or null label.
+            attrs['label'] = label_def
+            return attrs
+        # Merge attributes inherited from style references.
+        style_attrs = self._collect_style_attributes(label_def)
+        attrs.merge(style_attrs)
+        # Merge attributes defined here.
+        _collect_text_attributes(attrs, label_def)
+        return attrs
 
     def _collect_style_attributes(self, any_def: Definition) -> Attributes:
         """Collect the attributes of the named styles in the definition."""
@@ -306,25 +336,8 @@ def _collect_attributes(any_def: Definition) -> Attributes:
     _collect_container_attributes(attrs, any_def)
     _collect_block_attributes(attrs, any_def)
     _collect_connection_attributes(attrs, any_def)
-    _collect_label_attributes(attrs, any_def)
     _collect_diagram_attributes(attrs, any_def)
     return attrs
-
-def _collect_label_attributes(
-        attrs: Attributes,
-        any_def: Definition
-) -> None:
-    """Collect the attributes that are relevant to labels."""
-    keys = ('start_label', 'middle_label', 'end_label')
-    for key in keys:
-        label_def = any_def.get(key)
-        if label_def:
-            label_attrs = Attributes()
-            if isinstance(label_def, str):
-                label_attrs['label'] = label_def
-            else:
-                _collect_text_attributes(label_attrs, label_def)
-            attrs[key] = label_attrs
 
 def _collect_line_attributes(
         attrs: Attributes,
