@@ -371,9 +371,7 @@ class Block:
     def _make_label(self) -> Optional[Label]:
         """Create the label of the block."""
         attrs = self._attributes
-        # Do not create a label if the text in the attributes is
-        # undefined.
-        if not self._attributes.label:
+        if not attrs.label:
             return None
         return Label(attrs)
 
@@ -563,6 +561,7 @@ class Diagram:
         """Initialize from the definition."""
         self._attributes = DiagramAttributes(**ddef.attributes)
         self._grid = self._make_grid(ddef)
+        self._label = self._make_label()
         # The following will all be initialized simultaneously.
         self._blocks: List[Block] = []
         self._blocks_by_name: Dict[str, Block] = {}
@@ -577,6 +576,11 @@ class Diagram:
     def attributes(self) -> DiagramAttributes:
         """Attributes attached to the diagram."""
         return self._attributes
+
+    @property
+    def label(self) -> Optional[Label]:
+        """Label to draw as a title for the diagram."""
+        return self._label
 
     @property
     def label_orientation(self) -> Orientation:
@@ -616,6 +620,13 @@ class Diagram:
         for row_def in ddef.row_defs():
             grid.add_row(row_def)
         return grid
+
+    def _make_label(self) -> Optional[Label]:
+        """Create the label of the diagram."""
+        attrs = self._attributes
+        if not attrs.label:
+            return None
+        return Label(attrs)
 
     def _init_blocks(self, ddef: DiagramDef) -> None:
         """Create the blocks from the definition."""

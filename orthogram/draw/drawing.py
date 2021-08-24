@@ -75,15 +75,16 @@ class Drawing:
         """Initialize the drawing of a layout."""
         time_start = datetime.now()
         self._layout = layout
-        # Diagram label.
-        label: Optional[DrawingLabel] = None
         dia = layout.diagram
-        attrs = dia.attributes
-        text = attrs.label
-        if text:
+        dia_attrs = dia.attributes
+        # Diagram label.
+        draw_label: Optional[DrawingLabel] = None
+        dia_label = layout.diagram.label
+        if dia_label:
+            attrs = dia_label.attributes
             ori = dia.label_orientation
-            label = DrawingLabel(attrs, attrs, ori)
-        self._box = Box(attrs, "drawing", label)
+            draw_label = DrawingLabel(attrs, dia_attrs, ori)
+        self._box = Box(dia_attrs, "drawing", draw_label)
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)
         # The coordinates of the elements are calculated by creating
