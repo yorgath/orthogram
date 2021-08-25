@@ -264,7 +264,7 @@ class Builder:
         attrs.merge(own_attrs)
         # Create the object(s).
         cdefs = self._diagram_def.add_connections(
-        start, end, group=group, **attrs)
+            start, end, group=group, **attrs)
         # Add the labels.
         methods = {
             'start_label': ConnectionDef.set_start_label,
