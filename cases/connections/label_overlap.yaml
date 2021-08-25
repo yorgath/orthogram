@@ -1,0 +1,41 @@
+include:
+  - path: styles.inc
+  - path: label_styles.inc
+
+diagram:
+  label: Connection Label Overlap Test
+  padding_top: 24
+
+styles:
+
+  default_connection:
+    text_orientation: horizontal
+    arrow_aspect: 1
+    arrow_base: 8
+
+  middle:
+    text_orientation: follow
+    label: |-
+      Middle label is long...
+      and tall.
+
+rows:
+  - [~, C, ~]
+  - [A, ~, B]
+  - [~, D, ~]
+
+connections:
+
+  - start: A
+    end: B
+    start_label: "Start"
+    middle_label:
+      style: middle
+    end_label: "End"
+
+  - start: C
+    end: D
+    start_label: "Start"
+    middle_label:
+      style: middle
+    end_label: "End"

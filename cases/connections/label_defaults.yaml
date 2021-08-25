@@ -1,0 +1,61 @@
+include:
+  - path: styles.inc
+  - path: label_styles.inc
+
+diagram:
+  label: Connection Label Defaults Test
+
+styles:
+
+  default_connection:
+    label: "Bold"
+    font_weight: bold
+
+  left_side:
+    margin_right: 48
+
+  right_side:
+    margin_left: 48
+
+rows:
+  - [X1, X1]
+  - [A1, B1]
+  - [X2, X2]
+  - [A2, B2]
+
+blocks:
+
+  - name: A1
+    style: left_side
+
+  - name: B1
+    style: right_side
+
+  - name: X1
+    style: title_block
+    label: "Using default connection attributes"
+
+  - name: A2
+    style: left_side
+
+  - name: B2
+    style: right_side
+
+  - name: X2
+    style: title_block
+    label: "Overriding default connection attributes"
+
+connections:
+
+  - start: A1
+    end: B1
+    start_label: {}
+    end_label: {}
+
+  - start: A2
+    end: B2
+    start_label:
+      font_weight: normal
+      font_style: italic
+      label: "Italic"
+    end_label: ~

@@ -1,0 +1,54 @@
+include:
+  - path: styles.inc
+  - path: arrow_styles.inc
+
+diagram:
+  label: Connection Arrow Overlap Test
+
+styles:
+
+rows:
+  - [X1, X1, X1]
+  - [A1, B1, C1]
+  - [A2, B2, C2]
+  - [~ , D3, ~ ]
+  - [D1, ~ , D2]
+  - [~ , D4, ~ ]
+
+blocks:
+
+  - name: X1
+    style: title_block
+    label: |-
+      Arrows must not overlap with other arrows or connection lines.
+
+connections:
+
+  - start: A1
+    end: A2
+
+  - start: A1
+    end: A2
+    style: over
+
+  - start: B1
+    end: B2
+
+  - start: B2
+    end: B1
+    style: over
+
+  - start: C1
+    end: C2
+    arrow_forward: false
+
+  - start: C1
+    end: C2
+    style: over
+
+  - start: D1
+    end: D2
+
+  - start: D3
+    end: D4
+    style: over

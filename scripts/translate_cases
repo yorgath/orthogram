@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 
-# Translate the cases.
+"""Translate the cases."""
+
+import os
 
 from orthogram import translate_dir
 
 if __name__ == '__main__':
-    translate_dir("cases/interactions")
-    translate_dir("cases/other")
+    subdirs = [
+        "blocks",
+        "connections",
+        "diagram",
+        "interactions",
+    ]
+    for subdir in subdirs:
+        path = os.path.join("cases", subdir)
+        translate_dir(path)

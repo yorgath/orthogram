@@ -1,0 +1,115 @@
+include:
+  - path: styles.inc
+  - path: label_styles.inc
+
+diagram:
+  label: Connection End Labels Test
+
+styles:
+
+  left_side:
+    margin_right: 48
+
+  right_side:
+    margin_left: 48
+
+  green_labels:
+    text_fill: [0.0, 0.5, 0.0]
+
+  blue_labels:
+    text_fill: [0.0, 0.0, 0.5]
+
+rows:
+  - [X1, X1, X4, X4]
+  - [A1, B1, A4, B4]
+  - [X2, X2, X5, X5]
+  - [A2, B2, A5, B5]
+  - [X3, X3        ]
+  - [A3, B3        ]
+
+blocks:
+
+  - name: A1
+    style: left_side
+
+  - name: B1
+    style: right_side
+
+  - name: X1
+    style: title_block
+    label: "Using simple labels"
+
+  - name: A2
+    style: left_side
+
+  - name: B2
+    style: right_side
+
+  - name: X2
+    style: title_block
+    label: "Using nested attributes"
+
+  - name: A3
+    style: left_side
+
+  - name: B3
+    style: right_side
+
+  - name: X3
+    style: title_block
+    label: "Using parent attributes"
+
+  - name: A4
+    style: left_side
+
+  - name: B4
+    style: right_side
+
+  - name: X4
+    style: title_block
+    label: "Using parent style"
+
+  - name: A5
+    style: left_side
+
+  - name: B5
+    style: right_side
+
+  - name: X5
+    style: title_block
+    label: "Using own style"
+
+connections:
+
+  - start: A1
+    end: B1
+    start_label: "Start"
+    end_label: "End"
+
+  - start: A2
+    end: B2
+    start_label:
+      label: "Start"
+    end_label:
+      label: "End"
+
+  - start: A3
+    end: B3
+    text_fill: [0.0, 0.5, 0.0]
+    start_label: "Green"
+    end_label: "Green"
+
+  - start: A4
+    end: B4
+    style: green_labels
+    start_label: "Green"
+    end_label: "Green"
+
+  - start: A5
+    end: B5
+    start_label:
+      label: "Green"
+      style: green_labels
+    end_label:
+      label: "Blue"
+      style: blue_labels

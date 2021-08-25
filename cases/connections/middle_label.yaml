@@ -1,0 +1,86 @@
+include:
+  - path: styles.inc
+  - path: label_styles.inc
+
+diagram:
+  label: Connection Middle Label Test
+
+styles:
+
+  using_label:
+    label: "Label"
+
+  using_middle_label:
+    label: "Label"
+
+rows:
+  - [X1, X1, X4, X4]
+  - [A1, B1, A4, B4]
+  - [X2, X2, X5, X5]
+  - [A2, B2, A5, B5]
+  - [X3, X3, X6, X6]
+  - [A3, B3, A6, B6]
+  - [~ , ~ , X7, X7]
+  - [~ , ~ , A7, B7]
+
+blocks:
+
+  - name: X1
+    style: title_block
+    label: "Without label"
+
+  - name: X2
+    style: title_block
+    label: "Using direct 'label' attribute"
+
+  - name: X3
+    style: title_block
+    label: "Using direct 'middle_label' attribute"
+
+  - name: X4
+    style: title_block
+    label: "Using 'label' attribute from style"
+
+  - name: X5
+    style: title_block
+    label: "Using 'middle_label' attribute from style"
+
+  - name: X6
+    style: title_block
+    label: "Erase 'label' from style"
+
+  - name: X7
+    style: title_block
+    label: "Erase 'middle_label' from style"
+
+connections:
+
+  - start: A1
+    end: B1
+
+  - start: A2
+    end: B2
+    label: "Label"
+
+  - start: A3
+    end: B3
+    label: "Label"
+
+  - start: A4
+    end: B4
+    style: using_label
+
+  - start: A5
+    end: B5
+    style: using_middle_label
+
+  - start: A6
+    end: B6
+    style: using_label
+    label: ~
+
+  - start: A7
+    end: B7
+    style: using_label
+    middle_label:
+      label: ~
