@@ -13,7 +13,6 @@ from typing import (
 from ..geometry import (
     IntBounds,
     IntPoint,
-    Orientation,
 )
 
 from ..util import (
@@ -31,7 +30,6 @@ from .attributes import (
     DiagramAttributes,
     LabelAttributes,
     TextAttributes,
-    TextOrientation,
 )
 
 from .defs import (
@@ -324,11 +322,6 @@ class Block:
         """Label to draw on the block."""
         return self._label
 
-    @property
-    def label_orientation(self) -> Orientation:
-        """Orientation of the label."""
-        return _container_label_orientation(self._attributes)
-
     def nodes(self) -> Iterator[Node]:
         """Iterate over the nodes."""
         yield from self._nodes
@@ -582,11 +575,6 @@ class Diagram:
         """Label to draw as a title for the diagram."""
         return self._label
 
-    @property
-    def label_orientation(self) -> Orientation:
-        """Orientation of the label."""
-        return _container_label_orientation(self._attributes)
-
     def blocks(self) -> Iterator[Block]:
         """Iterate over the blocks.
 
@@ -749,19 +737,6 @@ class Diagram:
                 print(f"\t\t{cell}")
 
 ######################################################################
-
-def _container_label_orientation(attrs: TextAttributes) -> Orientation:
-    """Orientation of the label of a container, horizontal of vertical.
-
-    This is derived from the orientation of text in the attributes.
-    Since containers are considered to be always horizontal, it
-    converts FOLLOW to HORIZONTAL.
-
-    """
-    tori = attrs.text_orientation
-    if tori is TextOrientation.VERTICAL:
-        return Orientation.VERTICAL
-    return Orientation.HORIZONTAL
 
 def _tagged_repr(obj: object, point: IntPoint, tag: Optional[str]) -> str:
     """Helper for the representation methods of tagged point objects."""

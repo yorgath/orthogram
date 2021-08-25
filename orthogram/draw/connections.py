@@ -128,10 +128,6 @@ class DrawingWireSegment:
         """Vector of the segment in grid space."""
         return self._layout_segment.grid_vector
 
-    def follows_label(self, position: ConnectionLabelPosition) -> bool:
-        """True if the orientation matches that of the label."""
-        return self._layout_segment.follows_label(position)
-
     @property
     def start(self) -> DrawingJoint:
         """First joint of the segment."""

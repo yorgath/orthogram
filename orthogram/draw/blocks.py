@@ -14,6 +14,7 @@ from cassowary.expression import Constraint  # type: ignore
 from ..define import (
     Block,
     ConnectionLabelPosition,
+    DiagramAttributes,
     Side,
 )
 
@@ -28,7 +29,6 @@ from .connections import (
 
 from .boxes import Box
 from .functions import arrow_length
-from .labels import DrawingLabel
 
 ######################################################################
 
@@ -47,20 +47,23 @@ class DrawingBlock:
     def __init__(
             self,
             diagram_block: Block,
+            diagram_attributes: DiagramAttributes,
             top_row: Band, bottom_row: Band,
             left_column: Band, right_column: Band,
-            wire_margin: float = 0.0,
-            label: Optional[DrawingLabel] = None,
     ):
         """Initialize for a diagram block inside the given grid lines."""
         self._diagram_block = diagram_block
+        self._diagram_attributes = diagram_attributes
         self._top_row = top_row
         self._bottom_row = bottom_row
         self._left_column = left_column
         self._right_column = right_column
-        self._wire_margin = wire_margin
         block_name = f"block_{diagram_block.index}"
-        self._box = Box(diagram_block.attributes, block_name, label)
+        self._box = Box(
+            diagram_block.attributes,
+            diagram_attributes,
+            block_name,
+        )
         self._attachments: List[Attachment] = []
 
     def __repr__(self) -> str:
@@ -144,7 +147,7 @@ class DrawingBlock:
     def _wire_constraints(self) -> Iterator[Constraint]:
         """Generate constraints to fit the attached wires."""
         box = self._box
-        gap = self._wire_margin
+        gap = self._diagram_attributes.connection_distance
         for attachment in self._attachments:
             seg = attachment.segment
             half_width = 0.5 * seg.wire_width + gap

@@ -12,7 +12,6 @@ from typing import (
     Mapping,
     MutableMapping,
     Sequence,
-    Optional,
     Tuple,
 )
 
@@ -55,7 +54,6 @@ from .connections import (
 )
 
 from .labels import (
-    DrawingLabel,
     DrawingWireEndLabel,
     DrawingWireLabel,
     DrawingWireMiddleLabel,
@@ -244,7 +242,6 @@ class DrawingGrid:
         layout = self._layout
         dia = layout.diagram
         dia_attrs = dia.attributes
-        wire_margin = dia_attrs.connection_distance
         lgrid = layout.grid
         rows = self._rows
         cols = self._columns
@@ -258,16 +255,10 @@ class DrawingGrid:
             bottom = rows[bounds.imax]
             left = cols[bounds.jmin]
             right = cols[bounds.jmax]
-            draw_label: Optional[DrawingLabel] = None
-            dia_label = dia_block.label
-            if dia_label:
-                attrs = dia_label.attributes
-                ori = dia_block.label_orientation
-                draw_label = DrawingLabel(attrs, dia_attrs, ori)
             draw_block = DrawingBlock(
-                dia_block, top, bottom, left, right,
-                wire_margin,
-                draw_label
+                dia_block,
+                dia_attrs,
+                top, bottom, left, right,
             )
             self._associate_block_with_cells(draw_block)
             draw_blocks.append(draw_block)
@@ -447,15 +438,12 @@ class DrawingGrid:
                 side_bands = rows
             cmin = side_bands[lay_min].cmax
             cmax = side_bands[lay_max].cmin
-            attrs = lay_label.attributes
-            ori = lay_segment.label_orientation(lay_label.position)
-            label = DrawingLabel(attrs, dia_attrs, ori)
             wire_label: DrawingWireLabel
             if lay_label.position is ConnectionLabelPosition.MIDDLE:
                 wire_label = DrawingWireMiddleLabel(
-                    lay_label, label, cmin, cmax)
+                    lay_label, dia_attrs, cmin, cmax)
             else:
-                wire_label = DrawingWireEndLabel(lay_label, label)
+                wire_label = DrawingWireEndLabel(lay_label, dia_attrs)
             draw_segment.add_label(wire_label)
 
     def _place_structures(self) -> None:

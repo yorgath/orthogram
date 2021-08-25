@@ -10,9 +10,14 @@ from ..define import (
     ConnectionLabelPosition,
     Label,
     TextAttributes,
+    TextOrientation,
 )
 
-from ..geometry import OrientedVector
+from ..geometry import (
+    Orientation,
+    OrientedVector,
+)
+
 from ..util import class_str
 
 from .net import (
@@ -93,6 +98,7 @@ class WireLabel:
         self._diagram_label = diagram_label
         self._span = span
         self._position = position
+        self._orientation = _label_orientation(diagram_label, span.segment)
         self._name = f"{span.name}.{position.name}"
 
     def __repr__(self) -> str:
@@ -109,6 +115,15 @@ class WireLabel:
     def position(self) -> ConnectionLabelPosition:
         """Position of the label along the wire."""
         return self._position
+
+    @property
+    def orientation(self) -> Orientation:
+        """Orientation of the label."""
+        return self._orientation
+
+    def follows_segment(self) -> bool:
+        """True if the label and the segment have the same orientation."""
+        return self.orientation is self.grid_vector.orientation
 
     @property
     def attributes(self) -> TextAttributes:
@@ -168,7 +183,7 @@ class Labeler:
         # Middle.
         dia_label = wire.connection.middle_label
         if dia_label:
-            span = self._span_for_middle_label(spans)
+            span = _span_for_middle_label(dia_label, spans)
             yield WireLabel(dia_label, span, Pos.MIDDLE)
         # End.
         dia_label = wire.connection.end_label
@@ -212,20 +227,39 @@ class Labeler:
             )
             yield span
 
-    @staticmethod
-    def _span_for_middle_label(
-            wire_spans: Iterable[WireSegmentSpan]
-    ) -> WireSegmentSpan:
-        """Return the optimal sub-segment for the middle label."""
-        # Prefer segments with the same orientation as the label.
-        pos = ConnectionLabelPosition.MIDDLE
-        def pred(span: WireSegmentSpan) -> bool:
-            return span.segment.follows_label(pos)
-        spans = [span for span in wire_spans if pred(span)]
-        # However, we will take any segment if we have to.
-        if not spans:
-            spans = list(wire_spans)
-        # Pick the longest sub-segment.
-        key = lambda span: span.grid_vector.length
-        spans.sort(key=key, reverse=True)
-        return spans[0]
+######################################################################
+
+def _span_for_middle_label(
+        dia_label: Label,
+        wire_spans: Iterable[WireSegmentSpan]
+) -> WireSegmentSpan:
+    """Return the optimal sub-segment for the middle label."""
+    # Prefer segments with the same orientation as the label.
+    spans = list(_preferred_spans_for_middle_label(dia_label, wire_spans))
+    # However, we will take any segment if we have to.
+    if not spans:
+        spans = list(wire_spans)
+    # Pick the longest sub-segment.
+    key = lambda span: span.grid_vector.length
+    spans.sort(key=key, reverse=True)
+    return spans[0]
+
+def _preferred_spans_for_middle_label(
+        dia_label: Label,
+        wire_spans: Iterable[WireSegmentSpan]
+) -> Iterator[WireSegmentSpan]:
+    """Return the spans preferred for middle label placement."""
+    for span in wire_spans:
+        segment = span.segment
+        label_ori = _label_orientation(dia_label, span.segment)
+        if label_ori is segment.grid_vector.orientation:
+            yield span
+
+def _label_orientation(dia_label: Label, segment: WireSegment) -> Orientation:
+    """Return the orientation of the label when put on the given segment."""
+    tori = dia_label.attributes.text_orientation
+    if tori is TextOrientation.HORIZONTAL:
+        return Orientation.HORIZONTAL
+    if tori is TextOrientation.VERTICAL:
+        return Orientation.VERTICAL
+    return segment.grid_vector.orientation

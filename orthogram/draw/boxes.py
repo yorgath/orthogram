@@ -10,7 +10,13 @@ from cassowary.expression import Constraint  # type: ignore
 
 from shapely.geometry import Polygon  # type: ignore
 
-from ..define import ContainerAttributes
+from ..define import (
+    ContainerAttributes,
+    DiagramAttributes,
+    TextOrientation,
+)
+
+from ..geometry import Orientation
 from ..util import class_str
 
 from .labels import DrawingLabel
@@ -22,14 +28,15 @@ class Box:
 
     def __init__(
             self,
-            attrs: ContainerAttributes,
+            attributes: ContainerAttributes,
+            diagram_attributes: DiagramAttributes,
             name: str,
-            label: Optional[DrawingLabel] = None,
     ):
         """Initialize a box with the given name."""
-        self._attributes = attrs
+        self._attributes = attributes
+        self._diagram_attributes = diagram_attributes
         self._name = name
-        self._label = label
+        self._label = self._make_label()
         self._xmin = Variable(f"{name}_xmin")
         self._xmax = Variable(f"{name}_xmax")
         self._ymin = Variable(f"{name}_ymin")
@@ -149,3 +156,16 @@ class Box:
             height = label.box_height + sides
             return height
         return 0.0
+
+    def _make_label(self) -> Optional[DrawingLabel]:
+        """Create a label to draw on the box."""
+        attrs = self._attributes
+        text = attrs.label
+        if not text:
+            return None
+        tori = attrs.text_orientation
+        if tori is TextOrientation.VERTICAL:
+            ori = Orientation.VERTICAL
+        else:
+            ori = Orientation.HORIZONTAL
+        return DrawingLabel(attrs, self._diagram_attributes, ori)

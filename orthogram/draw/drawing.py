@@ -2,11 +2,7 @@
 
 from datetime import datetime
 from enum import Enum, auto
-
-from typing import (
-    Iterator,
-    Optional,
-)
+from typing import Iterator
 
 import math
 
@@ -77,14 +73,7 @@ class Drawing:
         self._layout = layout
         dia = layout.diagram
         dia_attrs = dia.attributes
-        # Diagram label.
-        draw_label: Optional[DrawingLabel] = None
-        dia_label = layout.diagram.label
-        if dia_label:
-            attrs = dia_label.attributes
-            ori = dia.label_orientation
-            draw_label = DrawingLabel(attrs, dia_attrs, ori)
-        self._box = Box(dia_attrs, "drawing", draw_label)
+        self._box = Box(dia_attrs, dia_attrs, "drawing")
         # Create the grid that contains the elements of the drawing.
         self._grid = DrawingGrid(self._layout)
         # The coordinates of the elements are calculated by creating
@@ -460,6 +449,8 @@ class Drawing:
             return False
         ctx.set_source_rgba(*color.rgba)
         return True
+
+    ######################### Retrieval ##############################
 
     def _block_boxes(self) -> Iterator[DrawingBlock]:
         """Return the boxes of the diagram blocks."""
