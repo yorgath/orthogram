@@ -26,8 +26,6 @@ styles:
     buffer_width: 2
     buffer_fill: [1.0, 0.9, 1.0]
     text_fill: [0.5, 0.0, 0.5]
-    start_label: Start
-    end_label: End
 
 groups:
 
@@ -157,8 +155,12 @@ connections:
   - start: E
     end: B3
     style: buffered_connection
-    label: Buffer lines for clarity.
+    start_label: Start
+    middle_label: Buffer lines for clarity.
+    end_label: End
 
   - start: E
     end: B5
     style: buffered_connection
+    start_label: Start
+    end_label: End
