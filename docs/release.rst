@@ -1,6 +1,18 @@
 Release history
 ===============
 
+0.7.0 (2021-08-27)
+------------------
+
+* Introduced labels at the start and end of connections.
+* Fixed bug: connection label distance was previously applied in half,
+  which is now fixed.  Had to halve the default value.  This change
+  may affect the appearance of diagrams created with previous versions
+  in mind.
+* Fixed bug: null connection labels in DDFs are now properly
+  recognized.  They were previously rendered as "None".
+* Reorganized cases directory.  Added more cases.
+
 0.6.0 (2021-08-04)
 ------------------
 

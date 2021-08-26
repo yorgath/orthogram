@@ -7,7 +7,7 @@ file and produces a PNG file like this one:
 
 .. image:: examples/showoff.png
    :width: 100%
-   :alt: (Showing off the capabilities)
+   :alt: Complex diagram demonstrating the capabilities of the program
 
 Target audience
 ---------------

@@ -1,0 +1,37 @@
+Attribute;Diagram;Block;Connection;Label
+``arrow_aspect``;;;1.5;
+``arrow_back``;;;False;
+``arrow_base``;;;3.0;
+``arrow_forward``;;;True;
+``buffer_fill``;;;None;
+``buffer_width``;;;0.0;
+``collapse_connections``;False;;;
+``connection_distance``;4.0;;;
+``entrances``;;;[<all>];
+``exits``;;;[<all>];
+``fill``;[1.0, 1.0, 1.0];None;;
+``font_family``;Arial;Arial;Arial;*Inherit*
+``font_size``;14.0;10.0;10.0;*Inherit*
+``font_style``;NORMAL;NORMAL;NORMAL;*Inherit*
+``font_weight``;NORMAL;NORMAL;NORMAL;*Inherit*
+``label``;None;None;None;*Inherit*
+``label_distance``;6.0;6.0;4.0;*Inherit*
+``label_position``;TOP;CENTER;;
+``margin_bottom``;;24.0;;
+``margin_left``;;24.0;;
+``margin_right``;;24.0;;
+``margin_top``;;24.0;;
+``min_height``;256.0;48.0;;
+``min_width``;256.0;96.0;;
+``padding_bottom``;0.0;8.0;;
+``padding_left``;0.0;8.0;;
+``padding_right``;0.0;8.0;;
+``padding_top``;0.0;8.0;;
+``pass_through``;;False;;
+``scale``;1.0;;;
+``stroke_dasharray``;None;None;None;
+``stroke_width``;0.0;2.0;2.0;
+``stroke``;None;[0.0, 0.0, 0.0];[0.0, 0.0, 0.0];
+``text_fill``;[0.0, 0.0, 0.0];[0.0, 0.0, 0.0];[0.0, 0.0, 0.0];*Inherit*
+``text_line_height``;1.2;1.2;1.2;*Inherit*
+``text_orientation``;HORIZONTAL;HORIZONTAL;FOLLOW;*Inherit*

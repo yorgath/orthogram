@@ -9,20 +9,13 @@ Orthogram
 .. warning::
 
    This is work in progress.  There may be breaking changes.  Pin the
-   minor version while major is zero (i.e. version 0.5.1 would be
-   compatible with 0.5.0; version 0.6.0 is *not* guaranteed to be
-   compatible with 0.5.1).  In case you use `Poetry`_ for package
-   management, this is the default behavior when upgrading
-   requirements.
+   minor version while major is zero (i.e. diagrams created for
+   version 0.5.0 should work without changes with version 0.5.1;
+   however, this is *not* guaranteed with version 0.6.0).  In case you
+   use `Poetry`_ for package management, this is the default behavior
+   when upgrading requirements.
 
    .. _Poetry: https://python-poetry.org/
-
-.. attention::
-
-   Beginning with version 0.5, output format has switched to PNG.
-   This was necessary in order to be able to calculate the dimensions
-   of text.  Use version 0.4 if you want to produce SVG files (and you
-   do not need labels on connections).
 
 Orthogram is a command line program and Python library that lets you
 draw block diagrams.  It reads a YAML file and produces a PNG file
@@ -30,6 +23,7 @@ like this one:
 
 .. image:: ../examples/showoff.png
    :width: 100%
+   :alt: Complex diagram demonstrating the capabilities of the program
 
 Orthogram does not aim to be a fully-featured graph layout solution.
 It offers just a single layout: grid.  You have to arrange the blocks

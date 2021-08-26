@@ -267,6 +267,78 @@ the connections themselves.  It is probably good practice to keep
 connection definitions referring to the same group close together in
 the file.
 
+You can add labels to connections in a manner similar to blocks.  A
+connection can have up to three labels: a *start* label, which is
+drawn near the first point of the connection, an *end* label, which is
+drawn near the last point, and a *middle* label, which is drawn
+somewhere between the other two.
+
+The ability to have more than one label on a connection introduces
+some necessary complexity to the definition.  Each label is a separate
+element of the diagram inside the connection element, which acts as
+its parent.  Each label element can have its own attributes.  You can
+define text attributes on the connection itself; if you do so, the
+values of the attributes in the connection serve as default values for
+the corresponding attributes in the label elements.
+
+To add labels to a connection, use the following elements:
+
+* ``start_label``
+* ``middle_label``
+* ``end_label``
+
+The following example demonstrates how to use them:
+
+.. code-block:: yaml
+
+   connections:
+
+     - start: A
+       end: B
+       text_fill: [1, 0, 0]
+       start_label: Start
+       middle_label: Somewhere in between
+       end_label:
+         label: End
+	 text_fill: [0, 0, 1]
+	 text_orientation: vertical
+
+The example can be explained as follows:
+
+* The ``text_fill`` attribute of the connection defines a default
+  color for all the labels, which is red.
+* The ``label`` attribute is not defined on the connection itself.  If
+  it were, it whould serve as the default text for all three labels.
+* The values of the ``start_label`` and ``middle_label`` elements are
+  plain strings.  This is shorthand we can use when there is no need
+  to override attributes for a label.
+* The ``end_label`` element overrides the value of the ``text_fill``
+  attribute of the connection; the label is drawn in blue.  It also
+  forces the label to be horizontal, regardless of the orientation of
+  the connection segment over which it is drawn.
+
+Note that if you define the ``label`` attribute on a connection, the
+program will implicitly set the middle label with it, i.e. the middle
+label is the default label for a connection.  The definitions in the
+following example all have the exact same result:
+
+.. code-block:: yaml
+
+   connections:
+
+     - start: A
+       end: B
+       middle_label:
+         label: Some text
+
+     - start: A
+       end: B
+       middle_label: Some text
+
+     - start: A
+       end: B
+       label: Some text
+
 styles
 ------
 

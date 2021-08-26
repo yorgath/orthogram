@@ -59,6 +59,29 @@ specific cells of a block.  The :py:class:`DiagramDef` class offers an
 connections en masse (all having the same attributes).  Use the Python
 :py:func:`help()` function to learn more about it.
 
+To add labels to a connection, you can use the following methods on
+the connection definition:
+
+* :py:meth:`set_start_label()`
+* :py:meth:`set_middle_label()`
+* :py:meth:`set_end_label()`
+
+For example:
+
+.. code-block:: python
+
+   # Assuming Color, FontWeight and TextOrientation have been imported
+   # from module orthogram...
+
+   c = d.add_connection("a", "b")
+   c.set_start_label("Go!")
+   c.set_middle_label(
+       "Keep going!",
+       font_weight=FontWeight.BOLD,
+       text_fill=Color(0, 0.5, 0)
+       text_orientation=TextOrientation.HORIZONTAL,
+   )
+
 After you have finished building your diagram, use the
 :py:func:`write_png` function to write the PNG file:
 
@@ -150,4 +173,3 @@ The use of these functions is straightforward:
 
    # and even this:
    translate_dir("~/diagrams")
-   

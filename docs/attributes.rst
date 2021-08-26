@@ -8,46 +8,13 @@ attribute or leave the value empty.  Also, in YAML you can have all
 values in lowercase.  The *name* of the attribute *must be* lowercase
 in both Python and YAML.
 
-========================  ===============  ===============  ===============
-Attribute                 Diagram          Block            Connection
-========================  ===============  ===============  ===============
-``arrow_aspect``                                            1.5
-``arrow_back``                                              False
-``arrow_base``                                              3.0
-``arrow_forward``                                           True
-``buffer_fill``                                             None
-``buffer_width``                                            0.0
-``collapse_connections``  False
-``connection_distance``   4.0
-``entrances``                                               [<all>]
-``exits``                                                   [<all>]
-``fill``                  [1.0, 1.0, 1.0]  None
-``font_family``           "Arial"          "Arial"          "Arial"
-``font_size``             14.0             10.0             10.0
-``font_style``            NORMAL           NORMAL           NORMAL
-``font_weight``           NORMAL           NORMAL           NORMAL
-``label``                 None             None             None
-``label_distance``        6.0              6.0              4.0
-``label_position``        TOP              CENTER
-``margin_bottom``                          24.0
-``margin_left``                            24.0
-``margin_right``                           24.0
-``margin_top``                             24.0
-``min_height``            256.0            48.0
-``min_width``             256.0            96.0
-``padding_bottom``        0.0              8.0
-``padding_left``          0.0              8.0
-``padding_right``         0.0              8.0
-``padding_top``           0.0              8.0
-``pass_through``                           False
-``scale``                 1.0
-``stroke_dasharray``      None             None             None
-``stroke_width``          0.0              2.0              2.0
-``stroke``                None             [0.0, 0.0, 0.0]  [0.0, 0.0, 0.0]
-``text_fill``             [0.0, 0.0, 0.0]  [0.0, 0.0, 0.0]  [0.0, 0.0, 0.0]
-``text_line_height``      1.2              1.2              1.2
-``text_orientation``      HORIZONTAL       HORIZONTAL       FOLLOW
-========================  ===============  ===============  ===============
+Connection label elements inherit default values from the parent
+connection element.
+
+.. csv-table::
+   :file: attribute_ref.csv
+   :delim: ;
+   :header-rows: 1
 
 Basic styling
 -------------
@@ -102,7 +69,7 @@ Text
 label
 ~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: String
 * Default: None
 
@@ -136,9 +103,9 @@ inside a box.  The positions available for labels are:
 label_distance
 ~~~~~~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: Float
-* Default: 6.0 (D, B), 4.0 (C)
+* Default: 6.0 (D, B), 4.0 (C, L)
 
 The ``label_distance`` attribute defines the distance of a label from
 the line relative to which it is drawn.  For diagrams and blocks, this
@@ -148,7 +115,7 @@ distance is measured from the connection line.
 text_fill
 ~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: Sequence of 3-4 floats
 * Default: [0.0, 0.0, 0.0]
 
@@ -157,9 +124,9 @@ The ``text_fill`` attribute defines the color in which text is drawn.
 text_orientation
 ~~~~~~~~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: ``TextOrientation``
-* Default: HORIZONTAL (D, B), FOLLOW (C)
+* Default: HORIZONTAL (D, B), FOLLOW (C, L)
 
 The ``text_orientation`` attribute defines the orientation in which
 text is drawn.  If the value is ``VERTICAL``, the text is rotated 90
@@ -179,7 +146,7 @@ default value for connections.
 text_line_height
 ~~~~~~~~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: Float
 * Default: 1.2
 
@@ -190,7 +157,7 @@ consecutive lines must be 20% of the height of the text itself.
 font_family
 ~~~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: String
 * Default: "Arial"
 
@@ -202,9 +169,9 @@ Windows and Unix systems.
 font_size
 ~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: Float
-* Default: 14.0 (D), 10.0 (B, C)
+* Default: 14.0 (D), 10.0 (B, C, L)
 
 The ``font_size`` attribute defines the size of the font in points.
 It is equivalent to the ``font-size`` property in CSS.  Orthogram uses
@@ -214,7 +181,7 @@ a factor of 1.25 internally to convert points to device units
 font_style
 ~~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: ``FontStyle``
 * Default: NORMAL
 
@@ -229,7 +196,7 @@ The following font styles are available:
 font_weight
 ~~~~~~~~~~~
 
-* Applies to: Diagram, Blocks and Connections
+* Applies to: Diagram, Blocks, Connections and Connection Labels
 * Type: ``FontWeight``
 * Default: NORMAL
 
