@@ -160,7 +160,7 @@ python-versions = ">=3.6, <4"
 
 [[package]]
 name = "pygments"
-version = "2.9.0"
+version = "2.10.0"
 description = "Pygments is a syntax highlighting package written in Python."
 category = "dev"
 optional = false
@@ -364,7 +364,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-pyyaml"
-version = "5.4.3"
+version = "5.4.6"
 description = "Typing stubs for PyYAML"
 category = "dev"
 optional = false
@@ -394,7 +394,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "badc7ba71caa68aa2a6fca782c03ee13408655da7de766075a0574391e1b6c89"
+content-hash = "54bed75f84d0b306a94465eb617d069d291d9f45d7fd073e8863715f523c6c92"
 
 [metadata.files]
 alabaster = [
@@ -524,8 +524,8 @@ pycairo = [
     {file = "pycairo-1.20.1.tar.gz", hash = "sha256:1ee72b035b21a475e1ed648e26541b04e5d7e753d75ca79de8c583b25785531b"},
 ]
 pygments = [
-    {file = "Pygments-2.9.0-py3-none-any.whl", hash = "sha256:d66e804411278594d764fc69ec36ec13d9ae9147193a1740cd34d272ca383b8e"},
-    {file = "Pygments-2.9.0.tar.gz", hash = "sha256:a18f47b506a429f6f4b9df81bb02beab9ca21d0a5fee38ed15aef65f0545519f"},
+    {file = "Pygments-2.10.0-py3-none-any.whl", hash = "sha256:b8e67fe6af78f492b3c4b3e2970c0624cbf08beb1e493b2c99b9fa1b67a20380"},
+    {file = "Pygments-2.10.0.tar.gz", hash = "sha256:f398865f7eb6874156579fdf36bc840a03cab64d1cde9e93d68f46a425ec52c6"},
 ]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
@@ -668,8 +668,8 @@ typed-ast = [
     {file = "typed_ast-1.4.3.tar.gz", hash = "sha256:fb1bbeac803adea29cedd70781399c99138358c26d05fcbd23c13016b7f5ec65"},
 ]
 types-pyyaml = [
-    {file = "types-PyYAML-5.4.3.tar.gz", hash = "sha256:2e7b81b2b7af751634425107b986086c6ba7cb61270a43a5c290c58be8cdbc3a"},
-    {file = "types_PyYAML-5.4.3-py2.py3-none-any.whl", hash = "sha256:bca83cbfc0be48600a8abf1e3d87fb762a91e6d35d724029a3321dd2dce2ceb1"},
+    {file = "types-PyYAML-5.4.6.tar.gz", hash = "sha256:745dcb4b1522423026bcc83abb9925fba747f1e8602d902f71a4058f9e7fb662"},
+    {file = "types_PyYAML-5.4.6-py3-none-any.whl", hash = "sha256:96f8d3d96aa1a18a465e8f6a220e02cff2f52632314845a364ecbacb0aea6e30"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
