@@ -254,7 +254,11 @@ class DrawingWireLabel(ABC):
         """Distance from 'highest' point to axis."""
         label = self._drawing_label
         gap = label.attributes.label_distance
-        return self._bump() + gap + label.height
+        if self._layout_label.follows_segment():
+            length = label.height
+        else:
+            length = label.width
+        return self._bump() + gap + length
 
     @property
     def lmid(self) -> Variable:

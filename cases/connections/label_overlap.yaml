@@ -20,7 +20,7 @@ styles:
       and tall.
 
 rows:
-  - [~, C, ~]
+  - [~, C, E]
   - [A, ~, B]
   - [~, D, ~]
 
@@ -39,3 +39,12 @@ connections:
     middle_label:
       style: middle
     end_label: "End"
+
+  - start: C
+    end: B
+    exits: [bottom]
+    entrances: [top]
+
+  - start: E
+    end: B
+    end_label: "Long end label"
