@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "orthogram"
-version = "0.7.0"
+version = "0.7.1"
 description = "Draw block diagrams."
 license = "GPL-3.0-or-later"
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
@@ -10,14 +10,14 @@ repository = "https://github.com/yorgath/orthogram"
 documentation = "https://readthedocs.org/projects/orthogram/"
 keywords = ["block", "diagram", "graph"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-PyYAML = "^5.4.1"
+PyYAML = "^6.0"
 Shapely = "^1.7.1"
 cassowary = "^0.5.2"
 networkx = "^2.6.2"
@@ -26,8 +26,8 @@ pycairo = "^1.20.1"
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
 Sphinx = "^4.1.2"
-sphinx-rtd-theme = "^0.5.2"
-types-PyYAML = "^5.4.6"
+sphinx-rtd-theme = "^1.0.0"
+types-PyYAML = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
