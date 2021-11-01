@@ -1,6 +1,14 @@
 Release history
 ===============
 
+0.7.1 (2021-11-01)
+------------------
+
+* Fixed bug: distance between connections did not take into account
+  the orientation of labels.
+* Improved performance of routing.
+* Changed project status to beta.
+
 0.7.0 (2021-08-27)
 ------------------
 

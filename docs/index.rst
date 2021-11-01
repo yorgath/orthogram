@@ -6,17 +6,6 @@
 Orthogram
 =========
 
-.. warning::
-
-   This is work in progress.  There may be breaking changes.  Pin the
-   minor version while major is zero (i.e. diagrams created for
-   version 0.5.0 should work without changes with version 0.5.1;
-   however, this is *not* guaranteed with version 0.6.0).  In case you
-   use `Poetry`_ for package management, this is the default behavior
-   when upgrading requirements.
-
-   .. _Poetry: https://python-poetry.org/
-
 Orthogram is a command line program and Python library that lets you
 draw block diagrams.  It reads a YAML file and produces a PNG file
 like this one:
