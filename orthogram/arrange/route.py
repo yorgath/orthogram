@@ -1,5 +1,7 @@
 """Route connections between diagram blocks."""
 
+import sys
+
 from typing import (
     Dict,
     Iterable,
@@ -81,6 +83,7 @@ class LayoutGrid:
         diagram_grid = diagram.grid
         self._height = 2 * diagram_grid.height + 1
         self._width = 2 * diagram_grid.width + 1
+        self._edges = self._make_edges()
         # These will be initialized together.
         self._rows = self._make_rows(diagram)
         self._node_points = self._map_nodes_to_points()
@@ -149,6 +152,11 @@ class LayoutGrid:
 
     def edges(self) -> Iterator[Tuple[IntPoint, IntPoint]]:
         """Iterate over all the edges between the points of the grid."""
+        yield from self._edges
+
+    def _make_edges(self) -> List[Tuple[IntPoint, IntPoint]]:
+        """Create the edges between the points of the grid."""
+        edges = []
         height = self._height
         width = self._width
         for i in range(height):
@@ -156,10 +164,11 @@ class LayoutGrid:
                 point_1 = IntPoint(i, j)
                 if j < width - 1:
                     point_2 = IntPoint(i, j + 1)
-                    yield point_1, point_2
+                    edges.append((point_1, point_2))
                 if i < height - 1:
                     point_2 = IntPoint(i + 1, j)
-                    yield point_1, point_2
+                    edges.append((point_1, point_2))
+        return edges
 
     def _make_rows(self, diagram: Diagram) -> List[List[LayoutCell]]:
         """Create the cells of the grid."""
@@ -339,16 +348,13 @@ class Router:
         return result
 
     def _make_grid_graph(self) -> nx.Graph:
-        """Create the graph of the edges of the grid.
-
-        The initial graph contains only nodes.  The edges are created
-        differently for each shortest path run.
-
-        """
+        """Create the graph of the edges of the grid."""
         graph = nx.Graph()
         grid = self._grid
         for point, node in grid.points_and_nodes():
             graph.add_node(point, node=node)
+        for point_a, point_b in grid.edges():
+            graph.add_edge(point_a, point_b)
         return graph
 
     def _make_routes(self) -> List[Route]:
@@ -417,11 +423,8 @@ class Router:
         point_1 = grid.node_point(start)
         point_2 = grid.node_point(end)
         graph = self._grid_graph
-        # Connect the nodes to form a grid, except the ones through
-        # which the connection is not allowed to pass.  We need to
-        # clear the edges of the previous run first.
-        graph.clear_edges()
         for point_a, point_b in grid.edges():
+            weight = sys.float_info.max
             # Check for blocking blocks.
             if point_a not in forbidden and point_b not in forbidden:
                 if self._must_create_edge(
@@ -430,7 +433,7 @@ class Router:
                     weight = self._edge_weight(
                         connection, (point_1, point_2), (point_a, point_b)
                     )
-                    graph.add_edge(point_a, point_b, weight=weight)
+            graph.edges[point_a, point_b]["weight"] = weight
         path = nx.shortest_path(graph, point_1, point_2, weight='weight')
         if not path:
             return None
