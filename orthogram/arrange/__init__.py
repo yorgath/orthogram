@@ -9,4 +9,5 @@ from .net import (
     RouteSegment,
     Wire,
     WireSegment,
+    set_bundle_offsets,
 )

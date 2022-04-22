@@ -12,11 +12,6 @@ from typing import (
     Tuple,
 )
 
-from cassowary import (  # type: ignore
-    SimplexSolver,
-    Variable,
-)
-
 import networkx as nx  # type: ignore
 
 from ..define import (
@@ -94,7 +89,7 @@ class Bundle:
         coord_pair = min(coords), max(coords)
         self._grid_vector = OrientedVector(bundle_axis, coord_pair)
         # This is what we must calculate.
-        self._offset_var = Variable(f"bundle_{name}_offset")
+        self._offset = 0
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -111,14 +106,14 @@ class Bundle:
         return self._grid_vector
 
     @property
-    def offset_var(self) -> Variable:
-        """Variable that holds the offset."""
-        return self._offset_var
-
-    @property
     def offset(self) -> int:
         """Offset of the bundle relative to the central axis."""
-        return round(self._offset_var.value)
+        return self._offset
+
+    @offset.setter
+    def offset(self, value: int) -> None:
+        """Set the offset."""
+        self._offset = value
 
     def description(self) -> str:
         """Return a description of the bundle."""
@@ -743,8 +738,8 @@ class BundleStructure:
 
         """
         # Calculate the new offsets starting from the existing ones.
-        # We can use a fresh constraint solver.
-        solver = SimplexSolver()
+        # We can use a fresh graph.
+        graph = nx.DiGraph()
         net_bundles = list(self._network_bundles())
         for i, net_bundle_1 in enumerate(net_bundles):
             bundle_1 = net_bundle_1.bundle
@@ -753,10 +748,10 @@ class BundleStructure:
                 # Caution: To restructure the layers, we *do* use the
                 # offsets to calculate the overlap!
                 if net_bundle_1.overlaps_with(net_bundle_2, True):
-                    var_1 = bundle_1.offset_var
-                    var_2 = bundle_2.offset_var
-                    constraint = var_1 >= var_2 + 1
-                    solver.add_constraint(constraint)
+                    graph.add_node(bundle_1)
+                    graph.add_node(bundle_2)
+                    graph.add_edge(bundle_2, bundle_1)
+        set_bundle_offsets(graph)
         # Create new layers using the new offsets.
         self._layers_by_offset = self._make_layers(net_bundles)
 
@@ -781,3 +776,21 @@ class BundleStructure:
     def _make_layer(self, offset: int) -> BundleLayer:
         """Create a new empty layer."""
         return BundleLayer(self._name, offset)
+
+######################################################################
+
+def set_bundle_offsets(graph: nx.DiGraph) -> None:
+    """Calculate the offsets and store them in the bundles."""
+    for bundle in graph.nodes:
+        bundle.offset = 0
+    while True:
+        updated = False
+        for bundle_2 in graph.nodes:
+            offset = 0
+            for bundle_1 in graph.predecessors(bundle_2):
+                offset = max(offset, bundle_1.offset + 1)
+            if offset > bundle_2.offset:
+                bundle_2.offset = offset
+                updated = True
+        if not updated:
+            break

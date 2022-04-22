@@ -13,9 +13,6 @@ from typing import (
     Tuple,
 )
 
-from cassowary import SimplexSolver  # type: ignore
-from cassowary.error import RequiredFailure  # type: ignore
-
 import networkx as nx  # type: ignore
 
 from ..debug import Debug
@@ -38,6 +35,7 @@ from .net import (
     NetworkBundle,
     NetworkOrigin,
     WireSegment,
+    set_bundle_offsets,
 )
 
 from .route import (
@@ -400,7 +398,7 @@ class Refiner:
     def _init_bundle_offsets(self) -> None:
         """Calculate the initial offsets of the bundles.
 
-        This method uses a constraint solver to calculate the initial
+        This method uses a directed graph to calculate the initial
         values for the offsets of the bundles.  It stores the results
         in the bundles themselves.
 
@@ -408,7 +406,7 @@ class Refiner:
         structured into layers to attain their final offsets.
 
         """
-        solver = SimplexSolver()
+        graph = nx.DiGraph()
         tv_rules: List[BundleRule] = []
         s_rules: List[List[BundleRule]] = []
         for inter in self._interactions():
@@ -425,9 +423,11 @@ class Refiner:
             for rules in self._s_rules(pt1, pt2):
                 s_rules.append(rules)
         for rule in tv_rules:
-            self._try_add_rules_to_solver(solver, [rule])
+            self._try_add_rules(graph, [rule])
         for rules in s_rules:
-            self._try_add_rules_to_solver(solver, rules)
+            self._try_add_rules(graph, rules)
+        # Rules complete, calculate the offsets.
+        set_bundle_offsets(graph)
 
     def _interactions(self) -> Iterator[Interaction]:
         """Iterate over the interactions of the routes at each point."""
@@ -619,14 +619,11 @@ class Refiner:
         return []
 
     @staticmethod
-    def _try_add_rules_to_solver(
-            solver: SimplexSolver,
-            rules: List[BundleRule],
-    ) -> None:
-        """Try to add the rules as constraints to the solver.
+    def _try_add_rules(graph: nx.DiGraph, rules: List[BundleRule]) -> None:
+        """Try to add the rules as elements to the graph.
 
-        It rolls back all the rules if one of them leads to an
-        infeasible constraint.
+        It rolls back all the rules if one of them leads to a cycle in
+        the graph.
 
         """
         added = []
@@ -637,22 +634,29 @@ class Refiner:
             # Do not use the bundle against itself!
             if bundle1 is bundle2:
                 continue
-            constraint = bundle2.offset_var >= bundle1.offset_var + 1
+            # No need to add the same rule twice.
+            if graph.has_edge(bundle1, bundle2):
+                continue
+            pair = (bundle1, bundle2)
+            graph.add_nodes_from(pair)
+            graph.add_edge(bundle1, bundle2)
+            added.append(pair)
             try:
-                solver.add_constraint(constraint)
-                added.append(constraint)
-            except RequiredFailure:
-                # Abort if the latest constraint is infeasible.
+                nx.find_cycle(graph)
+                # Found a cycle!  We must break that.
                 success = False
                 break
+            except nx.exception.NetworkXNoCycle:
+                # No cycle found, go on.
+                pass
         if success:
             if Debug.is_enabled():
                 for rule in rules:
                     log_debug(f"Added {rule}")
         else:
-            # Remove the constraints if one of them proved infeasible.
-            for constraint in added:
-                solver.remove_constraint(constraint)
+            # Remove the edges if one of them caused a cycle.
+            for pair in added:
+                graph.remove_edge(*pair)
             if Debug.is_enabled():
                 for rule in rules:
                     log_debug(f"Rejected {rule}")
