@@ -11,17 +11,14 @@ from abc import (
 from typing import (
     Any,
     Dict,
+    Iterable,
     List,
     Optional,
+    Set,
     cast,
 )
 
 import yaml
-
-from cassowary import (  # type: ignore
-    SimplexSolver,
-    Variable,
-)
 
 from ..debug import Debug
 
@@ -48,9 +45,8 @@ class File(metaclass=ABCMeta):
 
     def __init__(self, abs_path: str):
         """Initialize for the given *absolute* path."""
-        self._real_path = path = os.path.realpath(abs_path)
+        self._real_path = os.path.realpath(abs_path)
         self._defs = self._load()
-        self._index = Variable(path)
 
     def __repr__(self) -> str:
         """Represent as string."""
@@ -61,6 +57,10 @@ class File(metaclass=ABCMeta):
         if not isinstance(other, self.__class__):
             return False
         return os.path.samefile(self.real_path, other.real_path)
+
+    def __hash__(self) -> int:
+        """Make the file object hashable."""
+        return hash(self.real_path)
 
     @property
     def real_path(self) -> str:
@@ -87,11 +87,6 @@ class File(metaclass=ABCMeta):
                 idef = IncludeDef(path, file_type, delim)
                 result.append(idef)
         return result
-
-    @property
-    def index(self) -> Variable:
-        """Index number in the loading sequence."""
-        return self._index
 
     @abstractmethod
     def _load(self) -> Dict[str, Any]:
@@ -160,51 +155,46 @@ def _collect_files(path: str) -> List[File]:
     """Return the sequence of all files to be loaded."""
     # Start from the top file.  This *must* be a YAML file.
     abs_path = os.path.abspath(path)
-    file = YamlFile(abs_path)
-    result: List[File] = [file]
-    solver = SimplexSolver()
-    # Apply recursion to collect all included files.
-    _recur_collect_files(file, solver, result)
-    # Sort the files according to the calculated index number.
-    key = lambda file: file.index.value
-    result.sort(key=key)
-    return result
+    top_file = YamlFile(abs_path)
+    files: List[File] = [top_file]
+    expanded: Set[File] = set()
+    while True:
+        new_files: List[File] = []
+        for file in files:
+            if _is_file_included(file, new_files):
+                continue
+            if not file in expanded:
+                current_dir = os.path.dirname(file.real_path)
+                for idef in file.include_defs:
+                    def_path = idef.path
+                    if os.path.isabs(def_path):
+                        abs_path = def_path
+                    else:
+                        abs_path = os.path.join(current_dir, def_path)
+                    next_file = _make_file(abs_path, idef)
+                    _maybe_add_file(next_file, new_files)
+                expanded.add(file)
+            _maybe_add_file(file, new_files)
+        if new_files == files:
+            break
+        files = new_files
+    return files
 
-def _recur_collect_files(
-        file: File,
-        solver: SimplexSolver,
-        result: List[File],
-) -> None:
-    """Recursively collect the included files in the list.
+def _maybe_add_file(file: File, files: List[File]) -> None:
+    """Add the file to the list if not already there."""
+    if not _is_file_included(file, files):
+        files.append(file)
 
-    It uses the solver to calculate the loading index number of each
-    file.
+def _is_file_included(file: File, files: Iterable[File]) -> bool:
+    """Answer whether the file is already in the collection.
+
+    It prints a warning if the file is already in.
 
     """
-    current_dir = os.path.dirname(file.real_path)
-    previous_file: Optional[File] = None
-    for idef in file.include_defs:
-        def_path = idef.path
-        if os.path.isabs(def_path):
-            abs_path = def_path
-        else:
-            abs_path = os.path.join(current_dir, def_path)
-        next_file = _make_file(abs_path, idef)
-        if next_file in result:
-            # Avoid double loading and cycles.
-            log_warning(f"File '{next_file.real_path}' already included")
-        else:
-            # Includes must be used in the order they appear.
-            if previous_file:
-                constraint = next_file.index >= previous_file.index + 1
-                solver.add_constraint(constraint)
-            result.append(next_file)
-            _recur_collect_files(next_file, solver, result)
-            previous_file = next_file
-    # File must be used after the last include.
-    if previous_file:
-        constraint = file.index >= previous_file.index + 1
-        solver.add_constraint(constraint)
+    if file in files:
+        log_warning(f"File '{file.real_path}' already included")
+        return True
+    return False
 
 def _make_file(abs_path: str, idef: IncludeDef) -> File:
     """Creates a file object for the given absolute path.
