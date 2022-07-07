@@ -1,24 +1,44 @@
 Release history
 ===============
 
+0.8.0 (2022-07-17)
+------------------
+
+* Made Python 3.9 a requirement.  No API changes.
+
+* Loading of DDF dependencies is now done using a simple queueing
+  algorithm instead of solving constraints.
+
+* Offsets of bundles are now calculated using graphs instead of the
+  constraint solver.
+
+* Fixed minor bug in routing code.
+
+* Eliminated dead code and tidied up a bit.
+
 0.7.1 (2021-11-01)
 ------------------
 
 * Fixed bug: distance between connections did not take into account
   the orientation of labels.
+
 * Improved performance of routing.
+
 * Changed project status to beta.
 
 0.7.0 (2021-08-27)
 ------------------
 
 * Introduced labels at the start and end of connections.
+
 * Fixed bug: connection label distance was previously applied in half,
   which is now fixed.  Had to halve the default value.  This change
   may affect the appearance of diagrams created with previous versions
   in mind.
+
 * Fixed bug: null connection labels in DDFs are now properly
   recognized.  They were previously rendered as "None".
+
 * Reorganized cases directory.  Added more cases.
 
 0.6.0 (2021-08-04)
@@ -26,18 +46,24 @@ Release history
 
 * Made changes that may affect the output of some diagrams, so bumped
   version number appropriately.
+
 * Put connection arrows inside block margins to avoid overlaps.
+
 * Spacing between connections is now increased when necessary to avoid
   overlaps of wide arrow heads.
+
 * Drawing of connection labels now takes into account arrow size to
   avoid label - arrow overlap.
+
 * Added cases to visually check the above.
 
 0.5.5 (2021-07-25)
 ------------------
 
 * Fixed regression: diagram box and label are now drawn properly.
+
 * Minor updates to loading mechanism and depedencies.
+
 * Reorganized cases and examples; added a couple more cases.
 
 0.5.4 (2021-07-03)
@@ -45,12 +71,15 @@ Release history
 
 * Added the ability to include files in DDFs.  Useful for sharing
   styles between diagrams.
+
 * Added the ability to define the diagram layout grid using a CSV
   file.  It is now possible to manipulate the layout using a
   spreadsheet.
+
 * Internal change: using the constraint solver for refinement instead
   of graphs.  Made code much clearer at the cost of a slight
   performance degradation.
+
 * Internal change: refactored code; replaced a few convoluted
   inheritance patterns with composition; added representation strings
   to most objects.

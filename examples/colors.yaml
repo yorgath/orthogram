@@ -2,7 +2,7 @@ diagram:
   collapse_connections: true
   connection_distance: 12
   fill: [1, 1, 1]
-  label: Combinations of Basic Colors
+  label: Combinations of Primary Colors
   scale: 2
 
 styles:
@@ -20,7 +20,7 @@ styles:
     exits: [right]
     stroke_width: 4
 
-  basic_colors:
+  primary_colors:
     margin_right: 72
 
   combined_colors:
@@ -28,33 +28,33 @@ styles:
 
 rows:
 
-  - [~           , black  ]
-  - [~           , blue   ]
-  - [basic_red   , red    ]
-  - [basic_green , magenta]
-  - [basic_blue  , green  ]
-  - [~           , cyan   ]
-  - [~           , yellow ]
-  - [~           , white  ]
+  - [~          , black  ]
+  - [~          , blue   ]
+  - [prim_red   , red    ]
+  - [prim_green , magenta]
+  - [prim_blue  , green  ]
+  - [~          , cyan   ]
+  - [~          , yellow ]
+  - [~          , white  ]
 
 blocks:
 
-  - name: basic_red
-    style: basic_colors
+  - name: prim_red
+    style: primary_colors
     fill: [1, 0, 0]
     label: Red
     stroke: [1, 0, 0]
     text_fill: [1, 1, 1]
 
-  - name: basic_green
-    style: basic_colors
+  - name: prim_green
+    style: primary_colors
     fill: [0, 1, 0]
     label: Green
     stroke: [0, 1, 0]
     text_fill: [0, 0, 0]
 
-  - name: basic_blue
-    style: basic_colors
+  - name: prim_blue
+    style: primary_colors
     fill: [0, 0, 1]
     label: Blue
     stroke: [0, 0, 1]
@@ -118,17 +118,17 @@ blocks:
 
 connections:
 
-  - start: basic_red
+  - start: prim_red
     end: [red, magenta, yellow, white]
     stroke: [1, 0, 0]
     group: red
 
-  - start: basic_green
+  - start: prim_green
     end: [green, cyan, yellow, white]
     stroke: [0, 1, 0]
     group: green
 
-  - start: basic_blue
+  - start: prim_blue
     end: [blue, magenta, cyan, white]
     stroke: [0, 0, 1]
     group: blue

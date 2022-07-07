@@ -3,27 +3,31 @@ Acknowledgements
 
 This program depends on the following excellent pieces of software:
 
-* `Python`_: The author's preferred programming language.  Flexible,
-  convenient and nice to look at.  Has a library for everything.
+* `Python`_: Orthogram is implemented in the Python programming
+  language.  This project would probably not exist without Python
+  helping along the way with its ease of use and availability of high
+  quality libraries.
 
 * `NetworkX`_: Very comprehensive network analysis library.
   Implemented in pure Python, so easy to install and convenient to
-  use.
+  use.  Orthogram utilizes graphs to route the connections around the
+  blocks and minimize their overlapping with each other.
 
 * `Cassowary`_: Linear constraint solver implemented in pure Python.
-  Many of the calculations Orthogram does turn eventually into
-  constraint satisfaction problems.
+  Orthogram uses this to arrange the elements in the drawing.
 
-* `Shapely`_: Python interface to the powerful `GEOS`_ geometry
-  library.  A bit overkill for the simple geometry manipulations
-  Orthogram does, but why reinvent the wheel?
+* `Shapely`_: Powerful geometry manipulation library based on `GEOS`_.
+  A bit overkill for the simple geometry manipulations Orthogram does,
+  but why reinvent the wheel?
 
 * `pycairo`_: Python interface to the popular `cairo`_ graphics
-  library.
+  library.  Orthogram uses this to generate image files.
 
-* `PyYAML`_: Simple to use, efficient YAML parser.
+* `PyYAML`_: Simple to use, efficient YAML parser.  Orthogram uses
+  this to read the diagram definition files.
 
-* `Sphinx`_: The Python documentation generator.
+* `Sphinx`_: The Python documentation generator.  This documentation
+  is built with Sphinx.
 
 The following programs improved the development experience of the
 author a lot:
