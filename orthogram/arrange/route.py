@@ -519,9 +519,9 @@ class Router:
                 weight = light
             elif Side.RIGHT in entrances and i == end.i and point_b.j > end.j:
                 weight = light
-            elif Side.LEFT in exits and i == start.i and point_a.j < end.j:
+            elif Side.LEFT in exits and i == start.i and point_a.j < start.j:
                 weight = light
-            elif Side.RIGHT in exits and i == start.i and point_b.j > end.j:
+            elif Side.RIGHT in exits and i == start.i and point_b.j > start.j:
                 weight = light
         else:
             j = point_a.j
@@ -529,9 +529,9 @@ class Router:
                 weight = light
             elif Side.BOTTOM in entrances and j == end.j and point_b.i > end.i:
                 weight = light
-            elif Side.TOP in exits and j == start.j and point_a.i < end.i:
+            elif Side.TOP in exits and j == start.j and point_a.i < start.i:
                 weight = light
-            elif Side.BOTTOM in exits and j == start.j and point_b.i > end.i:
+            elif Side.BOTTOM in exits and j == start.j and point_b.i > start.i:
                 weight = light
         return weight
 
