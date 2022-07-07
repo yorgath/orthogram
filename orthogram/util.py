@@ -17,6 +17,10 @@ def vector_repr(start: object, end: object) -> str:
     """Return a string depicting a vector from start to end."""
     return f"[{repr(start)} -> {repr(end)}]"
 
+def indent(level: int) -> str:
+    """Return a string which is useful for indenting lines."""
+    return 4 * level * " "
+
 ######################################################################
 
 def log_debug(msg: str) -> None:

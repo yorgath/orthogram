@@ -29,7 +29,10 @@ from ..geometry import (
     OrientedVector,
 )
 
-from ..util import class_str
+from ..util import (
+    class_str,
+    indent,
+)
 
 from .route import (
     Route,
@@ -94,7 +97,9 @@ class Bundle:
 
     def __repr__(self) -> str:
         """Represent as string."""
-        content = self.description()
+        desc = self.description()
+        offset = self.offset
+        content =  f"{desc}, offset={offset}"
         return class_str(self, content)
 
     def route_segments(self) -> Iterator[RouteSegment]:
@@ -121,6 +126,12 @@ class Bundle:
         name = repr(self._name)
         points = self._grid_vector.vector_depiction()
         return f"{name}, points={points}"
+
+    def _pretty_print(self, level: int = 0) -> None:
+        """Print the object for debugging purposes."""
+        print(indent(level) + repr(self))
+        for segment in self.route_segments():
+            print(indent(level + 1) + repr(segment))
 
 ######################################################################
 
@@ -595,6 +606,13 @@ class Network:
     # In order to find bundles that overlap, the integer offsets are
     # converted to real numbers by multiplying with this quantity.
     _FACTOR = 0.001
+
+    def _pretty_print(self, level: int = 0) -> None:
+        """Print the object for debugging purposes."""
+        print(indent(level) + repr(self) + ":")
+        print(indent(level + 1) + "Bundles:")
+        for bundle in self.bundles():
+            bundle._pretty_print(level + 2)
 
 ######################################################################
 

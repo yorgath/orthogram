@@ -14,7 +14,10 @@ from typing import (
     cast,
 )
 
-from ..util import class_str
+from ..util import (
+    class_str,
+    indent,
+)
 
 ######################################################################
 
@@ -242,10 +245,11 @@ class Attributes(Mapping[str, Any]):
     def _pretty_print(self) -> None:
         """Print the attributes for debugging purposes."""
         print("Attributes:")
+        ind = indent(1)
         for name in sorted(self._attribute_names):
             if name in self:
                 value = self[name]
-                print(f"\t{name}: {value}")
+                print(f"{ind}{name}: {value}")
 
 ######################################################################
 

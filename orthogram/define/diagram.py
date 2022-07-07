@@ -18,6 +18,7 @@ from ..geometry import (
 from ..util import (
     class_str,
     grid_str,
+    indent,
     log_warning,
     vector_repr,
 )
@@ -724,17 +725,19 @@ class Diagram:
 
     def _pretty_print(self) -> None:
         """Print the diagram for debugging purposes."""
+        ind1 = indent(1)
+        ind2 = indent(2)
         print("Blocks:")
         for block in self._blocks:
-            print(f"\t{block}")
+            print(f"{ind1}{block}")
         print("Connections:")
         for connection in self._connections:
-            print(f"\t{connection}")
+            print(f"{ind1}{connection}")
         print("Rows:")
         for row in self._grid:
-            print(f"\t{row}:")
+            print(f"{ind1}{row}:")
             for cell in row:
-                print(f"\t\t{cell}")
+                print(f"{ind2}{cell}")
 
 ######################################################################
 

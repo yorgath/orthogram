@@ -33,6 +33,7 @@ from ..geometry import (
 from ..util import (
     class_str,
     grid_str,
+    indent,
     log_warning,
 )
 
@@ -293,6 +294,14 @@ class Route:
     def description(self) -> str:
         """Description of the route, based on the connection."""
         return self._connection.description()
+
+    def _pretty_print(self, level: int = 0) -> None:
+        """Print the object for debugging purposes."""
+        ind1 = indent(level)
+        ind2 = indent(level + 1)
+        print(f"{ind1}{self}")
+        for segment in self:
+            print(f"{ind2}{segment}")
 
 ######################################################################
 
@@ -584,3 +593,9 @@ class Router:
         if point_1.i == point_2.i:
             return Orientation.HORIZONTAL
         return Orientation.VERTICAL
+
+    def _pretty_print(self) -> None:
+        """Print the object for debugging purposes."""
+        print("Routes:")
+        for route in self._routes:
+            route._pretty_print(1)

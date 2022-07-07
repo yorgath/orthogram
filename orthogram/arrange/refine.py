@@ -25,6 +25,7 @@ from ..geometry import (
 
 from ..util import (
     class_str,
+    indent,
     log_debug,
 )
 
@@ -741,3 +742,9 @@ class Refiner:
         """Return the bundles."""
         for net in self._networks:
             yield from net.bundles()
+
+    def _pretty_print(self) -> None:
+        """Print the contents of the object for debugging purposes."""
+        print("Networks:")
+        for net in self._networks:
+            net._pretty_print(1)
