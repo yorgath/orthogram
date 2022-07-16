@@ -517,16 +517,6 @@ def _parse_label_position(string: str) -> Optional[LabelPosition]:
             break
     return result
 
-def _parse_orientation(string: str) -> Optional[Orientation]:
-    """Parse the value of an orientation attribute."""
-    result = None
-    norm = string.strip().upper()
-    for member in Orientation:
-        if member.name == norm:
-            result = member
-            break
-    return result
-
 def _parse_text_orientation(string: str) -> Optional[TextOrientation]:
     """Parse the value of a text orientation attribute."""
     result = None

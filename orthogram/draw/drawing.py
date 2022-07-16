@@ -208,9 +208,9 @@ class Drawing:
         y_start += line_width / 2
         width -= line_width
         height -= line_width
-        ctx.rectangle(x_start, y_start, width, height)
         is_visible = self._configure_context_for_line(ctx, attrs)
         if is_visible:
+            ctx.rectangle(x_start, y_start, width, height)
             ctx.stroke()
 
     def _draw_block_labels(self, surface: ImageSurface) -> None:
@@ -272,7 +272,7 @@ class Drawing:
             line: LineString,
             attrs: LineAttributes,
     ) -> None:
-        """Draw a line inside the given context."""
+        """Draw a line on the given surface."""
         ctx = Context(surface)
         is_visible = cls._configure_context_for_line(ctx, attrs)
         if not is_visible:

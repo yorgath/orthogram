@@ -294,14 +294,12 @@ class DrawingGrid:
     def _make_joint_map(self) -> Mapping[Joint, DrawingJoint]:
         """Map each layout joint to a drawing joint."""
         result: MutableMapping[Joint, DrawingJoint] = OrderedDict()
-        index = 0
         for net in self._layout.networks():
             for wire in net.wires():
                 for seg in wire:
                     for ljoint in seg.joints:
                         if ljoint not in result:
                             result[ljoint] = DrawingJoint(ljoint)
-                            index += 1
         return result
 
     def _layout_wire_segments(self) -> Iterator[WireSegment]:

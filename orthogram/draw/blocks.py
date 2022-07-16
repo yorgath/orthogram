@@ -73,7 +73,7 @@ class DrawingBlock:
 
     @property
     def diagram_block(self) -> Block:
-        """The diagram block for this has been created."""
+        """The diagram block for which this has been created."""
         return self._diagram_block
 
     @property

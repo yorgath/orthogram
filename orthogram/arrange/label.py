@@ -68,7 +68,7 @@ class WireSegmentSpan:
         return self._is_first
 
     def is_last(self) -> bool:
-        """True if the span is first in the whole wire."""
+        """True if the span is last in the whole wire."""
         return self._is_last
 
     @property
@@ -155,7 +155,6 @@ class Labeler:
     def __init__(self, refiner: Refiner):
         """Initialize for a given layout refinement object."""
         self._refiner = refiner
-        self._segment_map = refiner.router.segment_map()
         self._wire_labels = list(self._make_wire_labels())
 
     def wire_labels(self) -> Iterator[WireLabel]:
@@ -251,7 +250,7 @@ def _preferred_spans_for_middle_label(
     """Return the spans preferred for middle label placement."""
     for span in wire_spans:
         segment = span.segment
-        label_ori = _label_orientation(dia_label, span.segment)
+        label_ori = _label_orientation(dia_label, segment)
         if label_ori is segment.grid_vector.orientation:
             yield span
 

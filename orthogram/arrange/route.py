@@ -324,29 +324,6 @@ class Router:
         """Iterate over the routes."""
         yield from self._routes
 
-    def segment_map(self) -> Dict[IntPoint, List[RouteSegment]]:
-        """Return a map that maps grid points to the segments on them."""
-        result: Dict[IntPoint, List[RouteSegment]] = {}
-        for route in self._routes:
-            for seg in route:
-                vec = seg.grid_vector
-                is_hor = vec.is_horizontal()
-                seg_coord = vec.axis.coordinate
-                start, end = vec.coordinates
-                if start > end:
-                    start, end = end, start
-                for coord in range(start, end + 1):
-                    if is_hor:
-                        point = IntPoint(i=seg_coord, j=coord)
-                    else:
-                        point = IntPoint(i=coord, j=seg_coord)
-                    segments = result.get(point)
-                    if not segments:
-                        segments = []
-                        result[point] = segments
-                    segments.append(seg)
-        return result
-
     def _make_grid_graph(self) -> nx.Graph:
         """Create the graph of the edges of the grid."""
         graph = nx.Graph()

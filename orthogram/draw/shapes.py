@@ -178,7 +178,7 @@ class WireShape:
             coords = ls1.coords
             if coords:
                 # Set the geometry of the arrow.
-                base_middle = ls1.coords[-1]
+                base_middle = coords[-1]
                 tip = line.coords[-1]
                 arrow.set_geometry(base_middle, tip)
                 # Clip the line of the wire at *nearly* the distance
@@ -188,8 +188,8 @@ class WireShape:
                 poly2 = buffer_rectangle(poly, length_arrow - 1.0)
                 line = line.difference(poly2)
             else:
-                # Since the program now makes the lines long enough
-                # for the arrows, we should not be able to reach here.
+                # Since the program makes the lines long enough for
+                # the arrows, we should not be able to reach here.
                 connection = self._wire.connection
                 start_name = connection.start.block.name
                 end_name = connection.end.block.name

@@ -75,12 +75,13 @@ class Bundle:
         a_segment = seg_list[0]
         bundle_axis = a_segment.grid_vector.axis
         # Calculate the coordinate range.
-        horizontal = bundle_axis.orientation is Orientation.HORIZONTAL
+        horizontal = bundle_axis.is_horizontal()
         coords = set()
         for seg in seg_list:
+            vec = seg.grid_vector
             # All segments must be collinear.
-            assert seg.grid_vector.axis == bundle_axis
-            for point in seg.grid_vector.through_points():
+            assert vec.axis == bundle_axis
+            for point in vec.through_points():
                 if horizontal:
                     coords.add(point.j)
                 else:
@@ -459,16 +460,11 @@ class Network:
                 if self._segments_interact(seg1, seg2):
                     graph.add_edge(seg1, seg2)
         bundles: List[Bundle] = []
-        done = set()
         net_name = str(self._name)
         for segments in nx.connected_components(graph):
-            bundle_segments = []
-            for seg in segments:
-                bundle_segments.append(seg)
-                done.add(seg)
             index = len(bundles)
             name = f"{net_name}.{index}"
-            bundle = Bundle(name, bundle_segments)
+            bundle = Bundle(name, segments)
             bundles.append(bundle)
         return bundles
 

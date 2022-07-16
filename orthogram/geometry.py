@@ -145,7 +145,7 @@ class Axis:
 
     def is_horizontal(self) -> bool:
         """True if the axis is horizontal."""
-        return self.orientation is Orientation.HORIZONTAL
+        return self.orientation.is_horizontal()
 
     def point_at(self, coord: int) -> IntPoint:
         """Return the point on the axis at the given coordinate."""
