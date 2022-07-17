@@ -16,7 +16,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 PyYAML = "^6.0"
 Shapely = "^1.8.2"
 cassowary = "^0.5.2"
