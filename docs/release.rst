@@ -4,7 +4,7 @@ Release history
 0.8.0 (2022-07-17)
 ------------------
 
-* Made Python 3.9 a requirement.  No API changes.
+* Made Python 3.8 a requirement.  No API changes.
 
 * Loading of DDF dependencies is now done using a simple queueing
   algorithm instead of solving constraints.
