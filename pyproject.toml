@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "orthogram"
-version = "0.8.0"
+version = "0.8.1"
 description = "Draw block diagrams."
 license = "GPL-3.0-or-later"
 authors = ["Georgios Athanasiou <yorgath@gmail.com>"]
@@ -18,16 +18,18 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 PyYAML = "^6.0"
-Shapely = "^1.8.2"
+# Tested with Shapely 2.0.1, works OK.
+Shapely = ">=1.8.2,<3"
 cassowary = "^0.5.2"
 networkx = "^2.8.4"
-pycairo = "^1.21.0"
+# Generic Context in pycairo 1.22 causes typing errors.
+pycairo = "==1.21.0"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.961"
-Sphinx = "^5.0.2"
-sphinx-rtd-theme = "^1.0.0"
-types-PyYAML = "^6.0.10"
+mypy = ">=0.961,<2"
+Sphinx = ">=5.1.1,<6"
+sphinx-rtd-theme = ">=1,<2"
+types-PyYAML = "^6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
