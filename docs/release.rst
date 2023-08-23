@@ -1,6 +1,13 @@
 Release history
 ===============
 
+0.8.1 (2023-08-23)
+------------------
+
+* Maintenance release.
+
+* Updated dependencies; no change in functionality.
+
 0.8.0 (2022-07-17)
 ------------------
 
