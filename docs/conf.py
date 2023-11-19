@@ -22,7 +22,7 @@ copyright = '2020-2023, Georgios Athanasiou'
 author = 'Georgios Athanasiou'
 
 # The full version, including alpha/beta/rc tags
-release = '0.8.1'
+release = '0.8.2'
 
 
 # -- General configuration ---------------------------------------------------

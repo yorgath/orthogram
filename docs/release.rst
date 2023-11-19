@@ -1,6 +1,15 @@
 Release history
 ===============
 
+0.8.2 (2023-11-19)
+------------------
+
+* Improved connection arrangement algorithm.  Rules are now propagated
+  along routes instead of just being applied at independent points.
+  Performance hurt but only slightly.
+
+* Adapted project so that development with Guix is more convenient.
+
 0.8.1 (2023-08-23)
 ------------------
 

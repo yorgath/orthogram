@@ -37,6 +37,12 @@ author a lot:
 * `Poetry`_: Great Python package manager.  Also makes publishing to
   PyPI a breeze.
 
+* `GNU Guix`_: Advanced package manager for Linux.  Can be used
+  instead of Python's own virtual environments and package managers.
+  Most of the dependencies required by this project were already
+  available as Guix packages; writing package definitions for the rest
+  of them wasn't too hard either.
+
 .. _Python: https://python.org
 .. _NetworkX: https://networkx.org/
 .. _Shapely: https://github.com/Toblerity/Shapely
@@ -48,3 +54,4 @@ author a lot:
 .. _Sphinx: https://www.sphinx-doc.org/
 .. _Poetry: https://python-poetry.org/
 .. _mypy: http://mypy-lang.org/
+.. _GNU Guix: https://guix.gnu.org/
