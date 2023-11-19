@@ -1,0 +1,14 @@
+include:
+  - path: rule_order.inc
+
+rows:
+  - [X, X , X ]
+  - [A, B1, B2]
+  - [~, B3, B4]
+  - [~, B5, B6]
+
+connections:
+
+  - start: A
+    end: [B4, B5, B6]
+    exits: [right]

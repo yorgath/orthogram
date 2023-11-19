@@ -1,7 +1,7 @@
 """Refine the results of the router."""
 
 from enum import Enum, auto
-from itertools import permutations
+from itertools import combinations
 
 from typing import (
     Callable,
@@ -140,16 +140,22 @@ class Passthrough:
         return self._bundle_top
 
     def bundles(self) -> Iterator[Bundle]:
-        """Iterate over the bundles passing through the point."""
-        bundles = [
-            self._bundle_bottom,
-            self._bundle_left,
-            self._bundle_right,
-            self._bundle_top,
+        """Iterate over the bundles of the passthrough.
+
+        It yields each bundle exactly once.
+
+        """
+        segments = [
+            self._bundle_segment_in,
+            self._bundle_segment_out,
         ]
-        for bundle in bundles:
-            if bundle:
-                yield bundle
+        done = []
+        for segment in segments:
+            if segment:
+                bundle = segment.bundle
+                if bundle not in done:
+                    yield bundle
+                    done.append(bundle)
 
     def description(self) -> str:
         """Return a description of the object."""
@@ -226,6 +232,37 @@ class Interaction:
         """The passthroughs of the two routes."""
         return self._passthroughs
 
+    def sorted_routes(self) -> Tuple[Route, Route]:
+        """The interacting routes in index order."""
+        pt1, pt2 = self._passthroughs
+        route_1 = pt1.route
+        route_2 = pt2.route
+        if route_2.index < route_1.index:
+            routes = (route_2, route_1)
+        else:
+            routes = (route_1, route_2)
+        return routes
+
+    def bundles(self) -> Iterator[Bundle]:
+        """Iterate over the bundles of the interaction.
+
+        It yields each bundle exactly once.
+
+        """
+        done = []
+        for passthrough in self._passthroughs:
+            for bundle in passthrough.bundles():
+                if bundle not in done:
+                    yield bundle
+                    done.append(bundle)
+
+    def reversed(self) -> 'Interaction':
+        """Return a new interaction with swapped passthroughs."""
+        point = self._point
+        pts_1 = self._passthroughs
+        pts_2 = (pts_1[1], pts_1[0])
+        return self.__class__(point, pts_2)
+
     def description(self) -> str:
         """Return a description of the object."""
         passthroughs = self._passthroughs
@@ -235,6 +272,75 @@ class Interaction:
         i = point.i
         j = point.j
         return f"{route_1}, {route_2}, i={i}, j={j}"
+
+######################################################################
+
+class InteractionSet:
+    """Holds the interactions between the routes of a diagram."""
+
+    def __init__(self, interactions: Iterable[Interaction]):
+        """Initialize from the given interactions."""
+        self._graph = graph = self._interaction_graph(interactions)
+        # Hold the marks outside the graph because it is faster.
+        self._unmarked: List[Interaction] = list(graph.nodes)
+        self._marked: Dict[Interaction, bool] = {}
+
+    def is_marked(self, interaction: Interaction) -> bool:
+        """Tell whether an interaction is marked."""
+        return self._is_marked(interaction)
+
+    def mark(self, interaction: Interaction) -> None:
+        """Mark an interaction."""
+        self._mark(interaction)
+
+    def unmarked_interactions(self) -> Iterator[Interaction]:
+        """Iterate over the unmarked interactions."""
+        yield from self._unmarked
+
+    def has_marked_neighbor(self, interaction: Interaction) -> bool:
+        """Tell whether the interaction is next to a marked one."""
+        for other in self._neighbors(interaction):
+            if self._is_marked(other):
+                return True
+        return False
+
+    @staticmethod
+    def _interaction_graph(interactions: Iterable[Interaction]) -> nx.Graph:
+        """Return a graph of interdependent interactions."""
+        graph = nx.Graph()
+        inter_keys = {}
+        bundle_inters: Dict[Bundle, List[Interaction]] = {}
+        for inter in interactions:
+            graph.add_node(inter)
+            # Use the pair of routes as an associativity key between
+            # interactions.
+            inter_keys[inter] = inter.sorted_routes()
+            for bundle in inter.bundles():
+                bi = bundle_inters.get(bundle)
+                if not bi:
+                    bi = bundle_inters[bundle] = []
+                if inter not in bi:
+                    bi.append(inter)
+        for inters in bundle_inters.values():
+            for inter_1, inter_2 in combinations(inters, 2):
+                key_1 = inter_keys[inter_1]
+                key_2 = inter_keys[inter_2]
+                if key_1 == key_2:
+                    graph.add_edge(inter_1, inter_2)
+        return graph
+
+    def _neighbors(self, interaction: Interaction) -> Iterator[Interaction]:
+        """Yield the dependent interactions."""
+        yield from self._graph.neighbors(interaction)
+
+    def _is_marked(self, interaction: Interaction) -> bool:
+        """Tell whether an interaction is marked as handled."""
+        return self._marked.get(interaction, False)
+
+    def _mark(self, interaction: Interaction) -> None:
+        """Mark an interaction."""
+        self._unmarked.remove(interaction)
+        self._marked[interaction] = True
 
 ######################################################################
 
@@ -407,28 +513,72 @@ class Refiner:
         structured into layers to attain their final offsets.
 
         """
-        graph = nx.DiGraph()
+        rule_graph = nx.DiGraph()
+        inter_set = InteractionSet(self._interactions())
+        # Handle T and V interactions first.
         tv_rules: List[BundleRule] = []
-        s_rules: List[List[BundleRule]] = []
-        for inter in self._interactions():
-            pt1, pt2 = inter.passthroughs
-            # Store T and V rules one by one, because we roll them
-            # back individually.
-            rule = self._t_rule(pt1, pt2)
+        tv_interactions = set()
+        for inter in inter_set.unmarked_interactions():
+            rule = self._t_rule(inter)
             if rule:
                 tv_rules.append(rule)
-            for rule in self._v_rules(pt1, pt2):
+                tv_interactions.add(inter)
+            rules = self._v_rules(inter)
+            for rule in rules:
                 tv_rules.append(rule)
-            # Store S rules as lists of rules, because we must be able
-            # to roll back the whole list.
-            for rules in self._s_rules(pt1, pt2):
-                s_rules.append(rules)
+                tv_interactions.add(inter)
+        # Store T and V rules one by one, because we roll them
+        # back individually.
         for rule in tv_rules:
-            self._try_add_rules(graph, [rule])
+            self._try_add_rules(rule_graph, [rule])
+        # Mark interactions as used.
+        for inter in tv_interactions:
+            inter_set.mark(inter)
+        # Handle S interactions now.  This is rather complicated,
+        # because we must apply them in an appropriate order for best
+        # results.
+        s_rules: List[List[BundleRule]] = []
+        rule_cache = {}
+        for inter in inter_set.unmarked_interactions():
+            rule_cache[inter] = self._s_rules(inter)
+        while True:
+            again = False
+            # What if there isn't any interaction associated with a
+            # handled one?  We'll have to use one anyway as a resort,
+            # until we exhaust all interactions.
+            resorts: List[Optional[Interaction]] = [None, None]
+            for inter in inter_set.unmarked_interactions():
+                rule_sets = rule_cache[inter]
+                if rule_sets:
+                    if inter_set.has_marked_neighbor(inter):
+                        # Found an S interaction next to a marked one.
+                        # No need for resorts.
+                        s_rules.extend(rule_sets)
+                        inter_set.mark(inter)
+                        again = True
+                        resorts = [None, None]
+                    elif not resorts[0]:
+                        # An S interaction is the best resort.
+                        resorts = [inter, None]
+                        resort_sets = rule_sets
+                elif not resorts[1]:
+                    # Not an S interaction.  Last resort.
+                    resorts[1] = inter
+            if resorts[0]:
+                s_rules.extend(resort_sets)
+                inter_set.mark(resorts[0])
+                again = True
+            elif resorts[1]:
+                inter_set.mark(resorts[1])
+                again = True
+            if not again:
+                break
+        # Store S rules as lists of rules, because we must be able
+        # to roll back the whole list.
         for rules in s_rules:
-            self._try_add_rules(graph, rules)
+            self._try_add_rules(rule_graph, rules)
         # Rules complete, calculate the offsets.
-        set_bundle_offsets(graph)
+        set_bundle_offsets(rule_graph)
 
     def _interactions(self) -> Iterator[Interaction]:
         """Iterate over the interactions of the routes at each point."""
@@ -455,7 +605,7 @@ class Refiner:
         # Create the interactions.
         for point in points:
             passthroughs = per_point[point]
-            for passthrough_1, passthrough_2 in permutations(passthroughs, 2):
+            for passthrough_1, passthrough_2 in combinations(passthroughs, 2):
                 inter = Interaction(point, (passthrough_1, passthrough_2))
                 yield inter
 
@@ -490,10 +640,7 @@ class Refiner:
             )
 
     @staticmethod
-    def _t_rule(
-            passthrough_1: Passthrough,
-            passthrough_2: Passthrough
-    ) -> Optional[BundleRule]:
+    def _t_rule(interaction: Interaction) -> Optional[BundleRule]:
         """Rule between bundles for the T-junction interaction.
 
         The two routes interact like this:
@@ -503,47 +650,46 @@ class Refiner:
           |
 
         """
-        bot_1 = passthrough_1.bundle_bottom
-        lef_1 = passthrough_1.bundle_left
-        rig_1 = passthrough_1.bundle_right
-        top_1 = passthrough_1.bundle_top
-        bot_2 = passthrough_2.bundle_bottom
-        lef_2 = passthrough_2.bundle_left
-        rig_2 = passthrough_2.bundle_right
-        top_2 = passthrough_2.bundle_top
         make = _bundle_rule_factory(RuleCategory.T)
-        result = None
-        if bot_1 and lef_1 and bot_2 and rig_2:
-            result = make(bot_1, bot_2)
-        elif bot_1 and lef_1 and bot_2 and top_2:
-            result = make(bot_1, bot_2)
-        elif bot_1 and lef_1 and lef_2 and rig_2:
-            result = make(lef_2, lef_1)
-        elif bot_1 and lef_1 and lef_2 and top_2:
-            result = make(lef_2, lef_1)
-        elif bot_1 and rig_1 and bot_2 and top_2:
-            result = make(bot_2, bot_1)
-        elif bot_1 and rig_1 and lef_2 and rig_2:
-            result = make(rig_2, rig_1)
-        elif bot_1 and rig_1 and rig_2 and top_2:
-            result = make(rig_2, rig_1)
-        elif bot_1 and top_1 and lef_2 and top_2:
-            result = make(top_2, top_1)
-        elif bot_1 and top_1 and rig_2 and top_2:
-            result = make(top_1, top_2)
-        elif lef_1 and rig_1 and lef_2 and top_2:
-            result = make(lef_2, lef_1)
-        elif lef_1 and rig_1 and rig_2 and top_2:
-            result = make(rig_2, rig_1)
-        elif lef_1 and top_1 and rig_2 and top_2:
-            result = make(top_1, top_2)
-        return result
+        interactions = [interaction, interaction.reversed()]
+        for inter in interactions:
+            passthrough_1, passthrough_2 = inter.passthroughs
+            bot_1 = passthrough_1.bundle_bottom
+            lef_1 = passthrough_1.bundle_left
+            rig_1 = passthrough_1.bundle_right
+            top_1 = passthrough_1.bundle_top
+            bot_2 = passthrough_2.bundle_bottom
+            lef_2 = passthrough_2.bundle_left
+            rig_2 = passthrough_2.bundle_right
+            top_2 = passthrough_2.bundle_top
+            if bot_1 and lef_1 and bot_2 and rig_2:
+                return make(bot_1, bot_2)
+            elif bot_1 and lef_1 and bot_2 and top_2:
+                return make(bot_1, bot_2)
+            elif bot_1 and lef_1 and lef_2 and rig_2:
+                return make(lef_2, lef_1)
+            elif bot_1 and lef_1 and lef_2 and top_2:
+                return make(lef_2, lef_1)
+            elif bot_1 and rig_1 and bot_2 and top_2:
+                return make(bot_2, bot_1)
+            elif bot_1 and rig_1 and lef_2 and rig_2:
+                return make(rig_2, rig_1)
+            elif bot_1 and rig_1 and rig_2 and top_2:
+                return make(rig_2, rig_1)
+            elif bot_1 and top_1 and lef_2 and top_2:
+                return make(top_2, top_1)
+            elif bot_1 and top_1 and rig_2 and top_2:
+                return make(top_1, top_2)
+            elif lef_1 and rig_1 and lef_2 and top_2:
+                return make(lef_2, lef_1)
+            elif lef_1 and rig_1 and rig_2 and top_2:
+                return make(rig_2, rig_1)
+            elif lef_1 and top_1 and rig_2 and top_2:
+                return make(top_1, top_2)
+        return None
 
     @staticmethod
-    def _v_rules(
-            passthrough_1: Passthrough,
-            passthrough_2: Passthrough
-    ) -> List[BundleRule]:
+    def _v_rules(interaction: Interaction) -> List[BundleRule]:
         """Rules for the vertex-to-vertex interaction.
 
         The two routes interact at a single point, like this:
@@ -557,24 +703,24 @@ class Refiner:
         them will do.
 
         """
-        bot_1 = passthrough_1.bundle_bottom
-        lef_1 = passthrough_1.bundle_left
-        rig_1 = passthrough_1.bundle_right
-        lef_2 = passthrough_2.bundle_left
-        rig_2 = passthrough_2.bundle_right
-        top_2 = passthrough_2.bundle_top
         make = _bundle_rule_factory(RuleCategory.V)
-        if bot_1 and lef_1 and rig_2 and top_2:
-            return [make(bot_1, top_2), make(rig_2, lef_1)]
-        if bot_1 and rig_1 and lef_2 and top_2:
-            return [make(lef_2, rig_1), make(top_2, bot_1)]
+        interactions = [interaction, interaction.reversed()]
+        for inter in interactions:
+            passthrough_1, passthrough_2 = inter.passthroughs
+            bot_1 = passthrough_1.bundle_bottom
+            lef_1 = passthrough_1.bundle_left
+            rig_1 = passthrough_1.bundle_right
+            lef_2 = passthrough_2.bundle_left
+            rig_2 = passthrough_2.bundle_right
+            top_2 = passthrough_2.bundle_top
+            if bot_1 and lef_1 and rig_2 and top_2:
+                return [make(bot_1, top_2), make(rig_2, lef_1)]
+            if bot_1 and rig_1 and lef_2 and top_2:
+                return [make(lef_2, rig_1), make(top_2, bot_1)]
         return []
 
     @staticmethod
-    def _s_rules(
-            passthrough_1: Passthrough,
-            passthrough_2: Passthrough
-    ) -> List[List[BundleRule]]:
+    def _s_rules(interaction: Interaction) -> List[List[BundleRule]]:
         """Rules for the "spoon" interaction.
 
         The two routes interact like this:
@@ -588,35 +734,38 @@ class Refiner:
         pair will do.
 
         """
-        bot_1 = passthrough_1.bundle_bottom
-        lef_1 = passthrough_1.bundle_left
-        rig_1 = passthrough_1.bundle_right
-        top_1 = passthrough_1.bundle_top
-        bot_2 = passthrough_2.bundle_bottom
-        lef_2 = passthrough_2.bundle_left
-        rig_2 = passthrough_2.bundle_right
-        top_2 = passthrough_2.bundle_top
         make = _bundle_rule_factory(RuleCategory.S)
-        if bot_1 and lef_1 and bot_2 and lef_2:
-            return [
-                [make(bot_1, bot_2), make(lef_2, lef_1)],
-                [make(bot_2, bot_1), make(lef_1, lef_2)],
-            ]
-        if bot_1 and rig_1 and bot_2 and rig_2:
-            return [
-                [make(bot_1, bot_2), make(rig_1, rig_2)],
-                [make(bot_2, bot_1), make(rig_2, rig_1)],
-            ]
-        if lef_1 and top_1 and lef_2 and top_2:
-            return [
-                [make(lef_1, lef_2), make(top_1, top_2)],
-                [make(lef_2, lef_1), make(top_2, top_1)],
-            ]
-        if rig_1 and top_1 and rig_2 and top_2:
-            return [
-                [make(rig_2, rig_1), make(top_1, top_2)],
-                [make(rig_1, rig_2), make(top_2, top_1)],
-            ]
+        interactions = [interaction, interaction.reversed()]
+        for inter in interactions:
+            passthrough_1, passthrough_2 = inter.passthroughs
+            bot_1 = passthrough_1.bundle_bottom
+            lef_1 = passthrough_1.bundle_left
+            rig_1 = passthrough_1.bundle_right
+            top_1 = passthrough_1.bundle_top
+            bot_2 = passthrough_2.bundle_bottom
+            lef_2 = passthrough_2.bundle_left
+            rig_2 = passthrough_2.bundle_right
+            top_2 = passthrough_2.bundle_top
+            if bot_1 and lef_1 and bot_2 and lef_2:
+                return [
+                    [make(bot_1, bot_2), make(lef_2, lef_1)],
+                    [make(bot_2, bot_1), make(lef_1, lef_2)],
+                ]
+            if bot_1 and rig_1 and bot_2 and rig_2:
+                return [
+                    [make(bot_1, bot_2), make(rig_1, rig_2)],
+                    [make(bot_2, bot_1), make(rig_2, rig_1)],
+                ]
+            if lef_1 and top_1 and lef_2 and top_2:
+                return [
+                    [make(lef_1, lef_2), make(top_1, top_2)],
+                    [make(lef_2, lef_1), make(top_2, top_1)],
+                ]
+            if rig_1 and top_1 and rig_2 and top_2:
+                return [
+                    [make(rig_2, rig_1), make(top_1, top_2)],
+                    [make(rig_1, rig_2), make(top_2, top_1)],
+                ]
         return []
 
     @staticmethod

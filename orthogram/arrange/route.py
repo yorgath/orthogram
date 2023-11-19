@@ -289,7 +289,12 @@ class Route:
     @property
     def name(self) -> str:
         """The name of the route, derived from the connection."""
-        return str(self._connection.index)
+        return str(self.index)
+
+    @property
+    def index(self) -> int:
+        """Index of the connection."""
+        return self._connection.index
 
     def description(self) -> str:
         """Description of the route, based on the connection."""
