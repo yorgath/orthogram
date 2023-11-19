@@ -218,7 +218,7 @@ class DrawingWireLabel(ABC):
         self._width_along, self._height_across = self._relative_dimensions()
         self._displacement = self._calculate_displacement()
         name = layout_label.name
-        if layout_label.segment.grid_vector.is_horizontal():
+        if segment.grid_vector.is_horizontal():
             coord_name = "x"
         else:
             coord_name = "y"
