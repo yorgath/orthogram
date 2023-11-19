@@ -34,13 +34,13 @@ and iOS visual layout mechanism.")
 (define-public python-orthogram
   (package
    (name "python-orthogram")
-   (version "0.8.1")
+   (version "0.8.2")
    (source
     (origin
      (method url-fetch)
      (uri (pypi-uri "orthogram" version))
      (sha256
-      (base32 "1a9yszaiisgbnajz281i0nkbydr3hyx1ccsxbysp91dv131z3x4c"))))
+      (base32 "1xzs437dw4agrl3z8djhhhwmd4ysjp6dfqvdakk03v1qbrfg4l11"))))
    (build-system pyproject-build-system)
    ;; All tests are visual, unfortunately.
    (arguments
