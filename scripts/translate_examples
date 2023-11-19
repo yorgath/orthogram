@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+python3 <<END
 
 # Translate the examples.
 
@@ -6,3 +6,5 @@ from orthogram import translate_dir
 
 if __name__ == '__main__':
     translate_dir("examples")
+
+END
